@@ -198,6 +198,7 @@ Use these documents as active references:
 3. [`vault/03-API/Pagination-and-Filtering.md`](vault/03-API/Pagination-and-Filtering.md)
 4. [`vault/04-Reports/Contribution-Reports.md`](vault/04-Reports/Contribution-Reports.md)
 5. [`vault/00-Core/ADR-001-Data-Immutability-and-Corrections.md`](vault/00-Core/ADR-001-Data-Immutability-and-Corrections.md)
+6. [`vault/00-Core/Template-Usage-Guide.md`](vault/00-Core/Template-Usage-Guide.md)
 
 Canonical policy notes (V1):
 1. Authorization and role behavior, including payment actor model and payment capture flow, are defined in [`vault/00-Core/Roles-and-Permissions.md`](vault/00-Core/Roles-and-Permissions.md).

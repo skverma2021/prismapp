@@ -185,6 +185,8 @@
   },
   "active": "3e71d88191ac3799",
   "lastOpenFiles": [
+    "05-AI/Sprint-1-Checklist.md",
+    "00-Core/Template-Usage-Guide.md",
     "00-Core/ADR-001-Data-Immutability-and-Corrections.md",
     "00-Core/Roles-and-Permissions.md",
     "03-API/Pagination-and-Filtering.md",

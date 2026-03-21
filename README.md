@@ -1,5 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project Onboarding
+
+Before starting implementation, read:
+
+- [`AGENTS.md`](AGENTS.md) for delivery roadmap, scope, and quality gates.
+- [`vault/00-Core/Template-Usage-Guide.md`](vault/00-Core/Template-Usage-Guide.md) for reusing and adapting project templates.
+
 ## Getting Started
 
 First, run the development server:
