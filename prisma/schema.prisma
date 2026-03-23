@@ -152,6 +152,8 @@ model Contribution {
   actorUserId                String?
   actorRole                  String?
   correctionOfContributionId Int?
+  correctionReasonCode       String?
+  correctionReasonText       String?
   createdAt                  DateTime @default(now())
 
   unit              Unit              @relation(fields: [unitId], references: [id], onDelete: Restrict)
@@ -164,6 +166,7 @@ model Contribution {
   @@index([unitId, contributionHeadId])
   @@index([transactionDateTime])
   @@index([depositedBy])
+  @@index([correctionOfContributionId])
   @@map("contributions")
 }
 
