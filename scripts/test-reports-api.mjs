@@ -232,6 +232,22 @@ async function run() {
   const csv = await csvResponse.text();
   assert.equal(csv.includes("generatedBy,test-read-only-1"), true, "CSV should include generation actor");
   assert.equal(csv.includes("contributionId,transactionId"), true, "CSV should include header row");
+
+  const matrixCsvResponse = await fetch(
+    `${BASE_URL}/api/reports/contributions/paid-unpaid-matrix.csv?refYear=${refYear}&headId=${headId}&blockId=${blockId}`,
+    {
+      method: "GET",
+      headers: READ_ONLY_HEADERS,
+    }
+  );
+  assert.equal(matrixCsvResponse.status, 200, "Matrix CSV report should succeed");
+  const matrixCsv = await matrixCsvResponse.text();
+  assert.equal(
+    matrixCsv.includes("unitId,unitDescription,blockId,blockDescription"),
+    true,
+    "Matrix CSV should include unit header columns"
+  );
+  assert.equal(matrixCsv.includes("generatedBy,test-read-only-1"), true, "Matrix CSV should include actor metadata");
 }
 
 async function main() {

@@ -26,6 +26,34 @@ type MatrixReportParams = {
   blockId?: string;
 };
 
+type MatrixMonthStatus = "Paid" | "Unpaid" | "N/A";
+
+type MatrixStatusColumns = {
+  jan: MatrixMonthStatus;
+  feb: MatrixMonthStatus;
+  mar: MatrixMonthStatus;
+  apr: MatrixMonthStatus;
+  may: MatrixMonthStatus;
+  jun: MatrixMonthStatus;
+  jul: MatrixMonthStatus;
+  aug: MatrixMonthStatus;
+  sep: MatrixMonthStatus;
+  oct: MatrixMonthStatus;
+  nov: MatrixMonthStatus;
+  dec: MatrixMonthStatus;
+};
+
+type MatrixRow = MatrixStatusColumns & {
+  unitId: string;
+  unitDescription: string;
+  blockId: string;
+  blockDescription: string;
+  ownerName: string | null;
+  residentName: string | null;
+  paidMonthsCount: number;
+  unpaidMonthsCount: number;
+};
+
 function parseRequiredPositiveInt(value: string | null, field: string): number {
   if (value === null || value.trim().length === 0) {
     throw new HttpError(400, "VALIDATION_ERROR", `${field} is required.`);
@@ -391,9 +419,27 @@ export async function getContributionTransactionsCsv(
   return lines.join("\n");
 }
 
-function monthKey(month: number): string {
-  const keys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-  return keys[month - 1] ?? "unknown";
+function monthKey(month: number): keyof MatrixStatusColumns {
+  const keys: Array<keyof MatrixStatusColumns> = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+  ];
+
+  if (month < 1 || month > 12) {
+    throw new HttpError(400, "VALIDATION_ERROR", "Month key must be between 1 and 12.");
+  }
+
+  return keys[month - 1];
 }
 
 async function deriveExpectedQuantityForUnit(unitId: string, payUnit: number, referenceDate: Date): Promise<number> {
@@ -507,12 +553,12 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
   let collectionAmount = 0;
   let expectedAmount = 0;
 
-  const rows = [];
+  const rows: MatrixRow[] = [];
 
   for (const unit of units) {
     const owner = ownerByUnit.get(unit.id);
     const resident = residentByUnit.get(unit.id);
-    const monthStatuses: Record<string, "Paid" | "Unpaid" | "N/A"> = {
+    const monthStatuses: MatrixStatusColumns = {
       jan: "N/A",
       feb: "N/A",
       mar: "N/A",
@@ -597,4 +643,88 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
       activeRate: rateValue,
     },
   };
+}
+
+export async function getPaidUnpaidMatrixCsv(
+  params: MatrixReportParams,
+  actorUserId: string
+): Promise<string> {
+  const data = await getPaidUnpaidMatrixReport(params);
+  const generatedAt = new Date().toISOString();
+
+  const filterEcho = {
+    refYear: params.refYear,
+    headId: params.headId,
+    blockId: params.blockId ?? null,
+  };
+
+  const lines: string[] = [];
+  lines.push(`generatedAt,${formatCsvValue(generatedAt)}`);
+  lines.push(`generatedBy,${formatCsvValue(actorUserId)}`);
+  lines.push(`filters,${formatCsvValue(JSON.stringify(filterEcho))}`);
+  lines.push("");
+
+  lines.push(
+    [
+      "unitId",
+      "unitDescription",
+      "blockId",
+      "blockDescription",
+      "ownerName",
+      "residentName",
+      "jan",
+      "feb",
+      "mar",
+      "apr",
+      "may",
+      "jun",
+      "jul",
+      "aug",
+      "sep",
+      "oct",
+      "nov",
+      "dec",
+      "paidMonthsCount",
+      "unpaidMonthsCount",
+    ].join(",")
+  );
+
+  for (const row of data.rows) {
+    lines.push(
+      [
+        row.unitId,
+        row.unitDescription,
+        row.blockId,
+        row.blockDescription,
+        row.ownerName ?? "",
+        row.residentName ?? "",
+        row.jan,
+        row.feb,
+        row.mar,
+        row.apr,
+        row.may,
+        row.jun,
+        row.jul,
+        row.aug,
+        row.sep,
+        row.oct,
+        row.nov,
+        row.dec,
+        row.paidMonthsCount,
+        row.unpaidMonthsCount,
+      ]
+        .map((value) => formatCsvValue(value))
+        .join(",")
+    );
+  }
+
+  lines.push("");
+  lines.push(`totalUnits,${formatCsvValue(data.totals.totalUnits)}`);
+  lines.push(`totalPaidCells,${formatCsvValue(data.totals.totalPaidCells)}`);
+  lines.push(`totalUnpaidCells,${formatCsvValue(data.totals.totalUnpaidCells)}`);
+  lines.push(`collectionAmount,${formatCsvValue(data.totals.collectionAmount)}`);
+  lines.push(`expectedAmount,${formatCsvValue(data.totals.expectedAmount)}`);
+  lines.push(`activeRate,${formatCsvValue(data.totals.activeRate)}`);
+
+  return lines.join("\n");
 }
