@@ -1,6 +1,10 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
-import type { CreateOwnershipInput, UpdateOwnershipInput } from "./ownerships.schemas";
+import type {
+  CreateOwnershipInput,
+  TransferOwnershipInput,
+  UpdateOwnershipInput,
+} from "./ownerships.schemas";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
@@ -114,7 +118,6 @@ export async function createOwnership(input: CreateOwnershipInput) {
   return db.$transaction(
     async (tx) => {
       await ensureNoOwnershipOverlap(tx, input.unitId, input.fromDt, input.toDt ?? null);
-
       return tx.unitOwner.create({
         data: {
           unitId: input.unitId,
@@ -174,4 +177,44 @@ export async function deleteOwnership(id: string) {
 
     await tx.unitOwner.delete({ where: { id } });
   });
+}
+
+export async function transferOwnership(input: TransferOwnershipInput) {
+  return db.$transaction(
+    async (tx) => {
+      const current = await tx.unitOwner.findFirst({
+        where: {
+          unitId: input.unitId,
+          toDt: null,
+        },
+      });
+
+      if (!current) {
+        throw new HttpError(412, "PRECONDITION_FAILED", "An active ownership is required before transfer.");
+      }
+
+      if (current.indId === input.indId) {
+        throw new HttpError(400, "VALIDATION_ERROR", "Transfer owner must be different from active owner.");
+      }
+
+      const previousToDt = new Date(input.fromDt.getTime() - 24 * 60 * 60 * 1000);
+
+      await tx.unitOwner.update({
+        where: { id: current.id },
+        data: { toDt: previousToDt },
+      });
+
+      const created = await tx.unitOwner.create({
+        data: {
+          unitId: input.unitId,
+          indId: input.indId,
+          fromDt: input.fromDt,
+          toDt: null,
+        },
+      });
+
+      return created;
+    },
+    { isolationLevel: "Serializable" }
+  );
 }

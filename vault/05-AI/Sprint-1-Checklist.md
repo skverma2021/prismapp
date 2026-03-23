@@ -25,7 +25,8 @@ Deliver Phase 1, slice 1: `blocks` and `units` APIs with deterministic validatio
 - [x] Implement `app/api/units` route handlers.
 - [x] Implement `app/api/individuals` route handlers.
 - [x] Add ownership/residency timeline APIs with overlap-prevention logic.
-- [ ] Add auth/role guard middleware once AuthN/AuthZ approach is finalized.
+- [x] Add auth/role guard utility to mutation endpoints.
+- [x] Add automated API integration checks for timeline overlap/precondition behavior.
 
 ## Endpoints in This Slice
 1. `GET /api/blocks`
@@ -47,4 +48,4 @@ Deliver Phase 1, slice 1: `blocks` and `units` APIs with deterministic validatio
 ## Notes
 1. Unit uniqueness is enforced by DB constraint on `(blockId, description)`.
 2. API envelope aligns with `vault/03-API/Error-Model.md` and `vault/03-API/Pagination-and-Filtering.md`.
-3. Timeline overlap prevention is intentionally deferred to the next slice.
+3. Timeline overlap/precondition behavior is now covered by `npm run test:api:timelines`.

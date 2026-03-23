@@ -14,6 +14,12 @@ export type UpdateOwnershipInput = {
   toDt?: Date | null;
 };
 
+export type TransferOwnershipInput = {
+  unitId: string;
+  indId: string;
+  fromDt: Date;
+};
+
 function parseRequiredDate(value: unknown, field: string): Date {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new HttpError(400, "VALIDATION_ERROR", `${field} is required.`);
@@ -97,4 +103,18 @@ export function parseUpdateOwnershipInput(payload: unknown): UpdateOwnershipInpu
   }
 
   return input;
+}
+
+export function parseTransferOwnershipInput(payload: unknown): TransferOwnershipInput {
+  if (typeof payload !== "object" || payload === null) {
+    throw new HttpError(400, "VALIDATION_ERROR", "Payload must be an object.");
+  }
+
+  const record = payload as Record<string, unknown>;
+
+  return {
+    unitId: requireString(record.unitId, "unitId"),
+    indId: requireString(record.indId, "indId"),
+    fromDt: parseRequiredDate(record.fromDt, "fromDt"),
+  };
 }

@@ -1,4 +1,5 @@
 import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
+import { requireMutationRole } from "@/src/lib/authz";
 import { deleteBlock, getBlockById, updateBlock } from "@/src/modules/blocks/blocks.service";
 import { parseUpdateBlockInput } from "@/src/modules/blocks/blocks.schemas";
 
@@ -14,6 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    requireMutationRole(request);
     const { id } = await params;
     const payload = await request.json();
     const input = parseUpdateBlockInput(payload);
@@ -26,6 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    requireMutationRole(_request);
     const { id } = await params;
     await deleteBlock(id);
     return new Response(null, { status: 204 });

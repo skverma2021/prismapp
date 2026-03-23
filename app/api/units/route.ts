@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
+import { requireMutationRole } from "@/src/lib/authz";
 import { createUnit, listUnits } from "@/src/modules/units/units.service";
 import { parseCreateUnitInput } from "@/src/modules/units/units.schemas";
 
@@ -14,6 +15,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
+    requireMutationRole(request);
     const payload = await request.json();
     const input = parseCreateUnitInput(payload);
     const data = await createUnit(input);
