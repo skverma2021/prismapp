@@ -10,6 +10,7 @@
     "test:api:timelines": "node scripts/test-timelines-api.mjs",
     "test:api:contribution-rates": "node scripts/test-contribution-rates-api.mjs",
     "test:api:contributions": "node scripts/test-contributions-api.mjs",
+    "test:api:reports": "node scripts/test-reports-api.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
