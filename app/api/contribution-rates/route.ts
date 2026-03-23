@@ -1,0 +1,29 @@
+import type { NextRequest } from "next/server";
+import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
+import { requireMutationRole } from "@/src/lib/authz";
+import {
+  createContributionRate,
+  listContributionRates,
+} from "@/src/modules/contribution-rates/contribution-rates.service";
+import { parseCreateContributionRateInput } from "@/src/modules/contribution-rates/contribution-rates.schemas";
+
+export async function GET(request: NextRequest) {
+  try {
+    const data = await listContributionRates(request.nextUrl.searchParams);
+    return ok(data);
+  } catch (error) {
+    return fail(fromUnknownError(error));
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    requireMutationRole(request);
+    const payload = await request.json();
+    const input = parseCreateContributionRateInput(payload);
+    const data = await createContributionRate(input);
+    return ok(data, 201);
+  } catch (error) {
+    return fail(fromUnknownError(error));
+  }
+}

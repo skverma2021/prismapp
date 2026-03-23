@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:api:timelines": "node scripts/test-timelines-api.mjs",
+    "test:api:contribution-rates": "node scripts/test-contribution-rates-api.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
