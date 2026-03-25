@@ -122,6 +122,7 @@ model ContributionRate {
   createdAt          DateTime  @default(now())
 
   contributionHead ContributionHead @relation(fields: [contributionHeadId], references: [id], onDelete: Restrict)
+  details          ContributionDetail[]
 
   @@index([contributionHeadId, fromDt, toDt])
   @@map("contribution_rates")
@@ -174,14 +175,18 @@ model ContributionDetail {
   id                   Int      @id @default(autoincrement())
   contributionId       Int
   contributionPeriodId Int
+  contributionRateId   Int?
   amt                  Decimal  @db.Decimal(12, 2)
   appliedRate          Decimal? @db.Decimal(12, 4)
+  appliedRateReference String?
   createdAt            DateTime @default(now())
 
   contribution       Contribution     @relation(fields: [contributionId], references: [id], onDelete: Restrict)
   contributionPeriod ContributionPeriod @relation(fields: [contributionPeriodId], references: [id], onDelete: Restrict)
+  contributionRate   ContributionRate? @relation(fields: [contributionRateId], references: [id], onDelete: Restrict)
 
   @@unique([contributionId, contributionPeriodId])
   @@index([contributionPeriodId])
+  @@index([contributionRateId])
   @@map("contribution_details")
 }

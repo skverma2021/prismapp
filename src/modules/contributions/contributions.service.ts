@@ -356,8 +356,10 @@ export async function createContribution(input: CreateContributionInput, actor: 
           details: {
             create: periods.map((period) => ({
               contributionPeriodId: period.id,
+              contributionRateId: applicableRate.id,
               amt: detailAmount,
               appliedRate: rateValue,
+              appliedRateReference: applicableRate.reference,
             })),
           },
         },
@@ -439,8 +441,10 @@ export async function createContributionCorrection(
           details: {
             create: original.details.map((detail) => ({
               contributionPeriodId: detail.contributionPeriodId,
+              contributionRateId: detail.contributionRateId,
               amt: -Number(detail.amt),
               appliedRate: detail.appliedRate ? Number(detail.appliedRate) : null,
+              appliedRateReference: detail.appliedRateReference,
             })),
           },
         },

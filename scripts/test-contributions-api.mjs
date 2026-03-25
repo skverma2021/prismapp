@@ -186,6 +186,8 @@ async function run() {
   assert.equal(created.payload.data.periodCount, 1, "periodCount should match number of selected periods");
   assert.equal(created.payload.data.details.length, 1, "One detail row expected");
   assert.equal(Number(created.payload.data.details[0].amt), 150, "Detail amount should lock derived rate");
+  assert.equal(created.payload.data.details[0].contributionRateId, rate.payload.data.id);
+  assert.equal(created.payload.data.details[0].appliedRateReference, `rate-${unique}`);
   const contributionId = created.payload.data.id;
 
   const duplicate = await requestJson(
@@ -237,6 +239,8 @@ async function run() {
   assert.equal(correction.payload.data.correctionReasonCode, "WRONG_HEAD");
   assert.equal(correction.payload.data.details.length, 1);
   assert.equal(Number(correction.payload.data.details[0].amt), -150, "Correction should reverse detail amount");
+  assert.equal(correction.payload.data.details[0].contributionRateId, rate.payload.data.id);
+  assert.equal(correction.payload.data.details[0].appliedRateReference, `rate-${unique}`);
 
   const correctionOfCorrection = await requestJson(
     "POST",

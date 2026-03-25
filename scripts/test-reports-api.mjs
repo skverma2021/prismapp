@@ -210,6 +210,16 @@ async function run() {
   assertStatus(transactions, 200, "Transactions report should allow READ_ONLY role");
   assert.equal(transactions.payload.data.totals.rowCount >= 2, true);
   assert.equal(Number(transactions.payload.data.totals.sumAmount), 0, "Sum amount should net to zero");
+  assert.equal(
+    transactions.payload.data.items.some((row) => row.contributionRateId === rate.payload.data.id),
+    true,
+    "Transactions report should expose persisted contributionRateId"
+  );
+  assert.equal(
+    transactions.payload.data.items.some((row) => row.appliedRateReference === `rate-${unique}`),
+    true,
+    "Transactions report should expose applied rate reference snapshot"
+  );
 
   const matrix = await requestJson(
     "GET",
@@ -232,6 +242,8 @@ async function run() {
   const csv = await csvResponse.text();
   assert.equal(csv.includes("generatedBy,test-read-only-1"), true, "CSV should include generation actor");
   assert.equal(csv.includes("contributionId,transactionId"), true, "CSV should include header row");
+  assert.equal(csv.includes("contributionRateId"), true, "CSV should include contributionRateId column");
+  assert.equal(csv.includes("appliedRateReference"), true, "CSV should include appliedRateReference column");
 
   const matrixCsvResponse = await fetch(
     `${BASE_URL}/api/reports/contributions/paid-unpaid-matrix.csv?refYear=${refYear}&headId=${headId}&blockId=${blockId}`,
