@@ -128,7 +128,7 @@ Represents a payment transaction
 | id | integer | Primary Key |
 | unitId | string (FK → Units.id) | |
 | contributionHeadId | integer (FK → ContributionHeads.id) | |
-| quantity | integer | Derived from payUnit |
+| quantity | integer | Computed from payUnit rules |
 | periodCount | integer | Number of periods paid |
 | transactionId | string | External reference |
 | transactionDateTime | datetime | |
@@ -177,6 +177,11 @@ Maps a contribution to specific periods
 ## 🧠 DERIVED LOGIC (FOR AI GENERATION)
 
 - quantity depends on ContributionHeads.payUnit
+    - payUnit=1 -> Units.sqFt
+    - payUnit=2 -> operator-entered availing person count; requires at least one active resident for unit
+    - payUnit=3 -> 1 (lumpsum per unit)
+- per-period detail amount = quantity x applicable contributionRate
+- total payable for contribution = quantity x applicable contributionRate x periodCount
 - total contribution amount = SUM(ContributionDetails.amt)
 - active owner = UnitOwners where toDt IS NULL
 - active resident = UnitResidents where toDt IS NULL

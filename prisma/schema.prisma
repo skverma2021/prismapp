@@ -150,6 +150,7 @@ model Contribution {
   transactionId              String
   transactionDateTime        DateTime
   depositedBy                String
+  inputComment               String?
   actorUserId                String?
   actorRole                  String?
   correctionOfContributionId Int?

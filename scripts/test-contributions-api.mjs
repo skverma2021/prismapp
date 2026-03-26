@@ -103,6 +103,35 @@ async function run() {
   assertStatus(depositor, 201, "Creating depositor should succeed");
   const depositedBy = depositor.payload.data.id;
 
+  const resident = await requestJson(
+    "POST",
+    "/api/individuals",
+    {
+      fName: "Res",
+      sName: `Member${unique}`,
+      eMail: `res.member.${unique}@example.com`,
+      mobile: `+9778${String(unique).slice(-8)}`,
+      genderId: 1,
+    },
+    AUTH_HEADERS
+  );
+  assertStatus(resident, 201, "Creating active resident should succeed");
+  const residentId = resident.payload.data.id;
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const residency = await requestJson(
+    "POST",
+    "/api/residencies",
+    {
+      unitId,
+      indId: residentId,
+      fromDt: todayIso,
+      toDt: null,
+    },
+    AUTH_HEADERS
+  );
+  assertStatus(residency, 201, "Creating residency should succeed");
+
   const head = await requestJson(
     "POST",
     "/api/contribution-heads",
@@ -115,6 +144,19 @@ async function run() {
   );
   assertStatus(head, 201, "Creating contribution head should succeed");
   const contributionHeadId = head.payload.data.id;
+
+  const perPersonHead = await requestJson(
+    "POST",
+    "/api/contribution-heads",
+    {
+      description: `CONTR-HEAD-PER-PERSON-${unique}`,
+      payUnit: 2,
+      period: "MONTH",
+    },
+    AUTH_HEADERS
+  );
+  assertStatus(perPersonHead, 201, "Creating per-person contribution head should succeed");
+  const perPersonHeadId = perPersonHead.payload.data.id;
 
   const txDate = new Date();
   const txDateIso = txDate.toISOString();
@@ -133,6 +175,20 @@ async function run() {
   );
   assertStatus(rate, 201, "Creating contribution rate should succeed");
 
+  const perPersonRate = await requestJson(
+    "POST",
+    "/api/contribution-rates",
+    {
+      contributionHeadId: perPersonHeadId,
+      fromDt: new Date(txDate.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      toDt: null,
+      amt: 100,
+      reference: `rate-person-${unique}`,
+    },
+    AUTH_HEADERS
+  );
+  assertStatus(perPersonRate, 201, "Creating per-person contribution rate should succeed");
+
   const periodsList = await requestJson(
     "GET",
     `/api/contribution-periods?refYear=${txDate.getUTCFullYear()}&refMonth=1&page=1&pageSize=1`
@@ -140,6 +196,18 @@ async function run() {
   assertStatus(periodsList, 200, "Listing contribution periods should succeed");
   assert.equal(periodsList.payload.data.items.length, 1, "Expected one current-year month period in seed data");
   const periodId = periodsList.payload.data.items[0].id;
+
+  const periodsListMonth2 = await requestJson(
+    "GET",
+    `/api/contribution-periods?refYear=${txDate.getUTCFullYear()}&refMonth=2&page=1&pageSize=1`
+  );
+  assertStatus(periodsListMonth2, 200, "Listing month-2 contribution periods should succeed");
+  assert.equal(
+    periodsListMonth2.payload.data.items.length,
+    1,
+    "Expected one current-year month-2 period in seed data"
+  );
+  const periodIdMonth2 = periodsListMonth2.payload.data.items[0].id;
 
   const unauthorized = await requestJson("POST", "/api/contributions", {
     unitId,
@@ -189,6 +257,55 @@ async function run() {
   assert.equal(created.payload.data.details[0].contributionRateId, rate.payload.data.id);
   assert.equal(created.payload.data.details[0].appliedRateReference, `rate-${unique}`);
   const contributionId = created.payload.data.id;
+
+  const createdPerPerson = await requestJson(
+    "POST",
+    "/api/contributions",
+    {
+      unitId,
+      contributionHeadId: perPersonHeadId,
+      contributionPeriodIds: [periodId],
+      transactionId: `txn-${unique}-person-ok`,
+      transactionDateTime: txDateIso,
+      depositedBy,
+      availingPersonCount: 4,
+      comment: "Family members using gym and pool.",
+    },
+    AUTH_HEADERS
+  );
+  assertStatus(createdPerPerson, 201, "Creating per-person contribution should succeed");
+  assert.equal(createdPerPerson.payload.data.quantity, 4, "Per-person head should use operator-entered person count");
+  assert.equal(createdPerPerson.payload.data.inputComment, "Family members using gym and pool.");
+  assert.equal(Number(createdPerPerson.payload.data.details[0].amt), 400, "Per-person detail amount should use entered quantity");
+  assert.equal(createdPerPerson.payload.data.details[0].contributionRateId, perPersonRate.payload.data.id);
+  assert.equal(createdPerPerson.payload.data.details[0].appliedRateReference, `rate-person-${unique}`);
+
+  const perPersonMissingCount = await requestJson(
+    "POST",
+    "/api/contributions",
+    {
+      unitId,
+      contributionHeadId: perPersonHeadId,
+      contributionPeriodIds: [periodIdMonth2],
+      transactionId: `txn-${unique}-person-missing-count`,
+      transactionDateTime: txDateIso,
+      depositedBy,
+    },
+    AUTH_HEADERS
+  );
+  assertStatus(perPersonMissingCount, 400, "Per-person contribution without availingPersonCount should fail validation");
+  assert.equal(perPersonMissingCount.payload?.error?.code, "VALIDATION_ERROR");
+
+  const monthLedger = await requestJson(
+    "GET",
+    `/api/contributions/month-ledger?unitId=${encodeURIComponent(unitId)}&headId=${contributionHeadId}&refYear=${txDate.getUTCFullYear()}`
+  );
+  assertStatus(monthLedger, 200, "Monthly ledger helper should succeed for monthly head");
+  assert.equal(monthLedger.payload.data.latestPaidMonth, 1, "Latest paid month should be January for the created monthly payment");
+  assert.equal(monthLedger.payload.data.rows.length, 12, "Monthly ledger should return 12 rows");
+  assert.equal(monthLedger.payload.data.rows[0].status, "Paid", "January should be marked paid");
+  assert.equal(Number(monthLedger.payload.data.rows[0].amount), 150, "January paid amount should match posted detail amount");
+  assert.equal(monthLedger.payload.data.rows[1].status, "Unpaid", "February should be marked unpaid");
 
   const duplicate = await requestJson(
     "POST",

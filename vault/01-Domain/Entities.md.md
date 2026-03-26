@@ -180,13 +180,15 @@ Represents a payment transaction.
 - Can cover multiple periods
 - Amount is NOT stored here (derived via details)
 - Contributions are immutable
-- quantity is system-derived and not user-editable
+- quantity is server-computed from payUnit rules
 
 ### Derived Logic
 - quantity depends on payUnit:
   - per sqft → unit.sqFt
-  - per person → resident count
-  - lumpsum → 1
+  - per person → operator-entered availing person count (requires at least one active resident)
+  - lumpsum → 1 (payUnit=3, rate comes from contributionRates)
+- per-period detail amount = quantity x applicable rate
+- total payable amount = quantity x applicable rate x periodCount
 
 ### Sample Data
 

@@ -7,6 +7,28 @@ Last Updated: 2026-03-19
 ## Purpose
 Define V1 contribution reports with exact filters, columns, totals, and output behavior.
 
+## Capture Helper: Month Ledger (V1)
+
+### Goal
+Assist contribution capture by showing current-year monthly payment state for selected head + unit.
+
+### Required Filters
+- `unitId`
+- `headId`
+- `refYear` (must be current year)
+
+### Row Grain
+One row per month (Jan..Dec).
+
+### Columns
+- Month
+- Status (`Paid` / `Unpaid`)
+- Amount (net posted amount for that month)
+- Transaction refs (id/date/amount list)
+
+### Convenience Field
+- `latestPaidMonth`: highest month number with `Paid` status.
+
 ## Report 1: Paid/Unpaid Matrix
 
 ### Goal
@@ -40,6 +62,7 @@ One row per unit.
 1. For monthly heads, evaluate months 1..12.
 2. For yearly heads, use refMonth = 0 semantics.
 3. Duplicate payments must not appear; if found, flag data integrity issue.
+4. For payUnit = 2 heads, quantity is operator-entered at payment time; expected amount in matrix uses configured system assumption and should be interpreted as indicative.
 
 ## Report 2: Contribution Transaction List
 

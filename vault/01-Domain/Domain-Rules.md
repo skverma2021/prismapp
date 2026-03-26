@@ -20,13 +20,20 @@
 ## Contribution Rules
 1. **contributionHeads**: This table defines different purposes (description) of payment, unit (payUnit) of payment, and applicable month or year for which payment is made.
 2. **contributionRates**: This table defines historical rates (amt) related to a type of contribution (contributionHeadsId), a reference to how it was decided (reference to minutes of a meeting) , and Period (fromDt to toDt). A null in toDt means the current applicable rate.
+	- interpretation of current/applicable rate: rate effective as on transactionDateTime.
+	- revised rates (up/down) are forward effective only; historical posted entries are not recalculated.
 3. **contributionPeriods**: This table defines year (refYear), and months (refMonth) of the year it belongs to. These rows are pre-populated (seeded). For each year there are 13 rows where refMonth = 0 indicates entire year and refMonth = 1..12 indicates individual months (Jan .. Dec).
 4. **contributions**: This table defines reference to unit (unitId), purpose of contribution (contributionHeadsId), a basis for measuring payable amount (quantity),  transaction ID (transactionId), date of transaction (transactionDate), and the individual who is making the payment (depositedBy).
 	- *quantity*: it has a reference to payUnit defined in contributionHeads. Here is how this field will be populated:
 		- for contribution head = 1 (maintenance) , the field quantity will be the area of the flat (or unit) in Sq Ft. So in this case there is no user action since the app pulls it from units table. In any maintenance payment, user pays for only one unit based on its area
-		- for contribution head = 2, 5, 6, 7 the field quantity will be 1. These charges are for only one unit only and are lumpsum.
-		- for contribution head = 3,4,8,9,10  the field quantity will indicate number of persons who will be availing the services. 
+		- for contribution head = 2, 5, 6, 7 the field quantity will be 1. These charges are lumpsum per unit.
+		- for contribution head = 3,4,8,9,10  the field quantity will indicate number of persons who will be availing the services, entered by operator at payment time.
+		- eligibility rule for payUnit = 2: there must be at least one active resident for the unit on transaction date/time.
+		- payable formula: total payable for a contribution = quantity x applicable rate x periodCount.
+		- amount distribution rule: contributionDetails.amt stores per-period amount (quantity x applicable rate) for each selected period row.
 	- *periodCount*: it is a count of applicable periods (months only; app will permit payment for one/current year only). This will decide the number of rows to be created in contributionDetails table.
+		- for period = month, user must select explicit months (contributionPeriodIds); hidden auto-progression by count is not allowed.
+		- for period = year, exactly one yearly period row (refMonth = 0) must be selected.
 	- *transactionId* and transactionDate: A user can make UPI or Bank transfer payment. contributions table only records a reference and date of transaction. The amount is recorded in contributionDetails table.
 		- payment can be made for multiple months (contribution head with period = month) or a single year (contribution head with period = year) 
 		- in case of  contribution head with period = month, the amount gets distributed among selected months in the contributionDetails table (therefore multiple rows will be created).
@@ -44,14 +51,17 @@
 
 1. A Unit cannot have duplicate contribution entries for the same contributionHead and contributionPeriod.
 2. The system must prevent double payment for the same period.
+3. UI helper: for monthly heads, app should provide a month ledger per unit + head + year showing Paid/Unpaid status, transaction references, and amount by month.
+4. UI convenience: show latestPaidMonth derived from ledger rows (highest month with net paid amount > 0).
 
 ## Quantity Rules
 
-1. quantity must NOT be user-editable.
-2. It must be derived automatically based on contributionHeads.payUnit:
-   - per sqft → Units.sqFt
-   - lumpsum → 1
-   - per person → number of residents
+1. quantity is computed by server using contributionHeads.payUnit.
+2. For payUnit = 1 (per sqft), quantity is derived from Units.sqFt.
+3. For payUnit = 3 (lumpsum), quantity is fixed as 1.
+4. For payUnit = 2 (per person), quantity comes from operator input (availing person count).
+5. For payUnit = 2, the system must enforce resident eligibility: at least one active resident must exist for the unit at transaction date/time.
+6. For payUnit = 3, quantity is always 1 and amount depends only on contributionRate for the selected head and time.
 ## Financial Integrity Rules
 
 1. Contributions are immutable once recorded.

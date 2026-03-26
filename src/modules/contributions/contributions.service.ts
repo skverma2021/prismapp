@@ -65,11 +65,21 @@ function roundTo2(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+function monthLabel(month: number): string {
+  const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  if (month < 1 || month > 12) {
+    throw new HttpError(400, "VALIDATION_ERROR", "refMonth must be between 1 and 12.");
+  }
+
+  return labels[month - 1];
+}
+
 async function deriveQuantity(
   tx: Pick<typeof db, "unit" | "unitResident">,
   payUnit: number,
   unitId: string,
-  transactionDateTime: Date
+  transactionDateTime: Date,
+  availingPersonCount?: number
 ): Promise<number> {
   if (payUnit === 1) {
     const unit = await tx.unit.findUnique({ where: { id: unitId }, select: { sqFt: true } });
@@ -97,7 +107,15 @@ async function deriveQuantity(
       );
     }
 
-    return residentCount;
+    if (availingPersonCount === undefined) {
+      throw new HttpError(
+        400,
+        "VALIDATION_ERROR",
+        "availingPersonCount is required for per-person contribution heads."
+      );
+    }
+
+    return availingPersonCount;
   }
 
   if (payUnit === 3) {
@@ -266,6 +284,129 @@ export async function listContributions(searchParams: URLSearchParams) {
   };
 }
 
+export async function getContributionMonthLedger(searchParams: URLSearchParams) {
+  const unitId = searchParams.get("unitId")?.trim();
+  const contributionHeadId = parseOptionalPositiveInt(searchParams.get("headId"), "headId");
+  const refYear = parseOptionalPositiveInt(searchParams.get("refYear"), "refYear");
+
+  if (!unitId) {
+    throw new HttpError(400, "VALIDATION_ERROR", "unitId is required.");
+  }
+
+  if (!contributionHeadId) {
+    throw new HttpError(400, "VALIDATION_ERROR", "headId is required.");
+  }
+
+  if (!refYear) {
+    throw new HttpError(400, "VALIDATION_ERROR", "refYear is required.");
+  }
+
+  const currentYear = new Date().getUTCFullYear();
+  if (refYear !== currentYear) {
+    throw new HttpError(412, "PRECONDITION_FAILED", "Only current-year periods are allowed.");
+  }
+
+  const head = await db.contributionHead.findUnique({
+    where: { id: contributionHeadId },
+    select: { id: true, description: true, period: true },
+  });
+
+  if (!head) {
+    throw new HttpError(404, "NOT_FOUND", "Contribution head not found.");
+  }
+
+  const normalizedPeriod = normalizeHeadPeriod(head.period);
+  if (normalizedPeriod !== "MONTH") {
+    throw new HttpError(412, "PRECONDITION_FAILED", "Month ledger is only available for monthly contribution heads.");
+  }
+
+  const details = await db.contributionDetail.findMany({
+    where: {
+      contribution: {
+        unitId,
+        contributionHeadId,
+      },
+      contributionPeriod: {
+        refYear,
+        refMonth: {
+          in: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        },
+      },
+    },
+    include: {
+      contributionPeriod: {
+        select: {
+          refMonth: true,
+          refYear: true,
+        },
+      },
+      contribution: {
+        select: {
+          id: true,
+          transactionId: true,
+          transactionDateTime: true,
+        },
+      },
+    },
+    orderBy: [{ contributionPeriod: { refMonth: "asc" } }, { contribution: { transactionDateTime: "asc" } }],
+  });
+
+  const byMonth = new Map<number, {
+    totalAmount: number;
+    transactionRefs: Array<{ contributionId: number; transactionId: string; transactionDateTime: Date; amount: number }>;
+  }>();
+
+  for (const detail of details) {
+    const month = detail.contributionPeriod.refMonth;
+    const current = byMonth.get(month) ?? { totalAmount: 0, transactionRefs: [] };
+    const amount = Number(detail.amt);
+    current.totalAmount = roundTo2(current.totalAmount + amount);
+    current.transactionRefs.push({
+      contributionId: detail.contribution.id,
+      transactionId: detail.contribution.transactionId,
+      transactionDateTime: detail.contribution.transactionDateTime,
+      amount,
+    });
+    byMonth.set(month, current);
+  }
+
+  const rows = Array.from({ length: 12 }, (_, index) => {
+    const refMonth = index + 1;
+    const aggregate = byMonth.get(refMonth);
+    const totalAmount = roundTo2(aggregate?.totalAmount ?? 0);
+
+    return {
+      refYear,
+      refMonth,
+      monthLabel: monthLabel(refMonth),
+      status: totalAmount > 0 ? "Paid" : "Unpaid",
+      amount: totalAmount,
+      transactionRefs: aggregate?.transactionRefs ?? [],
+    };
+  });
+
+  const latestPaidMonth = rows.reduce<number | null>((latest, row) => {
+    if (row.status !== "Paid") {
+      return latest;
+    }
+
+    if (latest === null || row.refMonth > latest) {
+      return row.refMonth;
+    }
+
+    return latest;
+  }, null);
+
+  return {
+    unitId,
+    headId: head.id,
+    headDescription: head.description,
+    refYear,
+    latestPaidMonth,
+    rows,
+  };
+}
+
 export async function getContributionById(id: string) {
   const parsedId = parseContributionId(id);
 
@@ -320,7 +461,13 @@ export async function createContribution(input: CreateContributionInput, actor: 
 
       await ensureNoDuplicateContribution(tx, input.unitId, input.contributionHeadId, input.contributionPeriodIds);
 
-      const quantity = await deriveQuantity(tx, head.payUnit, input.unitId, input.transactionDateTime);
+      const quantity = await deriveQuantity(
+        tx,
+        head.payUnit,
+        input.unitId,
+        input.transactionDateTime,
+        input.availingPersonCount
+      );
 
       const applicableRate = await tx.contributionRate.findFirst({
         where: {
@@ -337,8 +484,9 @@ export async function createContribution(input: CreateContributionInput, actor: 
 
       const rateValue = Number(applicableRate.amt);
       const detailAmount = roundTo2(rateValue * quantity);
+      const totalPayableAmount = roundTo2(detailAmount * periods.length);
 
-      if (detailAmount <= 0) {
+      if (detailAmount <= 0 || totalPayableAmount <= 0) {
         throw new HttpError(412, "PRECONDITION_FAILED", "Derived contribution amount must be positive.");
       }
 
@@ -351,6 +499,7 @@ export async function createContribution(input: CreateContributionInput, actor: 
           transactionId: input.transactionId,
           transactionDateTime: input.transactionDateTime,
           depositedBy: input.depositedBy,
+          inputComment: input.comment,
           actorUserId: actor.actorUserId,
           actorRole: actor.actorRole,
           details: {

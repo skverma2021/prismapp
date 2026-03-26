@@ -7,6 +7,8 @@ export type CreateContributionInput = {
   transactionId: string;
   transactionDateTime: Date;
   depositedBy: string;
+  availingPersonCount?: number;
+  comment?: string;
   reference?: string;
 };
 
@@ -67,6 +69,11 @@ export function parseCreateContributionInput(payload: unknown): CreateContributi
     transactionId: requireString(record.transactionId, "transactionId"),
     transactionDateTime: parseRequiredDate(record.transactionDateTime, "transactionDateTime"),
     depositedBy: requireString(record.depositedBy, "depositedBy"),
+    availingPersonCount:
+      record.availingPersonCount === undefined
+        ? undefined
+        : parsePositiveInt(record.availingPersonCount, "availingPersonCount"),
+    comment: parseOptionalString(record.comment),
     reference: parseOptionalString(record.reference),
   };
 }
