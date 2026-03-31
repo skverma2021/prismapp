@@ -296,6 +296,10 @@ export async function getContributionTransactionsReport(params: TransactionsRepo
       correctionReasonCode?: string | null;
       correctionReasonText?: string | null;
     };
+    const detailWithRate = detail as typeof detail & {
+      contributionRateId?: number | null;
+      appliedRateReference?: string | null;
+    };
 
     return {
       contributionId: detail.contributionId,
@@ -311,9 +315,9 @@ export async function getContributionTransactionsReport(params: TransactionsRepo
       refYear: detail.contributionPeriod.refYear,
       refMonth: detail.contributionPeriod.refMonth,
       quantity: detail.contribution.quantity,
-      contributionRateId: detail.contributionRateId,
+      contributionRateId: detailWithRate.contributionRateId,
       appliedRate: detail.appliedRate,
-      appliedRateReference: detail.appliedRateReference,
+      appliedRateReference: detailWithRate.appliedRateReference,
       amount: detail.amt,
       depositedBy: `${detail.contribution.depositor.fName} ${detail.contribution.depositor.sName}`,
       depositedById: detail.contribution.depositedBy,

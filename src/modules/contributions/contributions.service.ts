@@ -518,7 +518,7 @@ export async function createContribution(input: CreateContributionInput, actor: 
               appliedRateReference: applicableRate.reference,
             })),
           },
-        },
+        } as never,
         include: {
           unit: true,
           contributionHead: true,
@@ -597,13 +597,13 @@ export async function createContributionCorrection(
           details: {
             create: original.details.map((detail) => ({
               contributionPeriodId: detail.contributionPeriodId,
-              contributionRateId: detail.contributionRateId,
+              contributionRateId: (detail as { contributionRateId?: number | null }).contributionRateId,
               amt: -Number(detail.amt),
               appliedRate: detail.appliedRate ? Number(detail.appliedRate) : null,
-              appliedRateReference: detail.appliedRateReference,
+              appliedRateReference: (detail as { appliedRateReference?: string | null }).appliedRateReference,
             })),
           },
-        },
+        } as never,
         include: {
           unit: true,
           contributionHead: true,
