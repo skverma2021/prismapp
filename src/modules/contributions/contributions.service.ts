@@ -168,7 +168,7 @@ async function ensureNoDuplicateContribution(
   contributionHeadId: number,
   contributionPeriodIds: number[]
 ) {
-  const duplicate = await tx.contributionDetail.findFirst({
+  const matchedDetails = await tx.contributionDetail.findMany({
     where: {
       contributionPeriodId: { in: contributionPeriodIds },
       contribution: {
@@ -177,16 +177,23 @@ async function ensureNoDuplicateContribution(
       },
     },
     select: {
-      id: true,
       contributionPeriodId: true,
+      amt: true,
     },
   });
 
-  if (duplicate) {
+  const netByPeriod = new Map<number, number>();
+  for (const detail of matchedDetails) {
+    const current = netByPeriod.get(detail.contributionPeriodId) ?? 0;
+    netByPeriod.set(detail.contributionPeriodId, roundTo2(current + Number(detail.amt)));
+  }
+
+  const lockedPeriodId = contributionPeriodIds.find((periodId) => (netByPeriod.get(periodId) ?? 0) > 0);
+  if (lockedPeriodId) {
     throw new HttpError(
       409,
       "CONFLICT",
-      `Duplicate contribution exists for period id ${duplicate.contributionPeriodId}.`
+      `Duplicate contribution exists for period id ${lockedPeriodId}.`
     );
   }
 }

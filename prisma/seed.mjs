@@ -41,8 +41,16 @@ async function seedBlocks() {
 
 async function seedContributionHeads() {
   const heads = [
-    { description: "Maintenance", payUnit: 1, period: "month" },
-    { description: "Mandir", payUnit: 3, period: "month" },
+    { description: "Maintenance", payUnit: 1, period: "MONTH" },
+    { description: "Mandir", payUnit: 3, period: "MONTH" },
+    { description: "Gymnasium", payUnit: 2, period: "MONTH" },
+    { description: "Swimming Pool", payUnit: 2, period: "MONTH" },
+    { description: "Holi", payUnit: 3, period: "YEAR" },
+    { description: "Dusshera", payUnit: 3, period: "YEAR" },
+    { description: "SaraswatiPuja", payUnit: 3, period: "YEAR" },
+    { description: "Holi-Feast", payUnit: 2, period: "YEAR" },
+    { description: "Dusshera-Feast", payUnit: 2, period: "YEAR" },
+    { description: "SaraswatiPujaFeast", payUnit: 2, period: "YEAR" },
   ];
 
   for (const head of heads) {
@@ -50,6 +58,74 @@ async function seedContributionHeads() {
       where: { description: head.description },
       update: { payUnit: head.payUnit, period: head.period },
       create: head,
+    });
+  }
+}
+
+function toSeedRef(description, year) {
+  const slug = description
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return `seed-default-${year}-${slug}`;
+}
+
+async function seedContributionRates(year) {
+  const fromDt = new Date(Date.UTC(year, 0, 1));
+  const defaults = [
+    { description: "Maintenance", amt: 2.5 },
+    { description: "Mandir", amt: 100 },
+    { description: "Gymnasium", amt: 100 },
+    { description: "Swimming Pool", amt: 120 },
+    { description: "Holi", amt: 500 },
+    { description: "Dusshera", amt: 500 },
+    { description: "SaraswatiPuja", amt: 500 },
+    { description: "Holi-Feast", amt: 200 },
+    { description: "Dusshera-Feast", amt: 200 },
+    { description: "SaraswatiPujaFeast", amt: 200 },
+  ];
+
+  for (const item of defaults) {
+    const head = await prisma.contributionHead.findUnique({
+      where: { description: item.description },
+      select: { id: true },
+    });
+
+    if (!head) {
+      continue;
+    }
+
+    const reference = toSeedRef(item.description, year);
+
+    const existing = await prisma.contributionRate.findFirst({
+      where: {
+        contributionHeadId: head.id,
+        reference,
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      await prisma.contributionRate.update({
+        where: { id: existing.id },
+        data: {
+          fromDt,
+          toDt: null,
+          amt: item.amt,
+        },
+      });
+      continue;
+    }
+
+    await prisma.contributionRate.create({
+      data: {
+        contributionHeadId: head.id,
+        reference,
+        fromDt,
+        toDt: null,
+        amt: item.amt,
+      },
     });
   }
 }
@@ -78,6 +154,7 @@ async function main() {
   await seedGenderTypes();
   await seedBlocks();
   await seedContributionHeads();
+  await seedContributionRates(currentYear);
   await seedContributionPeriods(currentYear);
 
   console.log(`Seed complete for year ${currentYear}`);

@@ -133,6 +133,7 @@ Posting rules:
   - total payable = per-period amount x periodCount
 - Applicable rate means effective as on transactionDateTime
 - Duplicate guard on unit + head + period
+- Net-zero unlock: repost for same unit + head + period is allowed only when prior net amount for that period is zero after compensation
 - Posted entries are immutable
 
 Endpoint: GET /api/contributions/{id}
@@ -258,6 +259,11 @@ Paid/Unpaid Matrix:
 
 - Month ledger helper
   - returns 12 rows for monthly head, correct statuses, transaction refs, and latestPaidMonth verified
+
+## 8) Execution Flow Reference
+
+- POST runtime flowchart:
+  - [Contribution-POST-Execution-Flow.md](./Contribution-POST-Execution-Flow.md)
 
 - Reports JSON and CSV
   - filter parsing, totals consistency, role access, and CSV metadata verified

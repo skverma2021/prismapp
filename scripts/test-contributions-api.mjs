@@ -359,6 +359,26 @@ async function run() {
   assert.equal(correction.payload.data.details[0].contributionRateId, rate.payload.data.id);
   assert.equal(correction.payload.data.details[0].appliedRateReference, `rate-${unique}`);
 
+  const repostAfterFullReversal = await requestJson(
+    "POST",
+    "/api/contributions",
+    {
+      unitId,
+      contributionHeadId,
+      contributionPeriodIds: [periodId],
+      transactionId: `txn-${unique}-repost-after-reversal`,
+      transactionDateTime: txDateIso,
+      depositedBy,
+    },
+    AUTH_HEADERS
+  );
+  assertStatus(
+    repostAfterFullReversal,
+    201,
+    "Repost for same period should succeed after full reversal brings period net to zero"
+  );
+  assert.equal(Number(repostAfterFullReversal.payload.data.details[0].amt), 150);
+
   const correctionOfCorrection = await requestJson(
     "POST",
     "/api/contributions/corrections",

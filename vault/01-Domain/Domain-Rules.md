@@ -51,8 +51,9 @@
 
 1. A Unit cannot have duplicate contribution entries for the same contributionHead and contributionPeriod.
 2. The system must prevent double payment for the same period.
-3. UI helper: for monthly heads, app should provide a month ledger per unit + head + year showing Paid/Unpaid status, transaction references, and amount by month.
-4. UI convenience: show latestPaidMonth derived from ledger rows (highest month with net paid amount > 0).
+3. Net-zero unlock policy: if all entries for a unit + head + period are fully compensated (net amount = 0), reposting for that period is allowed.
+4. UI helper: for monthly heads, app should provide a month ledger per unit + head + year showing Paid/Unpaid status, transaction references, and amount by month.
+5. UI convenience: show latestPaidMonth derived from ledger rows (highest month with net paid amount > 0).
 
 ## Quantity Rules
 
