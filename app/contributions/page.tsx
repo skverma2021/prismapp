@@ -113,6 +113,11 @@ type ContributionLookup = {
   }>;
 };
 
+type ActionHint = {
+  title: string;
+  detail: string;
+};
+
 const MONTHS = [
   "Jan",
   "Feb",
@@ -153,11 +158,74 @@ function payUnitLabel(payUnit: number) {
   return "Unknown";
 }
 
+function getContributionActionHint(
+  code: string | undefined,
+  message: string,
+  context: { payUnit?: number; isMonthly: boolean }
+): ActionHint | null {
+  const normalizedMessage = message.toLowerCase();
+
+  if (code === "CONFLICT" || normalizedMessage.includes("duplicate")) {
+    return {
+      title: "Duplicate payment detected",
+      detail:
+        "This unit/head/period appears to be already posted. Use transactions report to verify and use correction flow if rollback is needed.",
+    };
+  }
+
+  if (code === "PRECONDITION_FAILED" || normalizedMessage.includes("precondition")) {
+    if (context.payUnit === 2) {
+      return {
+        title: "Per-person precondition failed",
+        detail:
+          "Confirm the unit has an active resident and availing person count is a positive integer before retrying.",
+      };
+    }
+
+    if (context.isMonthly) {
+      return {
+        title: "Monthly period precondition failed",
+        detail: "Check that selected months are unpaid and in the valid current-year period set.",
+      };
+    }
+
+    return {
+      title: "Posting precondition failed",
+      detail: "Verify head rate/period setup and selected unit context, then retry.",
+    };
+  }
+
+  return null;
+}
+
+function getCorrectionActionHint(code: string | undefined, message: string): ActionHint | null {
+  const normalizedMessage = message.toLowerCase();
+
+  if (code === "CONFLICT" || normalizedMessage.includes("already") || normalizedMessage.includes("duplicate")) {
+    return {
+      title: "Correction conflict",
+      detail:
+        "This original contribution may already be corrected or conflicts with correction rules. Reload contribution details and verify correction chain.",
+    };
+  }
+
+  if (code === "PRECONDITION_FAILED" || normalizedMessage.includes("precondition")) {
+    return {
+      title: "Correction precondition failed",
+      detail:
+        "Ensure you selected an original (non-correction) contribution and provided valid reason code/text and transaction details.",
+    };
+  }
+
+  return null;
+}
+
 export default function ContributionCapturePage() {
   const currentYear = new Date().getUTCFullYear();
   const [heads, setHeads] = useState<Head[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoadError, setInitialLoadError] = useState("");
 
   const [headId, setHeadId] = useState<number | "">("");
   const [unitId, setUnitId] = useState<string>("");
@@ -177,6 +245,7 @@ export default function ContributionCapturePage() {
   const [actorRole, setActorRole] = useState<"SOCIETY_ADMIN" | "MANAGER">("MANAGER");
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [submitHint, setSubmitHint] = useState<ActionHint | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [showTestHeads, setShowTestHeads] = useState(false);
   const [activeResidents, setActiveResidents] = useState<ActiveResidency[]>([]);
@@ -197,28 +266,46 @@ export default function ContributionCapturePage() {
   const [correctionDepositedBy, setCorrectionDepositedBy] = useState("");
   const [correctionSubmitLoading, setCorrectionSubmitLoading] = useState(false);
   const [correctionSubmitError, setCorrectionSubmitError] = useState("");
+  const [correctionSubmitHint, setCorrectionSubmitHint] = useState<ActionHint | null>(null);
   const [correctionSubmitSuccess, setCorrectionSubmitSuccess] = useState("");
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      try {
-        const [headsRes, unitsRes] = await Promise.all([
-          fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-          fetch("/api/units?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-        ]);
+  async function loadInitialData() {
+    setLoading(true);
+    setInitialLoadError("");
 
-        const headsJson = await headsRes.json();
-        const unitsJson = await unitsRes.json();
+    try {
+      const [headsRes, unitsRes] = await Promise.all([
+        fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
+        fetch("/api/units?page=1&pageSize=100&sortBy=description&sortDir=asc"),
+      ]);
 
-        setHeads(headsJson?.data?.items ?? []);
-        setUnits(unitsJson?.data?.items ?? []);
-      } finally {
-        setLoading(false);
+      const [headsJson, unitsJson] = await Promise.all([headsRes.json(), unitsRes.json()]);
+
+      if (!headsRes.ok || !headsJson?.ok) {
+        throw new Error(headsJson?.error?.message ?? "Unable to load contribution heads.");
       }
-    }
 
-    void loadData();
+      if (!unitsRes.ok || !unitsJson?.ok) {
+        throw new Error(unitsJson?.error?.message ?? "Unable to load units.");
+      }
+
+      setHeads(headsJson?.data?.items ?? []);
+      setUnits(unitsJson?.data?.items ?? []);
+    } catch (error) {
+      setHeads([]);
+      setUnits([]);
+      setInitialLoadError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load contribution setup data. Try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadInitialData();
   }, []);
 
   const selectedHead = useMemo(
@@ -262,6 +349,39 @@ export default function ContributionCapturePage() {
     actorUserId.trim().length > 0 &&
     (isYearly || selectedMonths.length > 0) &&
     (payUnit !== 2 || Number.isInteger(Number(availingPersonCount)));
+  const parsedPersons = Number(availingPersonCount);
+  const captureGuardChecks: Array<{ label: string; ok: boolean }> = [
+    { label: "Contribution head selected", ok: Boolean(headId) },
+    { label: "Unit selected", ok: Boolean(unitId) },
+    {
+      label: "Depositor, transaction id, and datetime provided",
+      ok: Boolean(depositedBy.trim()) && Boolean(transactionId.trim()) && Boolean(transactionDateTime.trim()),
+    },
+    { label: "Actor user id provided", ok: Boolean(actorUserId.trim()) },
+  ];
+
+  if (isMonthly) {
+    captureGuardChecks.push({ label: "At least one unpaid month selected", ok: selectedMonths.length > 0 });
+  }
+
+  if (isYearly) {
+    captureGuardChecks.push({ label: "Yearly head resolves to refMonth = 0", ok: true });
+  }
+
+  if (payUnit === 2) {
+    captureGuardChecks.push({
+      label: "Availing person count is positive integer",
+      ok: Number.isInteger(parsedPersons) && parsedPersons > 0,
+    });
+  }
+
+  if (payUnit === 1) {
+    captureGuardChecks.push({ label: "Quantity derived from unit sq ft", ok: Boolean(unitId) });
+  }
+
+  if (payUnit === 3) {
+    captureGuardChecks.push({ label: "Lumpsum quantity fixed to 1", ok: true });
+  }
 
   function toggleMonth(month: number) {
     setMonths((prev) =>
@@ -445,6 +565,7 @@ export default function ContributionCapturePage() {
 
   async function onSubmitContribution() {
     setSubmitError("");
+    setSubmitHint(null);
     setSubmitSuccess("");
 
     if (!selectedHead || !headId) {
@@ -467,7 +588,6 @@ export default function ContributionCapturePage() {
       return;
     }
 
-    const parsedPersons = Number(availingPersonCount);
     if (payUnit === 2 && (!Number.isInteger(parsedPersons) || parsedPersons <= 0)) {
       setSubmitError("Enter a valid availing person count (positive integer).");
       return;
@@ -506,8 +626,12 @@ export default function ContributionCapturePage() {
 
       const result = (await response.json()) as ApiEnvelope<{ id: number }>;
       if (!response.ok || !result.ok) {
+        const code = result.ok ? undefined : result.error?.code;
         const message = result.ok ? "Contribution post failed." : result.error?.message;
-        throw new Error(message ?? "Contribution post failed.");
+        const normalized = message ?? "Contribution post failed.";
+        setSubmitError(normalized);
+        setSubmitHint(getContributionActionHint(code, normalized, { payUnit, isMonthly }));
+        return;
       }
 
       setSubmitSuccess(`Contribution recorded successfully (id: ${result.data.id}).`);
@@ -520,7 +644,9 @@ export default function ContributionCapturePage() {
       setAvailingPersonCount("");
       setTransactionDateTime(new Date().toISOString().slice(0, 16));
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Failed to record contribution.");
+      const message = error instanceof Error ? error.message : "Failed to record contribution.";
+      setSubmitError(message);
+      setSubmitHint(getContributionActionHint(undefined, message, { payUnit, isMonthly }));
     } finally {
       setSubmitLoading(false);
     }
@@ -576,6 +702,7 @@ export default function ContributionCapturePage() {
 
   async function submitCorrection() {
     setCorrectionSubmitError("");
+    setCorrectionSubmitHint(null);
     setCorrectionSubmitSuccess("");
 
     if (!correctionBase) {
@@ -624,8 +751,12 @@ export default function ContributionCapturePage() {
 
       const result = (await response.json()) as ApiEnvelope<{ id: number }>;
       if (!response.ok || !result.ok) {
+        const code = result.ok ? undefined : result.error?.code;
         const message = result.ok ? "Correction post failed." : result.error?.message;
-        throw new Error(message ?? "Correction post failed.");
+        const normalized = message ?? "Correction post failed.";
+        setCorrectionSubmitError(normalized);
+        setCorrectionSubmitHint(getCorrectionActionHint(code, normalized));
+        return;
       }
 
       setCorrectionSubmitSuccess(`Correction recorded successfully (id: ${result.data.id}).`);
@@ -635,7 +766,9 @@ export default function ContributionCapturePage() {
       setCorrectionTransactionDateTime(new Date().toISOString().slice(0, 16));
       await lookupCorrectionBase();
     } catch (error) {
-      setCorrectionSubmitError(error instanceof Error ? error.message : "Failed to submit correction.");
+      const message = error instanceof Error ? error.message : "Failed to submit correction.";
+      setCorrectionSubmitError(message);
+      setCorrectionSubmitHint(getCorrectionActionHint(undefined, message));
     } finally {
       setCorrectionSubmitLoading(false);
     }
@@ -650,6 +783,39 @@ export default function ContributionCapturePage() {
           <p className="mt-2 text-sm text-slate-600">
             Capture form with payUnit-aware fields, ledger-backed period statuses, and direct API submission.
           </p>
+
+          {loading && (
+            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              Loading contribution heads and units...
+            </div>
+          )}
+
+          {initialLoadError && (
+            <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-3 text-sm text-rose-700">
+              <p>{initialLoadError}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  void loadInitialData();
+                }}
+                className="mt-2 rounded border border-rose-300 bg-white px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100"
+              >
+                Retry load
+              </button>
+            </div>
+          )}
+
+          {!loading && !initialLoadError && heads.length === 0 && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              No contribution heads available. Add heads before posting contributions.
+            </div>
+          )}
+
+          {!loading && !initialLoadError && units.length === 0 && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              No units available. Create units before posting contributions.
+            </div>
+          )}
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <label className="flex flex-col gap-2">
@@ -946,9 +1112,27 @@ export default function ContributionCapturePage() {
             <p className="mt-2">Posting formula: CurrentRate x Quantity x PeriodCount.</p>
           </div>
 
+          <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-sm">
+            <p className="font-semibold text-slate-900">Capture Guard Checklist</p>
+            <div className="mt-2 grid gap-1">
+              {captureGuardChecks.map((item) => (
+                <p key={item.label} className={item.ok ? "text-emerald-700" : "text-amber-800"}>
+                  {item.ok ? "PASS" : "WAIT"} - {item.label}
+                </p>
+              ))}
+            </div>
+          </div>
+
           {submitError && (
             <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
               {submitError}
+            </div>
+          )}
+
+          {submitHint && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <p className="font-semibold">{submitHint.title}</p>
+              <p className="mt-1">{submitHint.detail}</p>
             </div>
           )}
 
@@ -1011,6 +1195,12 @@ export default function ContributionCapturePage() {
           {correctionLookupError && (
             <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
               {correctionLookupError}
+            </div>
+          )}
+
+          {!correctionLookupLoading && !correctionLookupError && !correctionBase && (
+            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              Lookup an original contribution ID to load correction details and enable submission.
             </div>
           )}
 
@@ -1122,6 +1312,13 @@ export default function ContributionCapturePage() {
               {correctionSubmitError && (
                 <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
                   {correctionSubmitError}
+                </div>
+              )}
+
+              {correctionSubmitHint && (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  <p className="font-semibold">{correctionSubmitHint.title}</p>
+                  <p className="mt-1">{correctionSubmitHint.detail}</p>
                 </div>
               )}
 

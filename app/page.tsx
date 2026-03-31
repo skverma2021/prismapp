@@ -17,6 +17,18 @@ export default function Home() {
             Open Contribution Capture
           </a>
           <a
+            href="/reports/contributions/transactions"
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            Open Transactions Report UI
+          </a>
+          <a
+            href="/reports/contributions/paid-unpaid-matrix"
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            Open Paid/Unpaid Matrix UI
+          </a>
+          <a
             href="/api/reports/contributions/transactions?refYear=2026"
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
           >
