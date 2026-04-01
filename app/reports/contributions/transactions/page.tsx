@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
+import { InlineNotice } from "@/src/components/ui/inline-notice";
+import { useMockSession } from "@/src/lib/mock-session";
+
 type ApiEnvelope<T> =
   | { ok: true; data: T }
   | {
@@ -139,20 +143,8 @@ function buildQuery(filters: FiltersState, page: number) {
   return params;
 }
 
-function ErrorBanner({ message }: { message: string }) {
-  if (!message) {
-    return null;
-  }
-
-  return (
-    <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-      <p className="font-semibold">Report request failed</p>
-      <p className="mt-1">{message}</p>
-    </div>
-  );
-}
-
 export default function ContributionTransactionsReportPage() {
+  const { session } = useMockSession();
   const currentYear = new Date().getUTCFullYear();
 
   const [filters, setFilters] = useState<FiltersState>({
@@ -168,9 +160,6 @@ export default function ContributionTransactionsReportPage() {
     sortBy: "transactionDateTime",
     sortDir: "desc",
   });
-
-  const [actorUserId, setActorUserId] = useState("ui-readonly-1");
-  const [actorRole, setActorRole] = useState<"SOCIETY_ADMIN" | "MANAGER" | "READ_ONLY">("READ_ONLY");
 
   const [heads, setHeads] = useState<HeadOption[]>([]);
   const [blocks, setBlocks] = useState<OptionItem[]>([]);
@@ -230,8 +219,8 @@ export default function ContributionTransactionsReportPage() {
       const params = buildQuery(filters, page);
       const response = await fetch(`/api/reports/contributions/transactions?${params.toString()}`, {
         headers: {
-          "x-user-id": actorUserId.trim(),
-          "x-user-role": actorRole,
+          "x-user-id": session.userId.trim(),
+          "x-user-role": session.role,
         },
       });
 
@@ -258,8 +247,8 @@ export default function ContributionTransactionsReportPage() {
       const params = buildQuery(filters, 1);
       const response = await fetch(`/api/reports/contributions/transactions.csv?${params.toString()}`, {
         headers: {
-          "x-user-id": actorUserId.trim(),
-          "x-user-role": actorRole,
+          "x-user-id": session.userId.trim(),
+          "x-user-role": session.role,
         },
       });
 
@@ -288,7 +277,7 @@ export default function ContributionTransactionsReportPage() {
     void runReport(1);
     // Intentionally run only on explicit filter state changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, actorUserId, actorRole]);
+  }, [filters, session.role, session.userId]);
 
   const pageLabel = report ? `Page ${report.page} of ${Math.max(report.totalPages, 1)}` : "Page 1 of 1";
 
@@ -296,14 +285,10 @@ export default function ContributionTransactionsReportPage() {
     <div className="min-h-screen bg-slate-100 px-4 py-8 sm:px-6">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-4">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Day 7</p>
-              <h1 className="mt-1 text-2xl font-semibold text-slate-900">Contribution Transactions Report</h1>
-              <p className="mt-2 text-sm text-slate-600">
-                Filter, sort, paginate, and export period-level contribution transactions.
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-600">
+              Filter, sort, paginate, and export period-level contribution transactions.
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -327,65 +312,31 @@ export default function ContributionTransactionsReportPage() {
               >
                 Paid/Unpaid Matrix
               </Link>
-              <Link
-                href="/"
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Home
-              </Link>
             </div>
           </div>
         </section>
 
-        <ErrorBanner message={requestError} />
+        {requestError && <InlineNotice tone="danger" title="Report request failed" message={requestError} />}
+
+        <SessionContextNotice className="shadow-sm" mode="report" />
 
         {optionsLoading && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm">
-            Loading filter options...
-          </section>
+          <InlineNotice message="Loading filter options..." />
         )}
 
         {!optionsLoading && heads.length === 0 && (
-          <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm">
-            No contribution heads found. Add at least one head to use report filters effectively.
-          </section>
+          <InlineNotice
+            tone="warning"
+            message="No contribution heads found. Add at least one head to use report filters effectively."
+          />
         )}
 
         {!optionsLoading && units.length === 0 && (
-          <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm">
-            No units found. Transaction report rows may remain empty until units and contributions exist.
-          </section>
+          <InlineNotice
+            tone="warning"
+            message="No units found. Transaction report rows may remain empty until units and contributions exist."
+          />
         )}
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Report Access Context</h2>
-          <p className="mt-1 text-sm text-slate-600">Headers are sent as x-user-id and x-user-role.</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <label className="text-sm text-slate-700">
-              <span className="mb-1 block">Actor User ID</span>
-              <input
-                value={actorUserId}
-                onChange={(event) => setActorUserId(event.target.value)}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                placeholder="ui-readonly-1"
-              />
-            </label>
-            <label className="text-sm text-slate-700">
-              <span className="mb-1 block">Role</span>
-              <select
-                value={actorRole}
-                onChange={(event) =>
-                  setActorRole(event.target.value as "SOCIETY_ADMIN" | "MANAGER" | "READ_ONLY")
-                }
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              >
-                <option value="READ_ONLY">READ_ONLY</option>
-                <option value="MANAGER">MANAGER</option>
-                <option value="SOCIETY_ADMIN">SOCIETY_ADMIN</option>
-              </select>
-            </label>
-          </div>
-        </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-base font-semibold text-slate-900">Filters</h2>

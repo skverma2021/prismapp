@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
+import { InlineNotice } from "@/src/components/ui/inline-notice";
+import { useMockSession } from "@/src/lib/mock-session";
+
 type Head = {
   id: number;
   description: string;
@@ -221,6 +225,7 @@ function getCorrectionActionHint(code: string | undefined, message: string): Act
 }
 
 export default function ContributionCapturePage() {
+  const { session } = useMockSession();
   const currentYear = new Date().getUTCFullYear();
   const [heads, setHeads] = useState<Head[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -241,8 +246,6 @@ export default function ContributionCapturePage() {
   const [ledgerLoading, setLedgerLoading] = useState(false);
   const [ledgerError, setLedgerError] = useState("");
   const [latestPaidMonth, setLatestPaidMonth] = useState<number | null>(null);
-  const [actorUserId, setActorUserId] = useState("ui-manager-1");
-  const [actorRole, setActorRole] = useState<"SOCIETY_ADMIN" | "MANAGER">("MANAGER");
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitHint, setSubmitHint] = useState<ActionHint | null>(null);
@@ -332,6 +335,8 @@ export default function ContributionCapturePage() {
   const selectedResident = activeResidents.find((row) => row.indId === selectedResidentId);
   const isCorrectionOfCorrection =
     correctionBase?.correctionOfContributionId !== null || Boolean(correctionBase?.correctionOf);
+  const actorUserId = session.userId;
+  const actorRole = session.role;
   const canSubmitCorrection =
     correctionBase !== null &&
     !isCorrectionOfCorrection &&
@@ -339,7 +344,8 @@ export default function ContributionCapturePage() {
     correctionTransactionDateTime.trim().length > 0 &&
     correctionReasonCode.trim().length > 0 &&
     correctionReasonText.trim().length > 0 &&
-    actorUserId.trim().length > 0;
+    actorUserId.trim().length > 0 &&
+    actorRole !== "READ_ONLY";
   const canSubmit =
     Boolean(headId) &&
     Boolean(unitId) &&
@@ -347,6 +353,7 @@ export default function ContributionCapturePage() {
     Boolean(transactionId.trim()) &&
     Boolean(transactionDateTime.trim()) &&
     actorUserId.trim().length > 0 &&
+    actorRole !== "READ_ONLY" &&
     (isYearly || selectedMonths.length > 0) &&
     (payUnit !== 2 || Number.isInteger(Number(availingPersonCount)));
   const parsedPersons = Number(availingPersonCount);
@@ -357,7 +364,11 @@ export default function ContributionCapturePage() {
       label: "Depositor, transaction id, and datetime provided",
       ok: Boolean(depositedBy.trim()) && Boolean(transactionId.trim()) && Boolean(transactionDateTime.trim()),
     },
-    { label: "Actor user id provided", ok: Boolean(actorUserId.trim()) },
+    { label: "Dashboard session is present", ok: Boolean(actorUserId.trim()) },
+    {
+      label: "Dashboard role allows contribution posting",
+      ok: actorRole === "SOCIETY_ADMIN" || actorRole === "MANAGER",
+    },
   ];
 
   if (isMonthly) {
@@ -784,38 +795,48 @@ export default function ContributionCapturePage() {
             Capture form with payUnit-aware fields, ledger-backed period statuses, and direct API submission.
           </p>
 
-          {loading && (
-            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-              Loading contribution heads and units...
-            </div>
-          )}
+          {loading && <InlineNotice className="mt-4" message="Loading contribution heads and units..." />}
 
           {initialLoadError && (
-            <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-3 text-sm text-rose-700">
-              <p>{initialLoadError}</p>
-              <button
-                type="button"
-                onClick={() => {
-                  void loadInitialData();
-                }}
-                className="mt-2 rounded border border-rose-300 bg-white px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100"
-              >
-                Retry load
-              </button>
-            </div>
+            <InlineNotice
+              className="mt-4"
+              tone="danger"
+              message={initialLoadError}
+              action={
+                <button
+                  type="button"
+                  onClick={() => {
+                    void loadInitialData();
+                  }}
+                  className="rounded border border-rose-300 bg-white px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                >
+                  Retry load
+                </button>
+              }
+            />
           )}
 
           {!loading && !initialLoadError && heads.length === 0 && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              No contribution heads available. Add heads before posting contributions.
-            </div>
+            <InlineNotice
+              className="mt-4"
+              tone="warning"
+              message="No contribution heads available. Add heads before posting contributions."
+            />
           )}
 
           {!loading && !initialLoadError && units.length === 0 && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              No units available. Create units before posting contributions.
-            </div>
+            <InlineNotice
+              className="mt-4"
+              tone="warning"
+              message="No units available. Create units before posting contributions."
+            />
           )}
+
+          <SessionContextNotice
+            className="mt-4"
+            mode="mutation"
+            allowedRoles={["SOCIETY_ADMIN", "MANAGER"]}
+          />
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <label className="flex flex-col gap-2">
@@ -916,29 +937,14 @@ export default function ContributionCapturePage() {
               />
             </label>
 
-            <label className="flex flex-col gap-2">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Actor User ID</span>
-              <input
-                value={actorUserId}
-                onChange={(event) => setActorUserId(event.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                placeholder="Required auth header value"
-              />
-            </label>
-
-            <label className="flex flex-col gap-2">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Actor Role</span>
-              <select
-                value={actorRole}
-                onChange={(event) =>
-                  setActorRole(event.target.value === "SOCIETY_ADMIN" ? "SOCIETY_ADMIN" : "MANAGER")
-                }
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="MANAGER">MANAGER</option>
-                <option value="SOCIETY_ADMIN">SOCIETY_ADMIN</option>
-              </select>
-            </label>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700 md:col-span-2">
+              <p className="font-semibold text-slate-900">Posting session</p>
+              <p className="mt-1">User: {actorUserId}</p>
+              <p className="mt-1">Role: {actorRole}</p>
+              <p className="mt-2 text-xs text-slate-500">
+                Change role from the dashboard shell if you need to verify a different posting path.
+              </p>
+            </div>
           </div>
 
           {payUnit === 2 && (
@@ -1049,16 +1055,10 @@ export default function ContributionCapturePage() {
             </div>
           )}
 
-          {isMonthly && ledgerLoading && (
-            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-              Loading month ledger...
-            </div>
-          )}
+          {isMonthly && ledgerLoading && <InlineNotice className="mt-3 text-xs" message="Loading month ledger..." />}
 
           {isMonthly && ledgerError && (
-            <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
-              {ledgerError}
-            </div>
+            <InlineNotice className="mt-3 text-xs" tone="danger" message={ledgerError} />
           )}
 
           {isMonthly && (
@@ -1099,9 +1099,10 @@ export default function ContributionCapturePage() {
           )}
 
           {!selectedHead && (
-            <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-              Select contribution head to unlock period controls.
-            </div>
+            <InlineNotice
+              className="mt-4 border-dashed rounded-xl p-4 text-slate-600"
+              message="Select contribution head to unlock period controls."
+            />
           )}
 
           <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
@@ -1123,23 +1124,19 @@ export default function ContributionCapturePage() {
             </div>
           </div>
 
-          {submitError && (
-            <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              {submitError}
-            </div>
-          )}
+          {submitError && <InlineNotice className="mt-4" tone="danger" message={submitError} />}
 
           {submitHint && (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              <p className="font-semibold">{submitHint.title}</p>
-              <p className="mt-1">{submitHint.detail}</p>
-            </div>
+            <InlineNotice
+              className="mt-4"
+              tone="warning"
+              title={submitHint.title}
+              message={submitHint.detail}
+            />
           )}
 
           {submitSuccess && (
-            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-              {submitSuccess}
-            </div>
+            <InlineNotice className="mt-4" tone="success" message={submitSuccess} />
           )}
 
           <button
@@ -1193,15 +1190,14 @@ export default function ContributionCapturePage() {
           </div>
 
           {correctionLookupError && (
-            <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-              {correctionLookupError}
-            </div>
+            <InlineNotice className="mt-4" tone="danger" message={correctionLookupError} />
           )}
 
           {!correctionLookupLoading && !correctionLookupError && !correctionBase && (
-            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-              Lookup an original contribution ID to load correction details and enable submission.
-            </div>
+            <InlineNotice
+              className="mt-4"
+              message="Lookup an original contribution ID to load correction details and enable submission."
+            />
           )}
 
           {correctionBase && (
@@ -1252,9 +1248,11 @@ export default function ContributionCapturePage() {
               </div>
 
               {isCorrectionOfCorrection && (
-                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  Selected entry is already a correction. Correction-of-correction is not allowed.
-                </div>
+                <InlineNotice
+                  className="mt-4"
+                  tone="warning"
+                  message="Selected entry is already a correction. Correction-of-correction is not allowed."
+                />
               )}
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -1310,22 +1308,20 @@ export default function ContributionCapturePage() {
               </div>
 
               {correctionSubmitError && (
-                <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                  {correctionSubmitError}
-                </div>
+                <InlineNotice className="mt-4" tone="danger" message={correctionSubmitError} />
               )}
 
               {correctionSubmitHint && (
-                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-                  <p className="font-semibold">{correctionSubmitHint.title}</p>
-                  <p className="mt-1">{correctionSubmitHint.detail}</p>
-                </div>
+                <InlineNotice
+                  className="mt-4"
+                  tone="warning"
+                  title={correctionSubmitHint.title}
+                  message={correctionSubmitHint.detail}
+                />
               )}
 
               {correctionSubmitSuccess && (
-                <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-                  {correctionSubmitSuccess}
-                </div>
+                <InlineNotice className="mt-4" tone="success" message={correctionSubmitSuccess} />
               )}
 
               <button

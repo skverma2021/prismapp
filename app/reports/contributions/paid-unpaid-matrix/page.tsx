@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
+import { InlineNotice } from "@/src/components/ui/inline-notice";
+import { useMockSession } from "@/src/lib/mock-session";
+
 type ApiEnvelope<T> =
   | { ok: true; data: T }
   | {
@@ -79,19 +83,6 @@ function getErrorMessage(payload: unknown, fallback: string) {
   return maybeError?.message ?? fallback;
 }
 
-function ErrorBanner({ message }: { message: string }) {
-  if (!message) {
-    return null;
-  }
-
-  return (
-    <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-      <p className="font-semibold">Report request failed</p>
-      <p className="mt-1">{message}</p>
-    </div>
-  );
-}
-
 function statusClassName(status: MatrixStatus) {
   if (status === "Paid") {
     return "bg-emerald-50 text-emerald-700";
@@ -105,10 +96,8 @@ function statusClassName(status: MatrixStatus) {
 }
 
 export default function ContributionPaidUnpaidMatrixPage() {
+  const { session } = useMockSession();
   const currentYear = new Date().getUTCFullYear();
-
-  const [actorUserId, setActorUserId] = useState("ui-readonly-1");
-  const [actorRole, setActorRole] = useState<"SOCIETY_ADMIN" | "MANAGER" | "READ_ONLY">("READ_ONLY");
 
   const [heads, setHeads] = useState<HeadOption[]>([]);
   const [blocks, setBlocks] = useState<BlockOption[]>([]);
@@ -158,7 +147,7 @@ export default function ContributionPaidUnpaidMatrixPage() {
     void loadOptions();
   }, []);
 
-  const canRun = useMemo(() => filters.headId !== "" && actorUserId.trim().length > 0, [filters.headId, actorUserId]);
+  const canRun = useMemo(() => filters.headId !== "" && session.userId.trim().length > 0, [filters.headId, session.userId]);
 
   async function runReport() {
     if (!canRun) {
@@ -179,8 +168,8 @@ export default function ContributionPaidUnpaidMatrixPage() {
 
       const response = await fetch(`/api/reports/contributions/paid-unpaid-matrix?${params.toString()}`, {
         headers: {
-          "x-user-id": actorUserId.trim(),
-          "x-user-role": actorRole,
+          "x-user-id": session.userId.trim(),
+          "x-user-role": session.role,
         },
       });
 
@@ -218,8 +207,8 @@ export default function ContributionPaidUnpaidMatrixPage() {
 
       const response = await fetch(`/api/reports/contributions/paid-unpaid-matrix.csv?${params.toString()}`, {
         headers: {
-          "x-user-id": actorUserId.trim(),
-          "x-user-role": actorRole,
+          "x-user-id": session.userId.trim(),
+          "x-user-role": session.role,
         },
       });
 
@@ -252,20 +241,16 @@ export default function ContributionPaidUnpaidMatrixPage() {
     void runReport();
     // Intentionally run only on filter and auth context updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canRun, filters, actorUserId, actorRole]);
+  }, [canRun, filters, session.role, session.userId]);
 
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-8 sm:px-6">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-4">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Day 8</p>
-              <h1 className="mt-1 text-2xl font-semibold text-slate-900">Paid/Unpaid Matrix Report</h1>
-              <p className="mt-2 text-sm text-slate-600">
-                Unit-level payment coverage by period for a selected year and contribution head.
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-600">
+              Unit-level payment coverage by period for a selected year and contribution head.
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -289,59 +274,24 @@ export default function ContributionPaidUnpaidMatrixPage() {
               >
                 Transactions Report
               </Link>
-              <Link
-                href="/"
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
-                Home
-              </Link>
             </div>
           </div>
         </section>
 
-        <ErrorBanner message={requestError} />
+        {requestError && <InlineNotice tone="danger" title="Report request failed" message={requestError} />}
+
+        <SessionContextNotice className="shadow-sm" mode="report" />
 
         {optionsLoading && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm">
-            Loading filter options...
-          </section>
+          <InlineNotice message="Loading filter options..." />
         )}
 
         {!optionsLoading && heads.length === 0 && (
-          <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 shadow-sm">
-            No contribution heads found. Create a head before running the paid/unpaid matrix.
-          </section>
+          <InlineNotice
+            tone="warning"
+            message="No contribution heads found. Create a head before running the paid/unpaid matrix."
+          />
         )}
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Report Access Context</h2>
-          <p className="mt-1 text-sm text-slate-600">Headers are sent as x-user-id and x-user-role.</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <label className="text-sm text-slate-700">
-              <span className="mb-1 block">Actor User ID</span>
-              <input
-                value={actorUserId}
-                onChange={(event) => setActorUserId(event.target.value)}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                placeholder="ui-readonly-1"
-              />
-            </label>
-            <label className="text-sm text-slate-700">
-              <span className="mb-1 block">Role</span>
-              <select
-                value={actorRole}
-                onChange={(event) =>
-                  setActorRole(event.target.value as "SOCIETY_ADMIN" | "MANAGER" | "READ_ONLY")
-                }
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              >
-                <option value="READ_ONLY">READ_ONLY</option>
-                <option value="MANAGER">MANAGER</option>
-                <option value="SOCIETY_ADMIN">SOCIETY_ADMIN</option>
-              </select>
-            </label>
-          </div>
-        </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-base font-semibold text-slate-900">Filters</h2>
