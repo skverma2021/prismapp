@@ -36,12 +36,24 @@ export async function requireServerAppSession(options?: {
   const session = await getServerAppSession();
 
   if (!session) {
-    const nextPath = options?.redirectTo ? `?next=${encodeURIComponent(options.redirectTo)}` : "";
-    redirect(`/${nextPath}`);
+    const params = new URLSearchParams();
+
+    if (options?.redirectTo) {
+      params.set("next", options.redirectTo);
+    }
+
+    params.set("auth", "required");
+    redirect(`/${params.size > 0 ? `?${params.toString()}` : ""}`);
   }
 
   if (options?.allowedRoles && !options.allowedRoles.includes(session.role)) {
-    redirect("/home?denied=1");
+    const params = new URLSearchParams({ auth: "denied" });
+
+    if (options.redirectTo) {
+      params.set("from", options.redirectTo);
+    }
+
+    redirect(`/home?${params.toString()}`);
   }
 
   return session;

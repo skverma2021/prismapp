@@ -6,10 +6,30 @@ import { PageHeader } from "@/src/components/shell/page-header";
 import { StateSurface } from "@/src/components/ui/state-surface";
 import { getServerAppSession } from "@/src/lib/server-auth";
 
+function getAuthBanner(searchParams: { auth?: string; next?: string }) {
+  if (searchParams.auth === "required") {
+    return {
+      tone: "warning" as const,
+      message: searchParams.next
+        ? `Sign in to continue to ${searchParams.next}.`
+        : "Sign in to continue to the protected workspace.",
+    };
+  }
+
+  if (searchParams.auth === "signed-out") {
+    return {
+      tone: "success" as const,
+      message: "You have been signed out of PrismApp.",
+    };
+  }
+
+  return undefined;
+}
+
 export default async function PublicLandingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ auth?: string; next?: string }>;
 }) {
   const session = await getServerAppSession();
 
@@ -19,6 +39,7 @@ export default async function PublicLandingPage({
 
   const params = await searchParams;
   const redirectTo = typeof params.next === "string" && params.next.startsWith("/") ? params.next : "/home";
+  const authBanner = getAuthBanner(params);
 
   return (
     <div className="min-h-screen px-4 py-6 sm:px-6 sm:py-8">
@@ -54,7 +75,11 @@ export default async function PublicLandingPage({
           </div>
 
           <div className="space-y-4">
-            <LoginForm redirectTo={redirectTo} />
+            <LoginForm
+              redirectTo={redirectTo}
+              bannerTone={authBanner?.tone}
+              bannerMessage={authBanner?.message}
+            />
             <StateSurface
               title="Auth status"
               message="Browser auth is backed by Auth.js credentials and JWT session persistence, and protected route handlers now resolve the authenticated session server-side."

@@ -43,25 +43,27 @@ Shell and auth baseline are in place. Current focus is closing auth alignment ga
 28. Paid/unpaid matrix yearly semantics were corrected to use refMonth = 0 and a Year status column.
 29. Contribution capture payer selection now uses an individual-name dropdown.
 30. Contribution capture now distinguishes payer identity from operator session identity in the UI.
+31. Route-handler authorization is now aligned with Auth.js-backed session resolution.
+32. Public entry now shows explicit auth-required and signed-out feedback states.
+33. Dashboard home now shows explicit role-denied feedback after protected-route redirects.
+34. Login and sign-out flows now provide clearer local credential and redirect feedback.
 
 ## In Progress
-1. Align route-handler authorization with Auth.js-backed session resolution.
-2. Add logout and auth feedback refinements across the shell.
-3. Prepare next-pass master-data UI baseline planning.
+1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
+2. Prepare next-pass master-data UI baseline planning.
 
 ## Next
 
 ### Immediate Next Steps
-1. Finalize route-handler auth/session alignment.
-2. Add logout/sign-out flow and auth feedback refinements.
-3. Start master-data UI baseline for blocks, units, and individuals.
-4. Standardize shared table/filter/form patterns for operator screens.
+1. Finish remaining shell-level auth feedback polish.
+2. Start master-data UI baseline for blocks, units, and individuals.
+3. Standardize shared table/filter/form patterns for operator screens.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.
-2. Route-handler and UI auth can drift if server-side session alignment is not finished cleanly.
+2. Auth feedback can still feel inconsistent if redirect reasons are not surfaced uniformly across all protected shell routes.
 3. Large seeded datasets can still surface performance issues in operator screens if client loading is not kept paginated and incremental.
-4. Master-data UI work will lag unless auth/session alignment closes soon.
+4. Master-data UI work will lag unless shell-level auth cleanup closes soon.
 
 ## References
 1. `Product-Delivery-Strategy.md`

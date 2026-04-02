@@ -48,10 +48,9 @@ Completed:
 10. Contribution heads, rates, periods, and reports APIs already exist.
 
 Not yet complete:
-1. Route-handler authorization is not yet fully aligned with Auth.js-backed session resolution.
-2. Logout and auth feedback refinements across the shell are not complete yet.
-3. Master-data CRUD UI baseline is not complete yet.
-4. Shared table, filter-bar, and form-shell component library is not complete yet.
+1. Shell-wide auth feedback is not yet uniform across every protected redirect path.
+2. Master-data CRUD UI baseline is not complete yet.
+3. Shared table, filter-bar, and form-shell component library is not complete yet.
 
 ### Objective 3: Keep architecture ready for Safety, Security, Events, and AI features without rework
 Status: Partially complete by architecture, not by feature implementation
@@ -152,20 +151,21 @@ Not yet complete:
 21. Added Auth.js credentials login with JWT-based browser session persistence.
 22. Added server-side session guards for dashboard, contributions, and report layouts.
 23. Added Prisma-backed app-user seed records for local authentication.
+24. Aligned route-handler authorization with Auth.js-backed session resolution.
+25. Added public-entry auth-required and signed-out feedback states.
+26. Added dashboard role-denied feedback after protected-route redirects.
+27. Added clearer login credential guidance and sign-out redirect feedback.
 
 ## Activities In Progress
 
-1. Align route-handler authorization with Auth.js-backed session resolution.
-2. Add logout and auth feedback refinements across the shell.
-3. Prepare master-data UI baseline after auth/session alignment stabilizes.
+1. Continue shell-level auth feedback refinements beyond the current public-entry and home redirect states.
+2. Prepare master-data UI baseline after auth/session alignment stabilizes.
 
 ## Activities Yet To Be Performed
 
 ### Auth and Shell Follow-Through
-1. Finalize route-handler authorization against authenticated session state.
-2. Add logout/sign-out flow.
-3. Refine auth feedback surfaces across login, redirect, and protected-route states.
-4. Remove any remaining test-style auth assumptions from operator-facing flows while preserving payer-versus-operator separation in contribution capture.
+1. Complete the remaining auth feedback surfaces across login, redirect, and protected-route states.
+2. Remove any remaining test-style auth assumptions from operator-facing flows while preserving payer-versus-operator separation in contribution capture.
 
 ### Week 5: Master Data UI Baseline
 1. Build blocks management UI.

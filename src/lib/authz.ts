@@ -6,6 +6,8 @@ import type { AuthContext, UserRole } from "@/src/lib/user-role";
 export { parseUserRole } from "@/src/lib/user-role";
 export type { AuthContext, UserRole } from "@/src/lib/user-role";
 
+const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+
 function parseRequestCookies(request: Request) {
   const cookieHeader = request.headers.get("cookie");
   const cookies: Record<string, string> = {};
@@ -54,6 +56,7 @@ function getRequestCookies(request: Request) {
 
 export async function getAuthContext(request: Request): Promise<AuthContext> {
   const token = await getToken({
+    secret: authSecret,
     req: {
       headers: request.headers,
       cookies: getRequestCookies(request),

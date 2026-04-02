@@ -172,6 +172,15 @@ type ActionHint = {
   detail: string;
 };
 
+type CorrectionSuccessState = {
+  correctionId: number;
+  originalContributionId: number;
+  correctionTransactionId: string;
+  unitLabel: string;
+  headDescription: string;
+  detailCount: number;
+};
+
 function payUnitLabel(payUnit: number) {
   if (payUnit === 1) return "Per Sq Ft";
   if (payUnit === 2) return "Per Person";
@@ -295,7 +304,7 @@ export default function ContributionCapturePage() {
   const [correctionSubmitLoading, setCorrectionSubmitLoading] = useState(false);
   const [correctionSubmitError, setCorrectionSubmitError] = useState("");
   const [correctionSubmitHint, setCorrectionSubmitHint] = useState<ActionHint | null>(null);
-  const [correctionSubmitSuccess, setCorrectionSubmitSuccess] = useState("");
+  const [correctionSubmitSuccess, setCorrectionSubmitSuccess] = useState<CorrectionSuccessState | null>(null);
 
   async function loadInitialData() {
     setLoading(true);
@@ -833,12 +842,12 @@ export default function ContributionCapturePage() {
     }
   }
 
-  async function lookupCorrectionBase() {
+  async function lookupCorrectionBase(overrideId?: number) {
     setCorrectionLookupError("");
     setCorrectionSubmitError("");
-    setCorrectionSubmitSuccess("");
+    setCorrectionSubmitSuccess(null);
 
-    const parsedId = Number(correctionLookupId);
+    const parsedId = overrideId ?? Number(correctionLookupId);
     if (!Number.isInteger(parsedId) || parsedId <= 0) {
       setCorrectionLookupError("Enter a valid positive contribution ID.");
       setCorrectionBase(null);
@@ -868,7 +877,7 @@ export default function ContributionCapturePage() {
   async function submitCorrection() {
     setCorrectionSubmitError("");
     setCorrectionSubmitHint(null);
-    setCorrectionSubmitSuccess("");
+    setCorrectionSubmitSuccess(null);
 
     if (!correctionBase) {
       setCorrectionSubmitError("Lookup an original contribution first.");
@@ -922,7 +931,14 @@ export default function ContributionCapturePage() {
         return;
       }
 
-      setCorrectionSubmitSuccess(`Correction recorded successfully (id: ${result.data.id}).`);
+      setCorrectionSubmitSuccess({
+        correctionId: result.data.id,
+        originalContributionId: correctionBase.id,
+        correctionTransactionId: correctionTransactionId.trim(),
+        unitLabel: correctionBase.unit?.description ?? correctionBase.unitId,
+        headDescription: correctionBase.contributionHead?.description ?? "Unknown head",
+        detailCount: correctionBase.details.length,
+      });
       setCorrectionTransactionId("");
       setCorrectionReasonCode("");
       setCorrectionReasonText("");
@@ -1533,7 +1549,47 @@ export default function ContributionCapturePage() {
               )}
 
               {correctionSubmitSuccess && (
-                <InlineNotice className="mt-4" tone="success" message={correctionSubmitSuccess} />
+                <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                  <p className="font-semibold text-emerald-900">Correction recorded successfully</p>
+                  <p className="mt-1">
+                    Correction {correctionSubmitSuccess.correctionId} has been posted against original contribution {correctionSubmitSuccess.originalContributionId}.
+                  </p>
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    <p>
+                      <span className="font-semibold">Head:</span> {correctionSubmitSuccess.headDescription}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Unit:</span> {correctionSubmitSuccess.unitLabel}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Correction Txn:</span> {correctionSubmitSuccess.correctionTransactionId}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Detail Rows Reversed:</span> {correctionSubmitSuccess.detailCount}
+                    </p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void copyValue(String(correctionSubmitSuccess.correctionId), "correction-id");
+                      }}
+                      className="rounded border border-emerald-300 bg-white px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                    >
+                      {copiedKey === "correction-id" ? "Copied correction ID" : "Copy correction ID"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCorrectionLookupId(String(correctionSubmitSuccess.correctionId));
+                        void lookupCorrectionBase(correctionSubmitSuccess.correctionId);
+                      }}
+                      className="rounded border border-emerald-300 bg-white px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                    >
+                      Load posted correction
+                    </button>
+                  </div>
+                </div>
               )}
 
               <button

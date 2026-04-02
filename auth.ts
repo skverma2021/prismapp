@@ -6,7 +6,10 @@ import bcrypt from "bcryptjs";
 import { db } from "@/src/lib/db";
 import { parseUserRole } from "@/src/lib/user-role";
 
+const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+
 export const authOptions: NextAuthOptions = {
+  secret: authSecret,
   pages: {
     signIn: "/",
   },
