@@ -38,6 +38,36 @@ export const dashboardNavItems: AppNavItem[] = [
     roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
   },
   {
+    href: "/ownerships",
+    label: "Ownerships",
+    description: "Manage unit ownership timelines and transfers.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
+    href: "/residencies",
+    label: "Residencies",
+    description: "Manage unit residency timelines and vacancy state.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
+    href: "/contribution-periods",
+    label: "Contribution Periods",
+    description: "Review seeded contribution periods used for monthly and yearly posting.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
+    href: "/contribution-heads",
+    label: "Contribution Heads",
+    description: "Manage charge heads, pay-unit rules, and monthly or yearly behavior.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
+    href: "/contribution-rates",
+    label: "Contribution Rates",
+    description: "Append new rate history without mutating posted financial context.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
     href: "/contributions",
     label: "Contribution Capture",
     description: "Record contributions and compensating corrections.",
@@ -77,6 +107,31 @@ const routeMeta = [
     href: "/individuals",
     title: "Individuals",
     description: "Manage person records used across ownership, residency, and payment flows.",
+  },
+  {
+    href: "/ownerships",
+    title: "Ownerships",
+    description: "Manage ownership timelines and transfer active ownership between individuals.",
+  },
+  {
+    href: "/residencies",
+    title: "Residencies",
+    description: "Manage residency timelines and current occupancy state for each unit.",
+  },
+  {
+    href: "/contribution-periods",
+    title: "Contribution Periods",
+    description: "Review the seeded posting periods available for contribution detail rows.",
+  },
+  {
+    href: "/contribution-heads",
+    title: "Contribution Heads",
+    description: "Manage charge heads, period type, and pay-unit semantics used during posting.",
+  },
+  {
+    href: "/contribution-rates",
+    title: "Contribution Rates",
+    description: "Append and review immutable rate history for contribution heads.",
   },
   {
     href: "/contributions",
@@ -164,6 +219,46 @@ export function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
       { label: "Home", href: "/home" },
       { label: "Master Data" },
       { label: "Individuals" },
+    ];
+  }
+
+  if (pathname.startsWith("/ownerships")) {
+    return [
+      { label: "Home", href: "/home" },
+      { label: "Master Data" },
+      { label: "Ownerships" },
+    ];
+  }
+
+  if (pathname.startsWith("/residencies")) {
+    return [
+      { label: "Home", href: "/home" },
+      { label: "Master Data" },
+      { label: "Residencies" },
+    ];
+  }
+
+  if (pathname.startsWith("/contribution-periods")) {
+    return [
+      { label: "Home", href: "/home" },
+      { label: "Master Data" },
+      { label: "Contribution Periods" },
+    ];
+  }
+
+  if (pathname.startsWith("/contribution-heads")) {
+    return [
+      { label: "Home", href: "/home" },
+      { label: "Master Data" },
+      { label: "Contribution Heads" },
+    ];
+  }
+
+  if (pathname.startsWith("/contribution-rates")) {
+    return [
+      { label: "Home", href: "/home" },
+      { label: "Master Data" },
+      { label: "Contribution Rates" },
     ];
   }
 

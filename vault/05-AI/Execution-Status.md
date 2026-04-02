@@ -33,7 +33,7 @@ Residual follow-up:
 2. Maker-checker correction workflow remains deferred to later hardening.
 
 ### Objective 2: Establish platform shell: home page, navigation, authentication, and master data CRUD baseline
-Status: Substantially complete for shell/auth baseline and first-pass master-data UI; deeper module coverage still pending
+Status: Substantially complete for shell/auth baseline and first-pass master-data UI across core and contribution domains
 
 Completed:
 1. Public entry page is now present.
@@ -49,11 +49,16 @@ Completed:
 11. Blocks management UI baseline is implemented.
 12. Units management UI baseline is implemented.
 13. Individuals management UI baseline is implemented.
+14. Ownership timeline UI baseline is implemented.
+15. Residency timeline UI baseline is implemented.
+16. Contribution periods UI baseline is implemented.
+17. Contribution heads UI baseline is implemented.
+18. Contribution rates UI baseline is implemented.
 
 Not yet complete:
 1. Shell-wide auth feedback is not yet uniform across every protected redirect path.
-2. Ownership, residency, and remaining master-data module screens are not complete yet.
-3. Shared table, filter-bar, and form-shell component library is not complete yet.
+2. Shared table, filter-bar, and form-shell component library is not complete yet.
+3. Cross-linking between master-data modules and contribution capture is not complete yet.
 
 ### Objective 3: Keep architecture ready for Safety, Security, Events, and AI features without rework
 Status: Partially complete by architecture, not by feature implementation
@@ -117,9 +122,15 @@ Not yet complete:
 1. Blocks management screen implemented with search, pagination, and CRUD actions.
 2. Units management screen implemented with block filter, pagination, and CRUD actions.
 3. Individuals management screen implemented with gender filter, pagination, and CRUD actions.
-4. Master-data shell navigation and route metadata were added for blocks, units, and individuals.
-5. Read-only individuals view now masks email and mobile in the UI.
-6. Gender types now have a dedicated read endpoint for the individuals form.
+4. Ownership timeline screen implemented with filters, pagination, CRUD actions, and ownership transfer flow.
+5. Residency timeline screen implemented with filters, pagination, and CRUD actions.
+6. Contribution periods screen implemented as a read-only seeded reference view with year and month filters.
+7. Contribution heads screen implemented with search, pagination, and CRUD actions.
+8. Contribution rates screen implemented with head and active-date filters plus append-only creation.
+9. Master-data shell navigation and route metadata were added for blocks, units, individuals, ownerships, residencies, contribution periods, contribution heads, and contribution rates.
+10. Dashboard home cards now link to ownership, residency, and contribution master-data workflows.
+11. Read-only individuals view now masks email and mobile in the UI.
+12. Gender types now have a dedicated read endpoint for the individuals form.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -170,8 +181,8 @@ Not yet complete:
 ## Activities In Progress
 
 1. Continue shell-level auth feedback refinements beyond the current public-entry and home redirect states.
-2. Extend master-data UI baseline to ownership and residency workflows.
-3. Standardize shared table, filter, and form patterns across the new operator pages.
+2. Standardize shared table, filter, and form patterns across the new operator pages.
+3. Add cross-linking between units, individuals, timeline screens, and contribution capture.
 
 ## Activities Yet To Be Performed
 
@@ -180,13 +191,9 @@ Not yet complete:
 2. Remove any remaining test-style auth assumptions from operator-facing flows while preserving payer-versus-operator separation in contribution capture.
 
 ### Week 5: Master Data UI Baseline
-1. Build ownership timeline UI.
-2. Build residency timeline UI.
-3. Build contribution heads UI.
-4. Build contribution rates UI.
-5. Build contribution periods UI if operationally needed.
-6. Add cross-linking between units, owners, residents, and contribution flows.
-7. Standardize search, filtering, pagination, and sort behavior across module screens.
+1. Add cross-linking between units, owners, residents, and contribution flows.
+2. Standardize search, filtering, pagination, and sort behavior across module screens.
+3. Decide whether contribution periods stay reference-only or gain linked drill-through usage.
 
 ### Shared UI and Platform Work
 1. Create reusable table component baseline.

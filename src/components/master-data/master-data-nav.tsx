@@ -16,6 +16,26 @@ const items = [
     href: "/individuals",
     label: "Individuals",
   },
+  {
+    href: "/ownerships",
+    label: "Ownerships",
+  },
+  {
+    href: "/residencies",
+    label: "Residencies",
+  },
+  {
+    href: "/contribution-periods",
+    label: "Periods",
+  },
+  {
+    href: "/contribution-heads",
+    label: "Heads",
+  },
+  {
+    href: "/contribution-rates",
+    label: "Rates",
+  },
 ];
 
 export function MasterDataNav() {

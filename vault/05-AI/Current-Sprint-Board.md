@@ -10,7 +10,7 @@ Provide one short-horizon execution board for the active sprint window.
 This file should stay concise and operational. Historical detail belongs in evidence or archived notes.
 
 ## Current Focus
-Shell and auth baseline are in place. Current focus is closing auth alignment gaps and stabilizing contribution/report operator UX before master-data UI work expands.
+Shell and auth baseline are in place. Current focus is expanding the master-data UI baseline while continuing to smooth remaining auth feedback gaps.
 
 ## Done
 1. Week 2 contribution scope completed and validated.
@@ -52,25 +52,34 @@ Shell and auth baseline are in place. Current focus is closing auth alignment ga
 37. Units management UI baseline is now available with block filter, search, pagination, create, edit, and delete.
 38. Individuals management UI baseline is now available with gender filter, search, pagination, create, edit, and delete.
 39. Read-only individual views now mask email and mobile in the UI baseline.
+40. Ownership timeline UI baseline is now available with unit and individual filters, pagination, create, edit, delete, and transfer flow.
+41. Residency timeline UI baseline is now available with unit and individual filters, pagination, create, edit, and delete.
+42. Master-data shell navigation and dashboard home cards now include ownerships and residencies.
+43. Contribution periods UI baseline is now available as a read-only seeded reference view with year and month filters.
+44. Contribution heads UI baseline is now available with search, pagination, create, edit, and delete.
+45. Contribution rates UI baseline is now available with head and active-date filters plus append-only rate creation.
+46. Master-data shell navigation and dashboard home cards now include contribution periods, heads, and rates.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
-2. Extend master-data UI baseline beyond blocks, units, and individuals.
-3. Standardize shared table/filter/form patterns for operator screens.
+2. Standardize shared table/filter/form patterns for operator screens.
+3. Add cross-linking between core master-data workflows and contribution capture.
 
 ## Next
 
 ### Immediate Next Steps
 1. Finish remaining shell-level auth feedback polish.
-2. Add ownership and residency UI baseline on top of the new master-data pages.
-3. Standardize shared table/filter/form patterns for operator screens.
-4. Add cross-linking between units, individuals, and contribution workflows.
+2. Standardize shared table/filter/form patterns for operator screens.
+3. Add cross-linking between units, individuals, ownerships, residencies, and contribution workflows.
+4. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.
 2. Auth feedback can still feel inconsistent if redirect reasons are not surfaced uniformly across all protected shell routes.
 3. Large seeded datasets can still surface performance issues in operator screens if client loading is not kept paginated and incremental.
 4. Master-data UI consistency will drift if the shared table/filter/form patterns are not extracted soon.
+5. Timeline screens will become harder to evolve if lookup loading and mutation feedback patterns diverge between ownerships and residencies.
+6. Contribution-head deletion behavior depends on related rates and posted contributions, so operator-facing error copy must stay clear when FK restrictions fire.
 
 ## References
 1. `Product-Delivery-Strategy.md`
