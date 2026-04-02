@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -36,6 +37,40 @@ async function seedBlocks() {
       update: {},
       create: { description },
     });
+  }
+}
+
+async function seedUnits() {
+  const blocks = await prisma.block.findMany({
+    select: { id: true, description: true },
+    orderBy: { description: "asc" },
+  });
+
+  const sqFtByColumn = [900, 925, 950, 975, 1000, 1025, 1050, 1075];
+
+  for (const block of blocks) {
+    for (let floor = 1; floor <= 14; floor += 1) {
+      for (let column = 1; column <= 8; column += 1) {
+        const description = `${floor}${String(column).padStart(2, "0")}`;
+
+        await prisma.unit.upsert({
+          where: {
+            blockId_description: {
+              blockId: block.id,
+              description,
+            },
+          },
+          update: {
+            sqFt: sqFtByColumn[column - 1],
+          },
+          create: {
+            blockId: block.id,
+            description,
+            sqFt: sqFtByColumn[column - 1],
+          },
+        });
+      }
+    }
   }
 }
 
@@ -148,11 +183,52 @@ async function seedContributionPeriods(year) {
   }
 }
 
+async function seedAppUsers() {
+  const password = process.env.AUTH_SEED_PASSWORD ?? "ChangeMe123!";
+  const passwordHash = await bcrypt.hash(password, 10);
+  const entries = [
+    {
+      email: "admin@prismapp.local",
+      displayName: "Society Admin",
+      role: "SOCIETY_ADMIN",
+    },
+    {
+      email: "manager@prismapp.local",
+      displayName: "Operations Manager",
+      role: "MANAGER",
+    },
+    {
+      email: "readonly@prismapp.local",
+      displayName: "Read-Only Auditor",
+      role: "READ_ONLY",
+    },
+  ];
+
+  for (const entry of entries) {
+    await prisma.appUser.upsert({
+      where: { email: entry.email },
+      update: {
+        displayName: entry.displayName,
+        role: entry.role,
+        isActive: true,
+        passwordHash,
+      },
+      create: {
+        ...entry,
+        isActive: true,
+        passwordHash,
+      },
+    });
+  }
+}
+
 async function main() {
   const currentYear = new Date().getUTCFullYear();
 
   await seedGenderTypes();
+  await seedAppUsers();
   await seedBlocks();
+  await seedUnits();
   await seedContributionHeads();
   await seedContributionRates(currentYear);
   await seedContributionPeriods(currentYear);

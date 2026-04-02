@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { PageHeader } from "@/src/components/shell/page-header";
 import { StateSurface } from "@/src/components/ui/state-surface";
-import { useMockSession } from "@/src/lib/mock-session";
+import { useAuthSession } from "@/src/lib/auth-session";
 
 type EntryCard = {
   description: string;
@@ -39,7 +39,7 @@ const entryCards: EntryCard[] = [
 ];
 
 export default function DashboardHomePage() {
-  const { session } = useMockSession();
+  const { session, sessionMode } = useAuthSession();
   const visibleCards = entryCards.filter((card) => card.roles.includes(session.role));
 
   return (
@@ -48,7 +48,7 @@ export default function DashboardHomePage() {
         breadcrumbs={[{ label: "Home" }]}
         eyebrow="Role-Aware Home"
         title={`Welcome, ${session.displayName}`}
-        description="Switch the mocked role from the shell to confirm menu visibility and entry-card differences before Week-4 credentials auth replaces the adapter."
+        description="Your authenticated role controls which entry points are visible in the shell and which workflow screens are available in this phase."
       />
 
       <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
@@ -76,8 +76,8 @@ export default function DashboardHomePage() {
           />
           <StateSurface
             tone="warning"
-            title="Week-4 handoff"
-            message="The shell is intentionally using a mocked session adapter so Auth.js credentials flow can replace it without another route reorganization next week."
+            title="Session mode"
+            message={`The shell is currently backed by the ${sessionMode} adapter. Browser session state is now authenticated and ready for tighter backend integration in the next slice.`}
           />
         </div>
       </section>

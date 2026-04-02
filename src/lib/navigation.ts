@@ -1,4 +1,4 @@
-import type { UserRole } from "@/src/lib/authz";
+import type { UserRole } from "@/src/lib/user-role";
 
 export type AppNavItem = {
   description: string;
