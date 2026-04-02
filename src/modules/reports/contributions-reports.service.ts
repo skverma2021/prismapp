@@ -50,6 +50,7 @@ type MatrixRow = MatrixStatusColumns & {
   blockDescription: string;
   ownerName: string | null;
   residentName: string | null;
+  annualStatus: MatrixMonthStatus;
   paidMonthsCount: number;
   unpaidMonthsCount: number;
 };
@@ -452,25 +453,6 @@ function monthKey(month: number): keyof MatrixStatusColumns {
   return keys[month - 1];
 }
 
-async function deriveExpectedQuantityForUnit(unitId: string, payUnit: number, referenceDate: Date): Promise<number> {
-  if (payUnit === 1) {
-    const unit = await db.unit.findUnique({ where: { id: unitId }, select: { sqFt: true } });
-    return unit?.sqFt ?? 0;
-  }
-
-  if (payUnit === 2) {
-    return db.unitResident.count({
-      where: {
-        unitId,
-        fromDt: { lte: referenceDate },
-        OR: [{ toDt: null }, { toDt: { gte: referenceDate } }],
-      },
-    });
-  }
-
-  return 1;
-}
-
 export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
   const head = await db.contributionHead.findUnique({
     where: { id: params.headId },
@@ -496,10 +478,12 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
   });
 
   const rateValue = Number(activeRate?.amt ?? 0);
+  const scopedUnitWhere = params.blockId ? { blockId: params.blockId } : undefined;
+  const scopedUnitRelationWhere = params.blockId ? { unit: { blockId: params.blockId } } : undefined;
 
   const units = await db.unit.findMany({
     where: {
-      ...(params.blockId ? { blockId: params.blockId } : {}),
+      ...(scopedUnitWhere ?? {}),
     },
     include: {
       block: true,
@@ -507,50 +491,106 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
     orderBy: [{ block: { description: "asc" } }, { description: "asc" }],
   });
 
-  const paidDetails = await db.contributionDetail.findMany({
-    where: {
-      contribution: {
-        contributionHeadId: params.headId,
-        unitId: {
-          in: units.map((unit) => unit.id),
+  const unitIds = units.map((unit) => unit.id);
+
+  if (unitIds.length === 0) {
+    return {
+      refYear: params.refYear,
+      headId: params.headId,
+      headDescription: head.description,
+      periodType: normalizedPeriod,
+      rows: [],
+      totals: {
+        totalUnits: 0,
+        totalPaidCells: 0,
+        totalUnpaidCells: 0,
+        collectionAmount: 0,
+        expectedAmount: 0,
+        activeRate: rateValue,
+      },
+    };
+  }
+
+  const [paidDetails, owners, residents] = await db.$transaction([
+    db.contributionDetail.findMany({
+      where: {
+        contribution: {
+          contributionHeadId: params.headId,
+          ...(params.blockId ? { unit: { blockId: params.blockId } } : {}),
+        },
+        contributionPeriod: {
+          refYear: params.refYear,
         },
       },
-      contributionPeriod: {
-        refYear: params.refYear,
-      },
-    },
-    include: {
-      contributionPeriod: true,
-      contribution: {
-        select: {
-          unitId: true,
+      select: {
+        amt: true,
+        contributionPeriod: {
+          select: {
+            refMonth: true,
+          },
+        },
+        contribution: {
+          select: {
+            unitId: true,
+          },
         },
       },
-    },
-  });
+    }),
+    db.unitOwner.findMany({
+      where: {
+        fromDt: { lte: now },
+        OR: [{ toDt: null }, { toDt: { gte: now } }],
+        ...(scopedUnitRelationWhere ?? {}),
+      },
+      select: {
+        unitId: true,
+        individual: {
+          select: {
+            fName: true,
+            sName: true,
+          },
+        },
+      },
+    }),
+    db.unitResident.findMany({
+      where: {
+        fromDt: { lte: now },
+        OR: [{ toDt: null }, { toDt: { gte: now } }],
+        ...(scopedUnitRelationWhere ?? {}),
+      },
+      select: {
+        unitId: true,
+        individual: {
+          select: {
+            fName: true,
+            sName: true,
+          },
+        },
+      },
+    }),
+  ]);
 
-  const owners = await db.unitOwner.findMany({
-    where: {
-      unitId: { in: units.map((unit) => unit.id) },
-      toDt: null,
-    },
-    include: {
-      individual: true,
-    },
-  });
-
-  const residents = await db.unitResident.findMany({
-    where: {
-      unitId: { in: units.map((unit) => unit.id) },
-      toDt: null,
-    },
-    include: {
-      individual: true,
-    },
-  });
+  const activeResidentRows =
+    head.payUnit === 2
+      ? await db.unitResident.findMany({
+          where: {
+            fromDt: { lte: now },
+            OR: [{ toDt: null }, { toDt: { gte: now } }],
+            ...(scopedUnitRelationWhere ?? {}),
+          },
+          select: {
+            unitId: true,
+          },
+        })
+      : [];
 
   const ownerByUnit = new Map(owners.map((row) => [row.unitId, row.individual]));
   const residentByUnit = new Map(residents.map((row) => [row.unitId, row.individual]));
+  const residentCountByUnit = new Map<string, number>();
+
+  for (const row of activeResidentRows) {
+    residentCountByUnit.set(row.unitId, (residentCountByUnit.get(row.unitId) ?? 0) + 1);
+  }
 
   const paidByUnitMonth = new Map<string, number>();
   for (const detail of paidDetails) {
@@ -582,8 +622,10 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
       nov: "N/A",
       dec: "N/A",
     };
+    let annualStatus: MatrixMonthStatus = "N/A";
 
-    const quantity = await deriveExpectedQuantityForUnit(unit.id, head.payUnit, now);
+    const quantity =
+      head.payUnit === 1 ? unit.sqFt : head.payUnit === 2 ? (residentCountByUnit.get(unit.id) ?? 0) : 1;
     const perPeriodExpected = roundTo2(quantity * rateValue);
 
     let paidMonthsCount = 0;
@@ -615,11 +657,11 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
       expectedAmount += perPeriodExpected;
 
       if (paidAmount > 0) {
-        monthStatuses.jan = "Paid";
+        annualStatus = "Paid";
         paidMonthsCount = 1;
         totalPaidCells += 1;
       } else {
-        monthStatuses.jan = "Unpaid";
+        annualStatus = "Unpaid";
         unpaidMonthsCount = 1;
         totalUnpaidCells += 1;
       }
@@ -632,6 +674,7 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
       blockDescription: unit.block.description,
       ownerName: owner ? `${owner.fName} ${owner.sName}` : null,
       residentName: resident ? `${resident.fName} ${resident.sName}` : null,
+      annualStatus,
       ...monthStatuses,
       paidMonthsCount,
       unpaidMonthsCount,
@@ -674,6 +717,11 @@ export async function getPaidUnpaidMatrixCsv(
   lines.push(`filters,${formatCsvValue(JSON.stringify(filterEcho))}`);
   lines.push("");
 
+  const periodHeaders =
+    data.periodType === "YEAR"
+      ? ["yearStatus"]
+      : ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
   lines.push(
     [
       "unitId",
@@ -682,24 +730,17 @@ export async function getPaidUnpaidMatrixCsv(
       "blockDescription",
       "ownerName",
       "residentName",
-      "jan",
-      "feb",
-      "mar",
-      "apr",
-      "may",
-      "jun",
-      "jul",
-      "aug",
-      "sep",
-      "oct",
-      "nov",
-      "dec",
+      ...periodHeaders,
       "paidMonthsCount",
       "unpaidMonthsCount",
     ].join(",")
   );
 
   for (const row of data.rows) {
+    const periodValues = data.periodType === "YEAR"
+      ? [row.annualStatus]
+      : [row.jan, row.feb, row.mar, row.apr, row.may, row.jun, row.jul, row.aug, row.sep, row.oct, row.nov, row.dec];
+
     lines.push(
       [
         row.unitId,
@@ -708,18 +749,7 @@ export async function getPaidUnpaidMatrixCsv(
         row.blockDescription,
         row.ownerName ?? "",
         row.residentName ?? "",
-        row.jan,
-        row.feb,
-        row.mar,
-        row.apr,
-        row.may,
-        row.jun,
-        row.jul,
-        row.aug,
-        row.sep,
-        row.oct,
-        row.nov,
-        row.dec,
+        ...periodValues,
         row.paidMonthsCount,
         row.unpaidMonthsCount,
       ]

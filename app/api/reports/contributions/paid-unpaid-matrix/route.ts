@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
-import { requireRole } from "@/src/lib/authz";
+import { requireReadRole } from "@/src/lib/authz";
 import {
   getPaidUnpaidMatrixReport,
   parseMatrixReportParams,
@@ -8,7 +8,7 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    requireRole(request, ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"]);
+    await requireReadRole(request);
     const params = parseMatrixReportParams(request.nextUrl.searchParams);
     const data = await getPaidUnpaidMatrixReport(params);
     return ok(data);

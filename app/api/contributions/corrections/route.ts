@@ -5,7 +5,7 @@ import { createContributionCorrection } from "@/src/modules/contributions/contri
 
 export async function POST(request: Request) {
   try {
-    const auth = requireMutationRole(request);
+    const auth = await requireMutationRole(request);
     const payload = await request.json();
     const input = parseCreateContributionCorrectionInput(payload);
     const data = await createContributionCorrection(input, {

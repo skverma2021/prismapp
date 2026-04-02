@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { fail, fromUnknownError } from "@/src/lib/api-response";
-import { requireRole } from "@/src/lib/authz";
+import { requireReadRole } from "@/src/lib/authz";
 import {
   getContributionTransactionsCsv,
   parseTransactionsReportParams,
@@ -8,7 +8,7 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    const auth = requireRole(request, ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"]);
+    const auth = await requireReadRole(request);
     const params = parseTransactionsReportParams(request.nextUrl.searchParams);
     const csv = await getContributionTransactionsCsv(params, auth.userId);
 

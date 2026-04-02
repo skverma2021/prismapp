@@ -1,11 +1,12 @@
 import type { NextRequest } from "next/server";
 import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
-import { requireMutationRole } from "@/src/lib/authz";
+import { requireMutationRole, requireReadRole } from "@/src/lib/authz";
 import { createIndividual, listIndividuals } from "@/src/modules/individuals/individuals.service";
 import { parseCreateIndividualInput } from "@/src/modules/individuals/individuals.schemas";
 
 export async function GET(request: NextRequest) {
   try {
+    await requireReadRole(request);
     const data = await listIndividuals(request.nextUrl.searchParams);
     return ok(data);
   } catch (error) {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    requireMutationRole(request);
+    await requireMutationRole(request);
     const payload = await request.json();
     const input = parseCreateIndividualInput(payload);
     const data = await createIndividual(input);

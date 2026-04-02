@@ -4,7 +4,7 @@ import type { CreateUnitInput, UpdateUnitInput } from "./units.schemas";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
-const MAX_PAGE_SIZE = 100;
+const MAX_PAGE_SIZE = 500;
 
 export async function listUnits(searchParams: URLSearchParams) {
   const page = parseQueryInt(searchParams.get("page"), DEFAULT_PAGE);

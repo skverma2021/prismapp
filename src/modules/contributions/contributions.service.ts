@@ -1,6 +1,6 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
-import type { UserRole } from "@/src/lib/authz";
+import type { UserRole } from "@/src/lib/user-role";
 import type {
   CreateContributionCorrectionInput,
   CreateContributionInput,

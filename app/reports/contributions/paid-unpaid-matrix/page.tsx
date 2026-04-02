@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
-import { useMockSession } from "@/src/lib/mock-session";
+import { useAuthSession } from "@/src/lib/auth-session";
 
 type ApiEnvelope<T> =
   | { ok: true; data: T }
@@ -36,6 +36,7 @@ type MatrixRow = {
   blockDescription: string;
   ownerName: string | null;
   residentName: string | null;
+  annualStatus: MatrixStatus;
   jan: MatrixStatus;
   feb: MatrixStatus;
   mar: MatrixStatus;
@@ -51,6 +52,9 @@ type MatrixRow = {
   paidMonthsCount: number;
   unpaidMonthsCount: number;
 };
+
+const MONTH_COLUMN_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
+const MONTH_COLUMN_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 
 type MatrixResponse = {
   refYear: number;
@@ -96,7 +100,7 @@ function statusClassName(status: MatrixStatus) {
 }
 
 export default function ContributionPaidUnpaidMatrixPage() {
-  const { session } = useMockSession();
+  const { session } = useAuthSession();
   const currentYear = new Date().getUTCFullYear();
 
   const [heads, setHeads] = useState<HeadOption[]>([]);
@@ -166,12 +170,7 @@ export default function ContributionPaidUnpaidMatrixPage() {
         params.set("blockId", filters.blockId.trim());
       }
 
-      const response = await fetch(`/api/reports/contributions/paid-unpaid-matrix?${params.toString()}`, {
-        headers: {
-          "x-user-id": session.userId.trim(),
-          "x-user-role": session.role,
-        },
-      });
+      const response = await fetch(`/api/reports/contributions/paid-unpaid-matrix?${params.toString()}`);
 
       const payload = (await response.json()) as ApiEnvelope<MatrixResponse>;
 
@@ -205,12 +204,7 @@ export default function ContributionPaidUnpaidMatrixPage() {
         params.set("blockId", filters.blockId.trim());
       }
 
-      const response = await fetch(`/api/reports/contributions/paid-unpaid-matrix.csv?${params.toString()}`, {
-        headers: {
-          "x-user-id": session.userId.trim(),
-          "x-user-role": session.role,
-        },
-      });
+      const response = await fetch(`/api/reports/contributions/paid-unpaid-matrix.csv?${params.toString()}`);
 
       if (!response.ok) {
         const payload = await response.json();
@@ -383,18 +377,13 @@ export default function ContributionPaidUnpaidMatrixPage() {
                   <th className="border-b border-slate-200 px-3 py-2">Unit</th>
                   <th className="border-b border-slate-200 px-3 py-2">Owner</th>
                   <th className="border-b border-slate-200 px-3 py-2">Resident</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Jan</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Feb</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Mar</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Apr</th>
-                  <th className="border-b border-slate-200 px-3 py-2">May</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Jun</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Jul</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Aug</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Sep</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Oct</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Nov</th>
-                  <th className="border-b border-slate-200 px-3 py-2">Dec</th>
+                  {report?.periodType === "YEAR" ? (
+                    <th className="border-b border-slate-200 px-3 py-2">Year</th>
+                  ) : (
+                    MONTH_COLUMN_LABELS.map((label) => (
+                      <th key={label} className="border-b border-slate-200 px-3 py-2">{label}</th>
+                    ))
+                  )}
                   <th className="border-b border-slate-200 px-3 py-2">Paid</th>
                   <th className="border-b border-slate-200 px-3 py-2">Unpaid</th>
                 </tr>
@@ -402,7 +391,7 @@ export default function ContributionPaidUnpaidMatrixPage() {
               <tbody>
                 {reportLoading ? (
                   <tr>
-                    <td className="px-3 py-4 text-slate-600" colSpan={18}>
+                    <td className="px-3 py-4 text-slate-600" colSpan={report?.periodType === "YEAR" ? 7 : 18}>
                       Loading matrix...
                     </td>
                   </tr>
@@ -413,25 +402,22 @@ export default function ContributionPaidUnpaidMatrixPage() {
                       <td className="border-b border-slate-100 px-3 py-2">{row.unitDescription}</td>
                       <td className="border-b border-slate-100 px-3 py-2">{row.ownerName ?? "-"}</td>
                       <td className="border-b border-slate-100 px-3 py-2">{row.residentName ?? "-"}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.jan)}`}>{row.jan}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.feb)}`}>{row.feb}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.mar)}`}>{row.mar}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.apr)}`}>{row.apr}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.may)}`}>{row.may}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.jun)}`}>{row.jun}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.jul)}`}>{row.jul}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.aug)}`}>{row.aug}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.sep)}`}>{row.sep}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.oct)}`}>{row.oct}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.nov)}`}>{row.nov}</td>
-                      <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.dec)}`}>{row.dec}</td>
+                      {report.periodType === "YEAR" ? (
+                        <td className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row.annualStatus)}`}>{row.annualStatus}</td>
+                      ) : (
+                        MONTH_COLUMN_KEYS.map((key) => (
+                          <td key={`${row.unitId}-${key}`} className={`border-b border-slate-100 px-3 py-2 ${statusClassName(row[key])}`}>
+                            {row[key]}
+                          </td>
+                        ))
+                      )}
                       <td className="border-b border-slate-100 px-3 py-2">{row.paidMonthsCount}</td>
                       <td className="border-b border-slate-100 px-3 py-2">{row.unpaidMonthsCount}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td className="px-3 py-4 text-slate-600" colSpan={18}>
+                    <td className="px-3 py-4 text-slate-600" colSpan={report?.periodType === "YEAR" ? 7 : 18}>
                       No matrix rows found for the selected filter context.
                     </td>
                   </tr>

@@ -4,7 +4,7 @@ import type { CreateResidencyInput, UpdateResidencyInput } from "./residencies.s
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
-const MAX_PAGE_SIZE = 100;
+const MAX_PAGE_SIZE = 500;
 
 function rangesOverlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date | null): boolean {
   const aEndTime = aEnd ? aEnd.getTime() : Number.POSITIVE_INFINITY;
@@ -62,10 +62,17 @@ export async function listResidencies(searchParams: URLSearchParams) {
     throw new HttpError(400, "VALIDATION_ERROR", "Invalid sortBy field.");
   }
 
+  const now = new Date();
+
   const where = {
     ...(unitId ? { unitId } : {}),
     ...(indId ? { indId } : {}),
-    ...(activeOnly ? { toDt: null } : {}),
+    ...(activeOnly
+      ? {
+          fromDt: { lte: now },
+          OR: [{ toDt: null }, { toDt: { gte: now } }],
+        }
+      : {}),
   };
 
   const orderBy = { [sortBy]: sortDir } as const;

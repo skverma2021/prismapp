@@ -31,9 +31,8 @@ Error shape:
 - error.retryable
 
 ## 3) Auth Contract
-Headers:
-- x-user-id
-- x-user-role
+Session transport:
+- Auth.js session cookie
 
 Roles:
 - SOCIETY_ADMIN
@@ -41,12 +40,12 @@ Roles:
 - READ_ONLY
 
 Authorization policy:
+- Domain read endpoints: SOCIETY_ADMIN, MANAGER, READ_ONLY
 - Mutation endpoints: SOCIETY_ADMIN or MANAGER
-- Report read endpoints: SOCIETY_ADMIN, MANAGER, READ_ONLY
 
 ## 4) Stable Error Mapping
 - 400 VALIDATION_ERROR: bad payload/query, invalid sort/filter fields
-- 401 UNAUTHORIZED: missing/invalid auth headers
+- 401 UNAUTHORIZED: missing/invalid authenticated session
 - 403 FORBIDDEN: role does not have required permission
 - 404 NOT_FOUND: referenced records do not exist
 - 409 CONFLICT: unique/overlap/duplicate contribution conflict

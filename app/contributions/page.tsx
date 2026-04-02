@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
-import { useMockSession } from "@/src/lib/mock-session";
+import { useAuthSession } from "@/src/lib/auth-session";
+import { fetchAllPages } from "@/src/lib/paginated-client";
+import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
 type Head = {
   id: number;
@@ -17,16 +19,27 @@ type Unit = {
   id: string;
   description: string;
   blockId: string;
+  block?: {
+    description: string;
+  };
 };
 
 type ActiveResidency = {
   id: string;
+  unitId: string;
   indId: string;
   individual?: {
     id: string;
     fName: string;
     sName: string;
   };
+};
+
+type IndividualOption = {
+  id: string;
+  fName: string;
+  mName?: string | null;
+  sName: string;
 };
 
 type MonthState = {
@@ -70,6 +83,43 @@ type ApiEnvelope<T> =
         details?: unknown;
       };
     };
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const TEST_HEAD_PREFIXES = ["CONTR-HEAD-", "RPT-HEAD-", "IT-RATE-HEAD-"];
+
+function isLikelyTestHead(head: Head) {
+  const normalized = head.description.trim().toUpperCase();
+  return TEST_HEAD_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+}
+
+function defaultMonths(): MonthState[] {
+  return MONTHS.map((label, index) => ({
+    month: index + 1,
+    label,
+    selected: false,
+    status: "Unknown",
+    amount: 0,
+    transactionRefs: [],
+  }));
+}
+
+function formatIndividualName(individual: IndividualOption) {
+  return [individual.fName, individual.mName ?? "", individual.sName].filter(Boolean).join(" ");
+}
 
 type ContributionPeriod = {
   id: number;
@@ -121,39 +171,6 @@ type ActionHint = {
   title: string;
   detail: string;
 };
-
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-const TEST_HEAD_PREFIXES = ["CONTR-HEAD-", "RPT-HEAD-", "IT-RATE-HEAD-"];
-
-function isLikelyTestHead(head: Head) {
-  const normalized = head.description.trim().toUpperCase();
-  return TEST_HEAD_PREFIXES.some((prefix) => normalized.startsWith(prefix));
-}
-
-function defaultMonths(): MonthState[] {
-  return MONTHS.map((label, index) => ({
-    month: index + 1,
-    label,
-    selected: false,
-    status: "Unknown",
-    amount: 0,
-    transactionRefs: [],
-  }));
-}
 
 function payUnitLabel(payUnit: number) {
   if (payUnit === 1) return "Per Sq Ft";
@@ -225,12 +242,20 @@ function getCorrectionActionHint(code: string | undefined, message: string): Act
 }
 
 export default function ContributionCapturePage() {
-  const { session } = useMockSession();
+  const { session, sessionMode } = useAuthSession();
   const currentYear = new Date().getUTCFullYear();
   const [heads, setHeads] = useState<Head[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
+  const [residentEligibleUnitIds, setResidentEligibleUnitIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialLoadError, setInitialLoadError] = useState("");
+  const [unitsLoading, setUnitsLoading] = useState(true);
+  const [unitsLoadError, setUnitsLoadError] = useState("");
+  const [residentEligibleLoading, setResidentEligibleLoading] = useState(false);
+  const [residentEligibleLoadError, setResidentEligibleLoadError] = useState("");
+  const [individuals, setIndividuals] = useState<IndividualOption[]>([]);
+  const [individualsLoading, setIndividualsLoading] = useState(true);
+  const [individualsLoadError, setIndividualsLoadError] = useState("");
 
   const [headId, setHeadId] = useState<number | "">("");
   const [unitId, setUnitId] = useState<string>("");
@@ -277,26 +302,17 @@ export default function ContributionCapturePage() {
     setInitialLoadError("");
 
     try {
-      const [headsRes, unitsRes] = await Promise.all([
-        fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-        fetch("/api/units?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-      ]);
+      const headsRes = await fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc");
 
-      const [headsJson, unitsJson] = await Promise.all([headsRes.json(), unitsRes.json()]);
+      const headsJson = await headsRes.json();
 
       if (!headsRes.ok || !headsJson?.ok) {
         throw new Error(headsJson?.error?.message ?? "Unable to load contribution heads.");
       }
 
-      if (!unitsRes.ok || !unitsJson?.ok) {
-        throw new Error(unitsJson?.error?.message ?? "Unable to load units.");
-      }
-
       setHeads(headsJson?.data?.items ?? []);
-      setUnits(unitsJson?.data?.items ?? []);
     } catch (error) {
       setHeads([]);
-      setUnits([]);
       setInitialLoadError(
         error instanceof Error
           ? error.message
@@ -309,6 +325,52 @@ export default function ContributionCapturePage() {
 
   useEffect(() => {
     void loadInitialData();
+  }, []);
+
+  async function loadUnits() {
+    setUnitsLoading(true);
+    setUnitsLoadError("");
+
+    try {
+      const allUnits = await fetchAllPages<Unit>(
+        (page) => `/api/units?page=${page}&pageSize=500&sortBy=description&sortDir=asc`,
+        "Unable to load units."
+      );
+
+      setUnits(allUnits.sort(compareUnitsByBlockAndDescription));
+    } catch (error) {
+      setUnits([]);
+      setUnitsLoadError(error instanceof Error ? error.message : "Unable to load units.");
+    } finally {
+      setUnitsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadUnits();
+  }, []);
+
+  async function loadIndividuals() {
+    setIndividualsLoading(true);
+    setIndividualsLoadError("");
+
+    try {
+      const allIndividuals = await fetchAllPages<IndividualOption>(
+        (page) => `/api/individuals?page=${page}&pageSize=100&sortBy=sName&sortDir=asc`,
+        "Unable to load individuals."
+      );
+
+      setIndividuals(allIndividuals);
+    } catch (error) {
+      setIndividuals([]);
+      setIndividualsLoadError(error instanceof Error ? error.message : "Unable to load individuals.");
+    } finally {
+      setIndividualsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadIndividuals();
   }, []);
 
   const selectedHead = useMemo(
@@ -328,11 +390,32 @@ export default function ContributionCapturePage() {
   const isMonthly = periodType === "MONTH";
   const isYearly = periodType === "YEAR";
   const payUnit = selectedHead?.payUnit;
+  const residentEligibleUnitIdSet = useMemo(() => new Set(residentEligibleUnitIds), [residentEligibleUnitIds]);
 
   const selectedMonths = months.filter((m) => m.selected).map((m) => m.month);
   const selectedMonthLabels = months.filter((m) => m.selected).map((m) => m.label);
   const selectedUnit = units.find((unit) => unit.id === unitId);
   const selectedResident = activeResidents.find((row) => row.indId === selectedResidentId);
+  const visibleUnits = useMemo(() => {
+    if (payUnit !== 2) {
+      return units;
+    }
+
+    return units.filter((unit) => residentEligibleUnitIdSet.has(unit.id));
+  }, [payUnit, residentEligibleUnitIdSet, units]);
+
+  useEffect(() => {
+    if (!unitId) {
+      return;
+    }
+
+    const unitStillVisible = visibleUnits.some((unit) => unit.id === unitId);
+    if (!unitStillVisible) {
+      setUnitId("");
+      setSelectedResidentId("");
+    }
+  }, [unitId, visibleUnits]);
+
   const isCorrectionOfCorrection =
     correctionBase?.correctionOfContributionId !== null || Boolean(correctionBase?.correctionOf);
   const actorUserId = session.userId;
@@ -482,6 +565,66 @@ export default function ContributionCapturePage() {
   }, [headId, isMonthly, unitId, year]);
 
   useEffect(() => {
+    if (payUnit !== 2) {
+      setResidentEligibleLoadError("");
+      setResidentEligibleLoading(false);
+      return;
+    }
+
+    if (residentEligibleUnitIds.length > 0) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function loadResidentEligibleUnits() {
+      setResidentEligibleLoading(true);
+      setResidentEligibleLoadError("");
+
+      try {
+        const items = await fetchAllPages<ActiveResidency>(
+          (page) =>
+            `/api/residencies?activeOnly=true&page=${page}&pageSize=500&sortBy=fromDt&sortDir=desc`,
+          "Unable to load resident-eligible units."
+        );
+
+        if (controller.signal.aborted) {
+          return;
+        }
+
+        const uniqueUnitIds = [...new Set(items.map((row) => row.unitId))];
+        setResidentEligibleUnitIds(uniqueUnitIds);
+      } catch (error) {
+        if (controller.signal.aborted || (error as Error).name === "AbortError") {
+          return;
+        }
+
+        setResidentEligibleUnitIds([]);
+        setResidentEligibleLoadError(
+          error instanceof Error ? error.message : "Unable to load resident-eligible units."
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setResidentEligibleLoading(false);
+        }
+      }
+    }
+
+    void loadResidentEligibleUnits();
+
+    return () => {
+      controller.abort();
+    };
+  }, [payUnit, residentEligibleUnitIds.length]);
+
+  useEffect(() => {
+    if (payUnit !== 2) {
+      setActiveResidents([]);
+      setSelectedResidentId("");
+      setActiveResidentsError("");
+      return;
+    }
+
     if (!unitId) {
       setActiveResidents([]);
       setSelectedResidentId("");
@@ -536,7 +679,20 @@ export default function ContributionCapturePage() {
     return () => {
       controller.abort();
     };
-  }, [unitId]);
+  }, [payUnit, unitId]);
+
+  useEffect(() => {
+    if (payUnit !== 2) {
+      return;
+    }
+
+    if (!unitId || residentEligibleUnitIdSet.has(unitId)) {
+      return;
+    }
+
+    setUnitId("");
+    setSelectedResidentId("");
+  }, [payUnit, residentEligibleUnitIdSet, unitId]);
 
   async function resolveContributionPeriodIds(): Promise<number[]> {
     const params = new URLSearchParams({
@@ -629,8 +785,6 @@ export default function ContributionCapturePage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-user-id": actorUserId.trim(),
-          "x-user-role": actorRole,
         },
         body: JSON.stringify(payload),
       });
@@ -754,8 +908,6 @@ export default function ContributionCapturePage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-user-id": actorUserId.trim(),
-          "x-user-role": actorRole,
         },
         body: JSON.stringify(payload),
       });
@@ -795,7 +947,7 @@ export default function ContributionCapturePage() {
             Capture form with payUnit-aware fields, ledger-backed period statuses, and direct API submission.
           </p>
 
-          {loading && <InlineNotice className="mt-4" message="Loading contribution heads and units..." />}
+          {loading && <InlineNotice className="mt-4" message="Loading contribution heads..." />}
 
           {initialLoadError && (
             <InlineNotice
@@ -807,10 +959,30 @@ export default function ContributionCapturePage() {
                   type="button"
                   onClick={() => {
                     void loadInitialData();
+                    void loadUnits();
                   }}
                   className="rounded border border-rose-300 bg-white px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100"
                 >
                   Retry load
+                </button>
+              }
+            />
+          )}
+
+          {!initialLoadError && unitsLoadError && (
+            <InlineNotice
+              className="mt-4"
+              tone="danger"
+              message={unitsLoadError}
+              action={
+                <button
+                  type="button"
+                  onClick={() => {
+                    void loadUnits();
+                  }}
+                  className="rounded border border-rose-300 bg-white px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                >
+                  Retry units
                 </button>
               }
             />
@@ -824,7 +996,7 @@ export default function ContributionCapturePage() {
             />
           )}
 
-          {!loading && !initialLoadError && units.length === 0 && (
+          {!loading && !initialLoadError && !unitsLoading && !unitsLoadError && units.length === 0 && (
             <InlineNotice
               className="mt-4"
               tone="warning"
@@ -871,17 +1043,42 @@ export default function ContributionCapturePage() {
               <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Unit</span>
               <select
                 value={unitId}
-                onChange={(event) => setUnitId(event.target.value)}
+                onChange={(event) => {
+                  setUnitId(event.target.value);
+                  setSelectedResidentId("");
+                }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                disabled={loading}
+                disabled={loading || unitsLoading || (payUnit === 2 && residentEligibleLoading)}
               >
-                <option value="">Select unit</option>
-                {units.map((unit) => (
+                <option value="">
+                  {unitsLoading
+                    ? "Loading units..."
+                    : payUnit === 2 && residentEligibleLoading
+                      ? "Loading resident-eligible units..."
+                      : payUnit === 2
+                        ? "Select resident-eligible unit"
+                        : "Select unit"}
+                </option>
+                {visibleUnits.map((unit) => (
                   <option key={unit.id} value={unit.id}>
-                    {unit.description} (Unit ID: {unit.id})
+                    {formatUnitLabel(unit)} (Unit ID: {unit.id})
                   </option>
                 ))}
               </select>
+              {unitsLoading && (
+                <p className="text-xs text-slate-500">Loading units in the background...</p>
+              )}
+              {payUnit === 2 && (
+                <p className="text-xs text-slate-500">
+                  Per-person heads only show units that currently have at least one active resident.
+                </p>
+              )}
+              {payUnit === 2 && residentEligibleLoading && (
+                <p className="text-xs text-amber-700">Loading resident-eligible unit list...</p>
+              )}
+              {payUnit === 2 && residentEligibleLoadError && (
+                <p className="text-xs text-rose-700">{residentEligibleLoadError}</p>
+              )}
               {selectedUnit && (
                 <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
                   <span>Selected Unit ID: {selectedUnit.id}</span>
@@ -908,13 +1105,27 @@ export default function ContributionCapturePage() {
             </label>
 
             <label className="flex flex-col gap-2">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Deposited By (Individual ID)</span>
-              <input
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Payer (Deposited By)</span>
+              <select
                 value={depositedBy}
                 onChange={(event) => setDepositedBy(event.target.value)}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                placeholder="UUID of depositor"
-              />
+                disabled={individualsLoading}
+              >
+                <option value="">{individualsLoading ? "Loading individuals..." : "Select payer"}</option>
+                {individuals.map((individual) => (
+                  <option key={individual.id} value={individual.id}>
+                    {formatIndividualName(individual)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500">
+                This is the payer identity from Individuals. It is separate from the logged-in operator who records the entry.
+              </p>
+              <p className="text-xs text-slate-500">
+                If a future self-service payment flow is added, this may be auto-filled from the payer session.
+              </p>
+              {individualsLoadError && <p className="text-xs text-rose-700">{individualsLoadError}</p>}
             </label>
 
             <label className="flex flex-col gap-2">
@@ -938,11 +1149,12 @@ export default function ContributionCapturePage() {
             </label>
 
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700 md:col-span-2">
-              <p className="font-semibold text-slate-900">Posting session</p>
+              <p className="font-semibold text-slate-900">Recorded By (Operator Session)</p>
               <p className="mt-1">User: {actorUserId}</p>
               <p className="mt-1">Role: {actorRole}</p>
+              <p className="mt-1">Adapter: {sessionMode}</p>
               <p className="mt-2 text-xs text-slate-500">
-                Change role from the dashboard shell if you need to verify a different posting path.
+                This posting request is sourced from the authenticated operator session, not from the payer identity above.
               </p>
             </div>
           </div>

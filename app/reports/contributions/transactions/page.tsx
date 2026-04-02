@@ -5,7 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
-import { useMockSession } from "@/src/lib/mock-session";
+import { useAuthSession } from "@/src/lib/auth-session";
+import { fetchAllPages } from "@/src/lib/paginated-client";
+import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
 type ApiEnvelope<T> =
   | { ok: true; data: T }
@@ -19,7 +21,11 @@ type ApiEnvelope<T> =
 
 type OptionItem = {
   id: string;
+  blockId: string;
   description: string;
+  block?: {
+    description: string;
+  };
 };
 
 type HeadOption = {
@@ -144,7 +150,7 @@ function buildQuery(filters: FiltersState, page: number) {
 }
 
 export default function ContributionTransactionsReportPage() {
-  const { session } = useMockSession();
+  const { session } = useAuthSession();
   const currentYear = new Date().getUTCFullYear();
 
   const [filters, setFilters] = useState<FiltersState>({
@@ -178,23 +184,27 @@ export default function ContributionTransactionsReportPage() {
       setRequestError("");
 
       try {
-        const [headsRes, blocksRes, unitsRes, individualsRes] = await Promise.all([
+        const unitsPromise = fetchAllPages<OptionItem>(
+          (page) => `/api/units?page=${page}&pageSize=500&sortBy=description&sortDir=asc`,
+          "Unable to load units."
+        );
+
+        const [headsRes, blocksRes, allUnits, individualsRes] = await Promise.all([
           fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
           fetch("/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-          fetch("/api/units?page=1&pageSize=100&sortBy=description&sortDir=asc"),
+          unitsPromise,
           fetch("/api/individuals?page=1&pageSize=100&sortBy=sName&sortDir=asc"),
         ]);
 
-        const [headsJson, blocksJson, unitsJson, individualsJson] = await Promise.all([
+        const [headsJson, blocksJson, individualsJson] = await Promise.all([
           headsRes.json(),
           blocksRes.json(),
-          unitsRes.json(),
           individualsRes.json(),
         ]);
 
         setHeads(headsJson?.data?.items ?? []);
         setBlocks(blocksJson?.data?.items ?? []);
-        setUnits(unitsJson?.data?.items ?? []);
+        setUnits(allUnits.sort(compareUnitsByBlockAndDescription));
         setIndividuals(individualsJson?.data?.items ?? []);
       } catch {
         setRequestError("Unable to load report filter options.");
@@ -210,6 +220,21 @@ export default function ContributionTransactionsReportPage() {
     () => individuals.map((row) => ({ id: row.id, label: `${row.fName} ${row.sName}` })),
     [individuals]
   );
+  const visibleUnits = useMemo(
+    () => (filters.blockId ? units.filter((unit) => unit.blockId === filters.blockId) : units),
+    [filters.blockId, units]
+  );
+
+  useEffect(() => {
+    if (!filters.blockId || !filters.unitId) {
+      return;
+    }
+
+    const unitStillVisible = units.some((unit) => unit.id === filters.unitId && unit.blockId === filters.blockId);
+    if (!unitStillVisible) {
+      setFilters((prev) => ({ ...prev, unitId: "" }));
+    }
+  }, [filters.blockId, filters.unitId, units]);
 
   async function runReport(page: number) {
     setReportLoading(true);
@@ -217,12 +242,7 @@ export default function ContributionTransactionsReportPage() {
 
     try {
       const params = buildQuery(filters, page);
-      const response = await fetch(`/api/reports/contributions/transactions?${params.toString()}`, {
-        headers: {
-          "x-user-id": session.userId.trim(),
-          "x-user-role": session.role,
-        },
-      });
+      const response = await fetch(`/api/reports/contributions/transactions?${params.toString()}`);
 
       const payload = (await response.json()) as ApiEnvelope<TransactionsResponse>;
 
@@ -245,12 +265,7 @@ export default function ContributionTransactionsReportPage() {
 
     try {
       const params = buildQuery(filters, 1);
-      const response = await fetch(`/api/reports/contributions/transactions.csv?${params.toString()}`, {
-        headers: {
-          "x-user-id": session.userId.trim(),
-          "x-user-role": session.role,
-        },
-      });
+      const response = await fetch(`/api/reports/contributions/transactions.csv?${params.toString()}`);
 
       if (!response.ok) {
         const payload = await response.json();
@@ -427,9 +442,9 @@ export default function ContributionTransactionsReportPage() {
                 disabled={optionsLoading}
               >
                 <option value="">All units</option>
-                {units.map((unit) => (
+                {visibleUnits.map((unit) => (
                   <option key={unit.id} value={unit.id}>
-                    {unit.description}
+                    {formatUnitLabel(unit)}
                   </option>
                 ))}
               </select>

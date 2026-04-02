@@ -1,5 +1,5 @@
 import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
-import { requireMutationRole } from "@/src/lib/authz";
+import { requireMutationRole, requireReadRole } from "@/src/lib/authz";
 import {
   deleteOwnership,
   getOwnershipById,
@@ -9,6 +9,7 @@ import { parseUpdateOwnershipInput } from "@/src/modules/ownerships/ownerships.s
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    await requireReadRole(_request);
     const { id } = await params;
     const data = await getOwnershipById(id);
     return ok(data);
@@ -19,7 +20,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    requireMutationRole(request);
+    await requireMutationRole(request);
     const { id } = await params;
     const payload = await request.json();
     const input = parseUpdateOwnershipInput(payload);
@@ -32,7 +33,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    requireMutationRole(_request);
+    await requireMutationRole(_request);
     const { id } = await params;
     await deleteOwnership(id);
     return new Response(null, { status: 204 });

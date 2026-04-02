@@ -5,7 +5,7 @@ import { transferOwnership } from "@/src/modules/ownerships/ownerships.service";
 
 export async function POST(request: Request) {
   try {
-    requireMutationRole(request);
+    await requireMutationRole(request);
     const payload = await request.json();
     const input = parseTransferOwnershipInput(payload);
     const data = await transferOwnership(input);

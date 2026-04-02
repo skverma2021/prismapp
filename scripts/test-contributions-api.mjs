@@ -1,47 +1,10 @@
 import assert from "node:assert/strict";
 import { exec, execSync } from "node:child_process";
 import process from "node:process";
+import { createSessionHeaders, waitForAuthServerReady } from "./lib/api-auth.mjs";
 
 const PORT = 3113;
 let BASE_URL = `http://127.0.0.1:${PORT}`;
-const AUTH_HEADERS = {
-  "x-user-id": "test-manager-1",
-  "x-user-role": "MANAGER",
-};
-const READ_ONLY_HEADERS = {
-  "x-user-id": "test-read-only-1",
-  "x-user-role": "READ_ONLY",
-};
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function waitForServerReady() {
-  for (let i = 0; i < 60; i += 1) {
-    try {
-      const response = await fetch(`${BASE_URL}/api/blocks`);
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      // Retry until timeout.
-    }
-
-    await sleep(1000);
-  }
-
-  throw new Error("Timed out waiting for Next.js dev server readiness.");
-}
-
-async function isServerReachable(url) {
-  try {
-    const response = await fetch(`${url}/api/blocks`);
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
 
 async function requestJson(method, path, body, headers = {}) {
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -69,12 +32,14 @@ function assertStatus(result, expectedStatus, message) {
 
 async function run() {
   const unique = Date.now();
+  const authHeaders = await createSessionHeaders(BASE_URL, "manager@prismapp.local");
+  const readOnlyHeaders = await createSessionHeaders(BASE_URL, "readonly@prismapp.local");
 
   const block = await requestJson(
     "POST",
     "/api/blocks",
     { description: `CONTR-B-${unique}` },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(block, 201, "Creating block should succeed");
   const blockId = block.payload.data.id;
@@ -83,7 +48,7 @@ async function run() {
     "POST",
     "/api/units",
     { description: `CONTR-U-${unique}`, blockId, sqFt: 1000 },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(unit, 201, "Creating unit should succeed");
   const unitId = unit.payload.data.id;
@@ -98,7 +63,7 @@ async function run() {
       mobile: `+9777${String(unique).slice(-8)}`,
       genderId: 1,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(depositor, 201, "Creating depositor should succeed");
   const depositedBy = depositor.payload.data.id;
@@ -113,7 +78,7 @@ async function run() {
       mobile: `+9778${String(unique).slice(-8)}`,
       genderId: 1,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(resident, 201, "Creating active resident should succeed");
   const residentId = resident.payload.data.id;
@@ -128,7 +93,7 @@ async function run() {
       fromDt: todayIso,
       toDt: null,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(residency, 201, "Creating residency should succeed");
 
@@ -140,7 +105,7 @@ async function run() {
       payUnit: 3,
       period: "MONTH",
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(head, 201, "Creating contribution head should succeed");
   const contributionHeadId = head.payload.data.id;
@@ -153,7 +118,7 @@ async function run() {
       payUnit: 2,
       period: "MONTH",
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(perPersonHead, 201, "Creating per-person contribution head should succeed");
   const perPersonHeadId = perPersonHead.payload.data.id;
@@ -171,7 +136,7 @@ async function run() {
       amt: 150,
       reference: `rate-${unique}`,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(rate, 201, "Creating contribution rate should succeed");
 
@@ -185,13 +150,15 @@ async function run() {
       amt: 100,
       reference: `rate-person-${unique}`,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(perPersonRate, 201, "Creating per-person contribution rate should succeed");
 
   const periodsList = await requestJson(
     "GET",
-    `/api/contribution-periods?refYear=${txDate.getUTCFullYear()}&refMonth=1&page=1&pageSize=1`
+    `/api/contribution-periods?refYear=${txDate.getUTCFullYear()}&refMonth=1&page=1&pageSize=1`,
+    undefined,
+    readOnlyHeaders
   );
   assertStatus(periodsList, 200, "Listing contribution periods should succeed");
   assert.equal(periodsList.payload.data.items.length, 1, "Expected one current-year month period in seed data");
@@ -199,7 +166,9 @@ async function run() {
 
   const periodsListMonth2 = await requestJson(
     "GET",
-    `/api/contribution-periods?refYear=${txDate.getUTCFullYear()}&refMonth=2&page=1&pageSize=1`
+    `/api/contribution-periods?refYear=${txDate.getUTCFullYear()}&refMonth=2&page=1&pageSize=1`,
+    undefined,
+    readOnlyHeaders
   );
   assertStatus(periodsListMonth2, 200, "Listing month-2 contribution periods should succeed");
   assert.equal(
@@ -231,7 +200,7 @@ async function run() {
       transactionDateTime: txDateIso,
       depositedBy,
     },
-    READ_ONLY_HEADERS
+    readOnlyHeaders
   );
   assertStatus(forbidden, 403, "POST /api/contributions should reject READ_ONLY mutation");
   assert.equal(forbidden.payload?.error?.code, "FORBIDDEN");
@@ -247,7 +216,7 @@ async function run() {
       transactionDateTime: txDateIso,
       depositedBy,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(created, 201, "Creating contribution should succeed");
   assert.equal(created.payload.data.quantity, 1, "Lumpsum head should derive quantity as 1");
@@ -271,7 +240,7 @@ async function run() {
       availingPersonCount: 4,
       comment: "Family members using gym and pool.",
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(createdPerPerson, 201, "Creating per-person contribution should succeed");
   assert.equal(createdPerPerson.payload.data.quantity, 4, "Per-person head should use operator-entered person count");
@@ -291,14 +260,16 @@ async function run() {
       transactionDateTime: txDateIso,
       depositedBy,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(perPersonMissingCount, 400, "Per-person contribution without availingPersonCount should fail validation");
   assert.equal(perPersonMissingCount.payload?.error?.code, "VALIDATION_ERROR");
 
   const monthLedger = await requestJson(
     "GET",
-    `/api/contributions/month-ledger?unitId=${encodeURIComponent(unitId)}&headId=${contributionHeadId}&refYear=${txDate.getUTCFullYear()}`
+    `/api/contributions/month-ledger?unitId=${encodeURIComponent(unitId)}&headId=${contributionHeadId}&refYear=${txDate.getUTCFullYear()}`,
+    undefined,
+    readOnlyHeaders
   );
   assertStatus(monthLedger, 200, "Monthly ledger helper should succeed for monthly head");
   assert.equal(monthLedger.payload.data.latestPaidMonth, 1, "Latest paid month should be January for the created monthly payment");
@@ -318,7 +289,7 @@ async function run() {
       transactionDateTime: txDateIso,
       depositedBy,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(duplicate, 409, "Duplicate contribution period should return conflict");
   assert.equal(duplicate.payload?.error?.code, "CONFLICT");
@@ -329,12 +300,12 @@ async function run() {
     {
       transactionId: `txn-${unique}-mutated`,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(immutablePatch, 412, "PATCH on posted contribution must fail precondition");
   assert.equal(immutablePatch.payload?.error?.code, "PRECONDITION_FAILED");
 
-  const immutableDelete = await requestJson("DELETE", `/api/contributions/${contributionId}`, undefined, AUTH_HEADERS);
+  const immutableDelete = await requestJson("DELETE", `/api/contributions/${contributionId}`, undefined, authHeaders);
   assertStatus(immutableDelete, 412, "DELETE on posted contribution must fail precondition");
   assert.equal(immutableDelete.payload?.error?.code, "PRECONDITION_FAILED");
 
@@ -349,7 +320,7 @@ async function run() {
       reasonText: "Captured against the wrong contribution head.",
       depositedBy,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(correction, 201, "Creating correction contribution should succeed");
   assert.equal(correction.payload.data.correctionOfContributionId, contributionId);
@@ -370,7 +341,7 @@ async function run() {
       transactionDateTime: txDateIso,
       depositedBy,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(
     repostAfterFullReversal,
@@ -390,7 +361,7 @@ async function run() {
       reasonText: "Correction of correction should not be allowed.",
       depositedBy,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(
     correctionOfCorrection,
@@ -402,45 +373,34 @@ async function run() {
 
 async function main() {
   const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-  let server = null;
+  BASE_URL = `http://127.0.0.1:${PORT}`;
+  const server = exec(`${npmCommand} run dev -- -p ${PORT}`, {
+    env: process.env,
+    windowsHide: true,
+  });
 
-  const existingBaseUrl = "http://127.0.0.1:3000";
-  if (await isServerReachable(existingBaseUrl)) {
-    BASE_URL = existingBaseUrl;
-  } else {
-    BASE_URL = `http://127.0.0.1:${PORT}`;
-    server = exec(`${npmCommand} run dev -- -p ${PORT}`, {
-      env: process.env,
-      windowsHide: true,
-    });
+  if (server.stdout) {
+    server.stdout.pipe(process.stdout);
+  }
 
-    if (server.stdout) {
-      server.stdout.pipe(process.stdout);
-    }
-
-    if (server.stderr) {
-      server.stderr.pipe(process.stderr);
-    }
+  if (server.stderr) {
+    server.stderr.pipe(process.stderr);
   }
 
   try {
-    if (server) {
-      await waitForServerReady();
-    }
+    await waitForAuthServerReady(BASE_URL);
 
     await run();
     console.log("Contributions API integration checks passed.");
   } finally {
-    if (server) {
-      if (process.platform === "win32") {
-        try {
-          execSync(`taskkill /PID ${server.pid} /T /F`, { stdio: "ignore" });
-        } catch {
-          // Ignore if process already exited.
-        }
-      } else {
-        server.kill("SIGTERM");
+    if (process.platform === "win32") {
+      try {
+        execSync(`taskkill /PID ${server.pid} /T /F`, { stdio: "ignore" });
+      } catch {
+        // Ignore if process already exited.
       }
+    } else {
+      server.kill("SIGTERM");
     }
   }
 }

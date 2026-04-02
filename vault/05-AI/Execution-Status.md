@@ -1,7 +1,7 @@
 # PrismApp Execution Status
 
 Status: In Progress
-Date: 2026-04-01
+Date: 2026-04-02
 Owner: Engineering
 
 ## Purpose
@@ -33,23 +33,25 @@ Residual follow-up:
 2. Maker-checker correction workflow remains deferred to later hardening.
 
 ### Objective 2: Establish platform shell: home page, navigation, authentication, and master data CRUD baseline
-Status: Partially complete
+Status: Substantially complete for shell and auth baseline; master-data UI still pending
 
 Completed:
 1. Public entry page is now present.
 2. Shared dashboard shell with top-level navigation behavior is now present.
 3. Role-aware home page is now present.
-4. Mock session adapter is now present for Week 3 shell work.
-5. Existing contributions and reports routes now render inside shared shell layouts.
-6. Master-data CRUD backend baseline already exists for blocks, units, individuals, ownerships, and residencies.
-7. Contribution heads, rates, periods, and reports APIs already exist.
+4. Existing contributions and reports routes now render inside shared shell layouts.
+5. Auth.js credentials login baseline is implemented.
+6. JWT-based browser session persistence is implemented.
+7. Dashboard, contributions, and reports routes now require authenticated session state.
+8. Prisma-backed app-user seed records are available for local authentication.
+9. Master-data CRUD backend baseline already exists for blocks, units, individuals, ownerships, and residencies.
+10. Contribution heads, rates, periods, and reports APIs already exist.
 
 Not yet complete:
-1. Real authentication is not implemented yet.
-2. Session management is not implemented yet.
-3. Protected-route behavior is not wired to a real auth provider yet.
-4. Master-data CRUD UI baseline is not complete yet.
-5. Shared table, filter-bar, and form-shell component library is not complete yet.
+1. Route-handler authorization is not yet fully aligned with Auth.js-backed session resolution.
+2. Logout and auth feedback refinements across the shell are not complete yet.
+3. Master-data CRUD UI baseline is not complete yet.
+4. Shared table, filter-bar, and form-shell component library is not complete yet.
 
 ### Objective 3: Keep architecture ready for Safety, Security, Events, and AI features without rework
 Status: Partially complete by architecture, not by feature implementation
@@ -64,7 +66,7 @@ Not yet complete:
 1. Shared policy middleware is not implemented as a reusable feature foundation yet.
 2. Shared audit middleware is not fully implemented yet.
 3. Feature flags and extensibility hooks for future modules are not formalized yet.
-4. Auth and audit foundations still need to be completed before future modules can be added cleanly.
+4. Auth alignment and audit foundations still need to be completed before future modules can be added cleanly.
 
 ## Activities Done
 
@@ -109,52 +111,61 @@ Not yet complete:
 4. Paid/unpaid matrix report screen implemented.
 5. Error, empty, and loading behavior was hardened during Week 2.
 
+### Post Week 2 UX and Reporting Corrections
+1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
+2. Shared unit label formatting was added so operator-facing screens show `Block, Unit` labels.
+3. Contribution capture unit loading was reworked to avoid blocking first render on all unit pages.
+4. Per-person contribution heads now filter unit options to resident-eligible units.
+5. Transactions report filter loading now handles full paginated unit data instead of only the first page.
+6. Paid/unpaid matrix report performance was improved by removing per-unit query loops.
+7. Paid/unpaid matrix yearly semantics were corrected so yearly heads use refMonth = 0 and display as Year, not January.
+8. Contribution capture payer selection now uses an individual-name dropdown instead of a raw ID text box.
+9. Contribution capture copy now distinguishes payer identity (`depositedBy`) from operator session identity (`actorUserId` / `actorRole`).
+
 ### Week 2 Validation and Release Readiness
 1. Lint passed during Week 2 sign-off.
 2. Build passed during Week 2 sign-off.
 3. API regression suites passed during Week 2 sign-off.
 4. UAT checklist and release-readiness docs were added.
 
-### Week 3 Activities Completed So Far
+### Shell and Auth Activities Completed
 1. Read relevant App Router docs from installed Next.js docs before shell changes.
 2. Added new public landing page route at `app/(public)/page.tsx`.
 3. Added dashboard route group and role-aware home page at `app/(dashboard)/home/page.tsx`.
 4. Added shared dashboard shell component with role-aware menu visibility.
-5. Added mock session adapter for Week 3 shell work.
-6. Added shared navigation metadata and breadcrumb helpers.
-7. Added shared page-header component.
-8. Added shared state-surface component for loading/error/info blocks.
-9. Wrapped contributions route in a shared shell layout.
-10. Wrapped reports routes in a shared shell layout.
-11. Added route-level loading surfaces for dashboard, contributions, and reports.
-12. Updated root app metadata and visual baseline styling.
-13. Updated existing report page home links to target the new dashboard home route.
-14. Revalidated lint and build after shell changes.
-15. Smoke-tested key UI routes successfully.
-16. Extracted repeated inline loading, warning, success, and error notices into a shared component.
-17. Moved contribution and report screens to shell-owned session context.
-18. Removed duplicated per-page report access panels.
-19. Recorded final Week 3 shell smoke notes.
+5. Added shared navigation metadata and breadcrumb helpers.
+6. Added shared page-header component.
+7. Added shared state-surface component for loading/error/info blocks.
+8. Wrapped contributions route in a shared shell layout.
+9. Wrapped reports routes in a shared shell layout.
+10. Added route-level loading surfaces for dashboard, contributions, and reports.
+11. Updated root app metadata and visual baseline styling.
+12. Updated existing report page home links to target the new dashboard home route.
+13. Revalidated lint and build after shell changes.
+14. Smoke-tested key UI routes successfully.
+15. Extracted repeated inline loading, warning, success, and error notices into a shared component.
+16. Moved contribution and report screens to shell-owned session context.
+17. Removed duplicated per-page report access panels.
+18. Recorded final shell smoke notes.
+19. Replaced earlier mock-oriented shell session imports with a generic auth-session provider contract.
+20. Centralized client-side auth header construction for contribution and report requests.
+21. Added Auth.js credentials login with JWT-based browser session persistence.
+22. Added server-side session guards for dashboard, contributions, and report layouts.
+23. Added Prisma-backed app-user seed records for local authentication.
 
 ## Activities In Progress
 
-1. Prepare the mock session layer to become the Week 4 auth adapter boundary.
-2. Translate the current shell session contract into Week 4 authentication implementation work.
+1. Align route-handler authorization with Auth.js-backed session resolution.
+2. Add logout and auth feedback refinements across the shell.
+3. Prepare master-data UI baseline after auth/session alignment stabilizes.
 
 ## Activities Yet To Be Performed
 
-### Complete Week 3 Shell Work
-1. Decide whether legacy route preservation by layout-wrapping is sufficient, or if explicit redirect rules are needed for future route moves.
-
-### Week 4: Authentication Phase 1
-1. Add credentials-based login.
+### Auth and Shell Follow-Through
+1. Finalize route-handler authorization against authenticated session state.
 2. Add logout/sign-out flow.
-3. Add session persistence.
-4. Add protected route behavior.
-5. Add role claims in session state.
-6. Replace current mock-session adapter with real auth-backed session adapter.
-7. Align frontend auth state with backend authorization expectations.
-8. Remove header-driven test-style auth inputs from primary operator screens.
+3. Refine auth feedback surfaces across login, redirect, and protected-route states.
+4. Remove any remaining test-style auth assumptions from operator-facing flows while preserving payer-versus-operator separation in contribution capture.
 
 ### Week 5: Master Data UI Baseline
 1. Build blocks management UI.
@@ -192,5 +203,5 @@ Not yet complete:
 
 ## Current Recommendation
 1. Treat the contribution module as functionally complete for current V1 scope.
-2. Finish Week 3 shell cleanup before starting Week 4 auth implementation.
-3. Keep future modules deferred until auth and master-data UI baselines are stable.
+2. Treat shell and auth baseline as delivered enough to move into master-data UI baseline work.
+3. Keep future modules deferred until auth alignment and master-data UI baselines are stable.

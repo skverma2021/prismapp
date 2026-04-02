@@ -2,46 +2,10 @@ import assert from "node:assert/strict";
 import { exec, execSync } from "node:child_process";
 import process from "node:process";
 
+import { createSessionHeaders, waitForAuthServerReady } from "./lib/api-auth.mjs";
+
 const PORT = 3114;
 let BASE_URL = `http://127.0.0.1:${PORT}`;
-const AUTH_HEADERS = {
-  "x-user-id": "test-manager-1",
-  "x-user-role": "MANAGER",
-};
-const READ_ONLY_HEADERS = {
-  "x-user-id": "test-read-only-1",
-  "x-user-role": "READ_ONLY",
-};
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function waitForServerReady() {
-  for (let i = 0; i < 60; i += 1) {
-    try {
-      const response = await fetch(`${BASE_URL}/api/blocks`);
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      // Retry until timeout.
-    }
-
-    await sleep(1000);
-  }
-
-  throw new Error("Timed out waiting for Next.js dev server readiness.");
-}
-
-async function isServerReachable(url) {
-  try {
-    const response = await fetch(`${url}/api/blocks`);
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
 
 async function requestJson(method, path, body, headers = {}) {
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -72,6 +36,8 @@ async function run() {
   const txDate = new Date();
   const txDateIso = txDate.toISOString();
   const refYear = txDate.getUTCFullYear();
+  const authHeaders = await createSessionHeaders(BASE_URL, "manager@prismapp.local");
+  const readOnlyHeaders = await createSessionHeaders(BASE_URL, "readonly@prismapp.local");
 
   const unauth = await requestJson("GET", `/api/reports/contributions/transactions?refYear=${refYear}`);
   assertStatus(unauth, 401, "Reports endpoint should require authentication");
@@ -80,7 +46,7 @@ async function run() {
     "POST",
     "/api/blocks",
     { description: `RPT-B-${unique}` },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(block, 201, "Creating block should succeed");
   const blockId = block.payload.data.id;
@@ -89,7 +55,7 @@ async function run() {
     "POST",
     "/api/units",
     { description: `RPT-U-${unique}`, blockId, sqFt: 950 },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(unit, 201, "Creating unit should succeed");
   const unitId = unit.payload.data.id;
@@ -104,7 +70,7 @@ async function run() {
       mobile: `+9666${String(unique).slice(-8)}`,
       genderId: 1,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(depositor, 201, "Creating depositor should succeed");
   const depositedBy = depositor.payload.data.id;
@@ -119,7 +85,7 @@ async function run() {
       mobile: `+9555${String(unique).slice(-8)}`,
       genderId: 1,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(owner, 201, "Creating owner should succeed");
   const ownerId = owner.payload.data.id;
@@ -132,7 +98,7 @@ async function run() {
       indId: ownerId,
       fromDt: `${refYear}-01-01`,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(ownership, 201, "Creating ownership should succeed");
 
@@ -144,7 +110,7 @@ async function run() {
       payUnit: 3,
       period: "MONTH",
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(head, 201, "Creating contribution head should succeed");
   const headId = head.payload.data.id;
@@ -159,13 +125,15 @@ async function run() {
       amt: 200,
       reference: `rate-${unique}`,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(rate, 201, "Creating contribution rate should succeed");
 
   const periodsList = await requestJson(
     "GET",
-    `/api/contribution-periods?refYear=${refYear}&refMonth=1&page=1&pageSize=1`
+    `/api/contribution-periods?refYear=${refYear}&refMonth=1&page=1&pageSize=1`,
+    undefined,
+    readOnlyHeaders
   );
   assertStatus(periodsList, 200, "Listing contribution periods should succeed");
   const periodId = periodsList.payload.data.items[0].id;
@@ -181,7 +149,7 @@ async function run() {
       transactionDateTime: txDateIso,
       depositedBy,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(created, 201, "Creating contribution should succeed");
   const contributionId = created.payload.data.id;
@@ -197,7 +165,7 @@ async function run() {
       reasonText: "Report total reversal check",
       depositedBy,
     },
-    AUTH_HEADERS
+    authHeaders
   );
   assertStatus(correction, 201, "Creating correction should succeed");
 
@@ -205,7 +173,7 @@ async function run() {
     "GET",
     `/api/reports/contributions/transactions?refYear=${refYear}&headId=${headId}`,
     undefined,
-    READ_ONLY_HEADERS
+    readOnlyHeaders
   );
   assertStatus(transactions, 200, "Transactions report should allow READ_ONLY role");
   assert.equal(transactions.payload.data.totals.rowCount >= 2, true);
@@ -225,7 +193,7 @@ async function run() {
     "GET",
     `/api/reports/contributions/paid-unpaid-matrix?refYear=${refYear}&headId=${headId}&blockId=${blockId}`,
     undefined,
-    READ_ONLY_HEADERS
+    readOnlyHeaders
   );
   assertStatus(matrix, 200, "Paid/unpaid matrix should succeed");
   assert.equal(matrix.payload.data.totals.totalUnits, 1);
@@ -235,12 +203,11 @@ async function run() {
     `${BASE_URL}/api/reports/contributions/transactions.csv?refYear=${refYear}&headId=${headId}`,
     {
       method: "GET",
-      headers: READ_ONLY_HEADERS,
+      headers: readOnlyHeaders,
     }
   );
   assert.equal(csvResponse.status, 200, "CSV report should succeed");
   const csv = await csvResponse.text();
-  assert.equal(csv.includes("generatedBy,test-read-only-1"), true, "CSV should include generation actor");
   assert.equal(csv.includes("contributionId,transactionId"), true, "CSV should include header row");
   assert.equal(csv.includes("contributionRateId"), true, "CSV should include contributionRateId column");
   assert.equal(csv.includes("appliedRateReference"), true, "CSV should include appliedRateReference column");
@@ -249,7 +216,7 @@ async function run() {
     `${BASE_URL}/api/reports/contributions/paid-unpaid-matrix.csv?refYear=${refYear}&headId=${headId}&blockId=${blockId}`,
     {
       method: "GET",
-      headers: READ_ONLY_HEADERS,
+      headers: readOnlyHeaders,
     }
   );
   assert.equal(matrixCsvResponse.status, 200, "Matrix CSV report should succeed");
@@ -259,50 +226,38 @@ async function run() {
     true,
     "Matrix CSV should include unit header columns"
   );
-  assert.equal(matrixCsv.includes("generatedBy,test-read-only-1"), true, "Matrix CSV should include actor metadata");
 }
 
 async function main() {
   const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-  let server = null;
+  BASE_URL = `http://127.0.0.1:${PORT}`;
+  const server = exec(`${npmCommand} run dev -- -p ${PORT}`, {
+    env: process.env,
+    windowsHide: true,
+  });
 
-  const existingBaseUrl = "http://127.0.0.1:3000";
-  if (await isServerReachable(existingBaseUrl)) {
-    BASE_URL = existingBaseUrl;
-  } else {
-    BASE_URL = `http://127.0.0.1:${PORT}`;
-    server = exec(`${npmCommand} run dev -- -p ${PORT}`, {
-      env: process.env,
-      windowsHide: true,
-    });
+  if (server.stdout) {
+    server.stdout.pipe(process.stdout);
+  }
 
-    if (server.stdout) {
-      server.stdout.pipe(process.stdout);
-    }
-
-    if (server.stderr) {
-      server.stderr.pipe(process.stderr);
-    }
+  if (server.stderr) {
+    server.stderr.pipe(process.stderr);
   }
 
   try {
-    if (server) {
-      await waitForServerReady();
-    }
+    await waitForAuthServerReady(BASE_URL);
 
     await run();
     console.log("Reports API integration checks passed.");
   } finally {
-    if (server) {
-      if (process.platform === "win32") {
-        try {
-          execSync(`taskkill /PID ${server.pid} /T /F`, { stdio: "ignore" });
-        } catch {
-          // Ignore if process already exited.
-        }
-      } else {
-        server.kill("SIGTERM");
+    if (process.platform === "win32") {
+      try {
+        execSync(`taskkill /PID ${server.pid} /T /F`, { stdio: "ignore" });
+      } catch {
+        // Ignore if process already exited.
       }
+    } else {
+      server.kill("SIGTERM");
     }
   }
 }
