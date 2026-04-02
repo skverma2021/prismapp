@@ -47,23 +47,30 @@ Shell and auth baseline are in place. Current focus is closing auth alignment ga
 32. Public entry now shows explicit auth-required and signed-out feedback states.
 33. Dashboard home now shows explicit role-denied feedback after protected-route redirects.
 34. Login and sign-out flows now provide clearer local credential and redirect feedback.
+35. Master-data shell navigation now includes blocks, units, and individuals.
+36. Blocks management UI baseline is now available with search, pagination, create, edit, and delete.
+37. Units management UI baseline is now available with block filter, search, pagination, create, edit, and delete.
+38. Individuals management UI baseline is now available with gender filter, search, pagination, create, edit, and delete.
+39. Read-only individual views now mask email and mobile in the UI baseline.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
-2. Prepare next-pass master-data UI baseline planning.
+2. Extend master-data UI baseline beyond blocks, units, and individuals.
+3. Standardize shared table/filter/form patterns for operator screens.
 
 ## Next
 
 ### Immediate Next Steps
 1. Finish remaining shell-level auth feedback polish.
-2. Start master-data UI baseline for blocks, units, and individuals.
+2. Add ownership and residency UI baseline on top of the new master-data pages.
 3. Standardize shared table/filter/form patterns for operator screens.
+4. Add cross-linking between units, individuals, and contribution workflows.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.
 2. Auth feedback can still feel inconsistent if redirect reasons are not surfaced uniformly across all protected shell routes.
 3. Large seeded datasets can still surface performance issues in operator screens if client loading is not kept paginated and incremental.
-4. Master-data UI work will lag unless shell-level auth cleanup closes soon.
+4. Master-data UI consistency will drift if the shared table/filter/form patterns are not extracted soon.
 
 ## References
 1. `Product-Delivery-Strategy.md`

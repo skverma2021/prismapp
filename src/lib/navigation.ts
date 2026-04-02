@@ -20,6 +20,24 @@ export const dashboardNavItems: AppNavItem[] = [
     roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
   },
   {
+    href: "/blocks",
+    label: "Blocks",
+    description: "Manage residential block records.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
+    href: "/units",
+    label: "Units",
+    description: "Manage unit inventory and sq ft values.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
+    href: "/individuals",
+    label: "Individuals",
+    description: "Manage owners, residents, and payers.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
     href: "/contributions",
     label: "Contribution Capture",
     description: "Record contributions and compensating corrections.",
@@ -44,6 +62,21 @@ const routeMeta = [
     href: "/home",
     title: "Platform Home",
     description: "Role-aware launch surface for the current Week-3 shell.",
+  },
+  {
+    href: "/blocks",
+    title: "Blocks",
+    description: "Manage building-block records that anchor unit inventory.",
+  },
+  {
+    href: "/units",
+    title: "Units",
+    description: "Manage unit inventory, block placement, and sq ft attributes.",
+  },
+  {
+    href: "/individuals",
+    title: "Individuals",
+    description: "Manage person records used across ownership, residency, and payment flows.",
   },
   {
     href: "/contributions",
@@ -108,6 +141,30 @@ export function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
 
   if (pathname.startsWith("/contributions")) {
     return [{ label: "Home", href: "/home" }, { label: "Contribution Capture" }];
+  }
+
+  if (pathname.startsWith("/blocks")) {
+    return [
+      { label: "Home", href: "/home" },
+      { label: "Master Data" },
+      { label: "Blocks" },
+    ];
+  }
+
+  if (pathname.startsWith("/units")) {
+    return [
+      { label: "Home", href: "/home" },
+      { label: "Master Data" },
+      { label: "Units" },
+    ];
+  }
+
+  if (pathname.startsWith("/individuals")) {
+    return [
+      { label: "Home", href: "/home" },
+      { label: "Master Data" },
+      { label: "Individuals" },
+    ];
   }
 
   return [{ label: "Home", href: "/home" }, { label: "Workspace" }];

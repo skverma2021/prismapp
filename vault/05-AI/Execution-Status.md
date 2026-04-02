@@ -33,7 +33,7 @@ Residual follow-up:
 2. Maker-checker correction workflow remains deferred to later hardening.
 
 ### Objective 2: Establish platform shell: home page, navigation, authentication, and master data CRUD baseline
-Status: Substantially complete for shell and auth baseline; master-data UI still pending
+Status: Substantially complete for shell/auth baseline and first-pass master-data UI; deeper module coverage still pending
 
 Completed:
 1. Public entry page is now present.
@@ -46,10 +46,13 @@ Completed:
 8. Prisma-backed app-user seed records are available for local authentication.
 9. Master-data CRUD backend baseline already exists for blocks, units, individuals, ownerships, and residencies.
 10. Contribution heads, rates, periods, and reports APIs already exist.
+11. Blocks management UI baseline is implemented.
+12. Units management UI baseline is implemented.
+13. Individuals management UI baseline is implemented.
 
 Not yet complete:
 1. Shell-wide auth feedback is not yet uniform across every protected redirect path.
-2. Master-data CRUD UI baseline is not complete yet.
+2. Ownership, residency, and remaining master-data module screens are not complete yet.
 3. Shared table, filter-bar, and form-shell component library is not complete yet.
 
 ### Objective 3: Keep architecture ready for Safety, Security, Events, and AI features without rework
@@ -110,6 +113,14 @@ Not yet complete:
 4. Paid/unpaid matrix report screen implemented.
 5. Error, empty, and loading behavior was hardened during Week 2.
 
+### Master-Data UI Baseline
+1. Blocks management screen implemented with search, pagination, and CRUD actions.
+2. Units management screen implemented with block filter, pagination, and CRUD actions.
+3. Individuals management screen implemented with gender filter, pagination, and CRUD actions.
+4. Master-data shell navigation and route metadata were added for blocks, units, and individuals.
+5. Read-only individuals view now masks email and mobile in the UI.
+6. Gender types now have a dedicated read endpoint for the individuals form.
+
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
 2. Shared unit label formatting was added so operator-facing screens show `Block, Unit` labels.
@@ -159,7 +170,8 @@ Not yet complete:
 ## Activities In Progress
 
 1. Continue shell-level auth feedback refinements beyond the current public-entry and home redirect states.
-2. Prepare master-data UI baseline after auth/session alignment stabilizes.
+2. Extend master-data UI baseline to ownership and residency workflows.
+3. Standardize shared table, filter, and form patterns across the new operator pages.
 
 ## Activities Yet To Be Performed
 
@@ -168,16 +180,13 @@ Not yet complete:
 2. Remove any remaining test-style auth assumptions from operator-facing flows while preserving payer-versus-operator separation in contribution capture.
 
 ### Week 5: Master Data UI Baseline
-1. Build blocks management UI.
-2. Build units management UI.
-3. Build individuals management UI.
-4. Build ownership timeline UI.
-5. Build residency timeline UI.
-6. Build contribution heads UI.
-7. Build contribution rates UI.
-8. Build contribution periods UI if operationally needed.
-9. Add cross-linking between units, owners, residents, and contribution flows.
-10. Standardize search, filtering, pagination, and sort behavior across module screens.
+1. Build ownership timeline UI.
+2. Build residency timeline UI.
+3. Build contribution heads UI.
+4. Build contribution rates UI.
+5. Build contribution periods UI if operationally needed.
+6. Add cross-linking between units, owners, residents, and contribution flows.
+7. Standardize search, filtering, pagination, and sort behavior across module screens.
 
 ### Shared UI and Platform Work
 1. Create reusable table component baseline.

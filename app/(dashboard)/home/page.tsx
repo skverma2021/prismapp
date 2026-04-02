@@ -18,6 +18,27 @@ type EntryCard = {
 
 const entryCards: EntryCard[] = [
   {
+    kicker: "Master Data",
+    title: "Blocks",
+    description: "Review and maintain block records that anchor unit inventory.",
+    href: "/blocks",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
+    kicker: "Master Data",
+    title: "Units",
+    description: "Maintain units, block placement, and sq ft attributes used in calculations.",
+    href: "/units",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
+    kicker: "Master Data",
+    title: "Individuals",
+    description: "Manage people who act as owners, residents, and contribution payers.",
+    href: "/individuals",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
+  {
     kicker: "Operations",
     title: "Contribution Capture",
     description: "Record contributions and corrections with the existing Week-2 posting flow.",
