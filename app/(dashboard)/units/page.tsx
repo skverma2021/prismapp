@@ -48,6 +48,10 @@ function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
   return payload.ok ? fallback : payload.error?.message ?? fallback;
 }
 
+function resolveBlock(blocks: BlockOption[], blockId: string) {
+  return blocks.find((block) => block.id === blockId);
+}
+
 export default function UnitsPage() {
   const { session } = useAuthSession();
   const canMutate = session.role !== "READ_ONLY";
@@ -197,7 +201,22 @@ export default function UnitsPage() {
 
       setEditingId(null);
       setEditingState({ description: "", blockId: "", sqFt: "" });
-      setItems((prev) => prev.map((item) => (item.id === id ? payload.data : item)));
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                ...payload.data,
+                block: resolveBlock(blocks, payload.data.blockId)
+                  ? {
+                      id: payload.data.blockId,
+                      description: resolveBlock(blocks, payload.data.blockId)?.description ?? "",
+                    }
+                  : item.block,
+              }
+            : item
+        )
+      );
       setSubmitSuccess(`Unit updated: ${payload.data.description}`);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Unable to update unit.");

@@ -67,6 +67,8 @@ const emptyFormState: IndividualFormState = {
   genderId: "",
 };
 
+type SortOption = "sName" | "fName" | "eMail" | "createdAt";
+
 function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
   return payload.ok ? fallback : payload.error?.message ?? fallback;
 }
@@ -108,6 +110,10 @@ export default function IndividualsPage() {
   const [appliedQuery, setAppliedQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
   const [appliedGenderFilter, setAppliedGenderFilter] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("sName");
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("sName");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
@@ -147,8 +153,8 @@ export default function IndividualsPage() {
         const params = new URLSearchParams({
           page: String(page),
           pageSize: "20",
-          sortBy: "sName",
-          sortDir: "asc",
+          sortBy: appliedSortBy,
+          sortDir: appliedSortDir,
         });
 
         if (appliedQuery.trim()) {
@@ -180,7 +186,7 @@ export default function IndividualsPage() {
     }
 
     void loadIndividuals();
-  }, [appliedGenderFilter, appliedQuery, page]);
+  }, [appliedGenderFilter, appliedQuery, appliedSortBy, appliedSortDir, page]);
 
   async function createIndividual() {
     setCreateLoading(true);
@@ -247,7 +253,18 @@ export default function IndividualsPage() {
 
       setEditingId(null);
       setEditingState(emptyFormState);
-      setItems((prev) => prev.map((item) => (item.id === id ? payload.data : item)));
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                ...payload.data,
+                genderType:
+                  genderTypes.find((gender) => gender.id === payload.data.genderId) ?? item.genderType,
+              }
+            : item
+        )
+      );
       setSubmitSuccess(`Individual updated: ${formatIndividualName(payload.data)}`);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Unable to update individual.");
@@ -307,17 +324,37 @@ export default function IndividualsPage() {
               placeholder="Search name, email, or mobile"
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             />
+            <div className="grid gap-2 md:grid-cols-2">
+              <select
+                value={genderFilter}
+                onChange={(event) => setGenderFilter(event.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="">All genders</option>
+                {genderTypes.map((gender) => (
+                  <option key={gender.id} value={gender.id}>
+                    {gender.description}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortOption)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="sName">Sort by surname</option>
+                <option value="fName">Sort by first name</option>
+                <option value="eMail">Sort by email</option>
+                <option value="createdAt">Sort by created time</option>
+              </select>
+            </div>
             <select
-              value={genderFilter}
-              onChange={(event) => setGenderFilter(event.target.value)}
+              value={sortDir}
+              onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             >
-              <option value="">All genders</option>
-              {genderTypes.map((gender) => (
-                <option key={gender.id} value={gender.id}>
-                  {gender.description}
-                </option>
-              ))}
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
             </select>
             <div className="flex gap-2">
               <button
@@ -326,6 +363,8 @@ export default function IndividualsPage() {
                   setPage(1);
                   setAppliedQuery(query);
                   setAppliedGenderFilter(genderFilter);
+                  setAppliedSortBy(sortBy);
+                  setAppliedSortDir(sortDir);
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -336,8 +375,12 @@ export default function IndividualsPage() {
                 onClick={() => {
                   setQuery("");
                   setGenderFilter("");
+                  setSortBy("sName");
+                  setSortDir("asc");
                   setAppliedQuery("");
                   setAppliedGenderFilter("");
+                  setAppliedSortBy("sName");
+                  setAppliedSortDir("asc");
                   setPage(1);
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
@@ -361,7 +404,7 @@ export default function IndividualsPage() {
         {submitSuccess ? <InlineNotice className="mt-4" tone="success" message={submitSuccess} /> : null}
         {loadError ? <InlineNotice className="mt-4" tone="danger" message={loadError} /> : null}
 
-        <div className="mt-6 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="mt-6 space-y-4">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Create Individual</p>
             <p className="mt-1 text-sm text-slate-600">Email and mobile must remain unique across all individuals.</p>

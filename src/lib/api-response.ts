@@ -34,7 +34,7 @@ export function fail(error: HttpError): Response {
         code: error.code,
         message: error.message,
         details: error.details,
-        retryable: false,
+        retryable: error.code === "RATE_LIMITED" || error.code === "SERVICE_UNAVAILABLE",
       },
     },
     { status: error.status }
@@ -64,6 +64,15 @@ export function fromUnknownError(error: unknown): HttpError {
 
     if (prismaLikeError.code === "P2025") {
       return new HttpError(404, "NOT_FOUND", "Record not found.");
+    }
+
+    if (prismaLikeError.code === "P2034") {
+      return new HttpError(
+        503,
+        "SERVICE_UNAVAILABLE",
+        "The operation could not be completed due to concurrent database activity. Please retry.",
+        prismaLikeError.meta
+      );
     }
   }
 

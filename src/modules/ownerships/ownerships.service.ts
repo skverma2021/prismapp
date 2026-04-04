@@ -37,6 +37,25 @@ async function ensureNoOwnershipOverlap(
   }
 }
 
+async function ensureOwnershipReferencesExist(
+  tx: Pick<typeof db, "unit" | "individual">,
+  unitId: string,
+  indId: string
+) {
+  const [unit, individual] = await Promise.all([
+    tx.unit.findUnique({ where: { id: unitId }, select: { id: true } }),
+    tx.individual.findUnique({ where: { id: indId }, select: { id: true } }),
+  ]);
+
+  if (!unit) {
+    throw new HttpError(404, "NOT_FOUND", "Unit not found.");
+  }
+
+  if (!individual) {
+    throw new HttpError(404, "NOT_FOUND", "Individual not found.");
+  }
+}
+
 export async function listOwnerships(searchParams: URLSearchParams) {
   const page = parseQueryInt(searchParams.get("page"), DEFAULT_PAGE);
   const pageSize = parseQueryInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE);
@@ -117,6 +136,7 @@ export async function getOwnershipById(id: string) {
 export async function createOwnership(input: CreateOwnershipInput) {
   return db.$transaction(
     async (tx) => {
+      await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
       await ensureNoOwnershipOverlap(tx, input.unitId, input.fromDt, input.toDt ?? null);
       return tx.unitOwner.create({
         data: {
@@ -140,6 +160,7 @@ export async function updateOwnership(id: string, input: UpdateOwnershipInput) {
       }
 
       const nextUnitId = input.unitId ?? current.unitId;
+      const nextIndId = input.indId ?? current.indId;
       const nextFromDt = input.fromDt ?? current.fromDt;
       const nextToDt = input.toDt === undefined ? current.toDt : input.toDt;
 
@@ -147,6 +168,7 @@ export async function updateOwnership(id: string, input: UpdateOwnershipInput) {
         throw new HttpError(400, "VALIDATION_ERROR", "fromDt must be before or equal to toDt.");
       }
 
+      await ensureOwnershipReferencesExist(tx, nextUnitId, nextIndId);
       await ensureNoOwnershipOverlap(tx, nextUnitId, nextFromDt, nextToDt, id);
 
       return tx.unitOwner.update({
@@ -182,6 +204,8 @@ export async function deleteOwnership(id: string) {
 export async function transferOwnership(input: TransferOwnershipInput) {
   return db.$transaction(
     async (tx) => {
+      await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
+
       const current = await tx.unitOwner.findFirst({
         where: {
           unitId: input.unitId,
