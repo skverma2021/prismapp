@@ -7,6 +7,7 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
 type ApiEnvelope<T> =
@@ -27,21 +28,9 @@ type PaginatedResponse<T> = {
   totalPages: number;
 };
 
-type UnitOption = {
-  id: string;
-  description: string;
-  blockId: string;
-  block?: {
-    description: string;
-  };
-};
+type UnitOption = UnitLookupOption;
 
-type IndividualOption = {
-  id: string;
-  fName: string;
-  mName?: string | null;
-  sName: string;
-};
+type IndividualOption = IndividualLookupOption;
 
 type OwnershipItem = {
   id: string;
@@ -57,11 +46,6 @@ type OwnershipFormState = {
   indId: string;
   fromDt: string;
   toDt: string;
-};
-
-type OwnershipLookupResponse = {
-  units: UnitOption[];
-  individuals: IndividualOption[];
 };
 
 const emptyFormState: OwnershipFormState = {
@@ -98,7 +82,8 @@ export default function OwnershipsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [lookupLoading, setLookupLoading] = useState(true);
+  const [unitsLoading, setUnitsLoading] = useState(true);
+  const [individualsLoading, setIndividualsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
@@ -114,36 +99,56 @@ export default function OwnershipsPage() {
   const [transferLoading, setTransferLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingState, setEditingState] = useState<OwnershipFormState>(emptyFormState);
-  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
-
   const unitMap = useMemo(() => new Map(units.map((item) => [item.id, item])), [units]);
   const individualMap = useMemo(() => new Map(individuals.map((item) => [item.id, item])), [individuals]);
 
   useEffect(() => {
-    async function loadLookups() {
-      setLookupLoading(true);
+    async function loadUnits() {
+      setUnitsLoading(true);
       setLoadError("");
 
       try {
-        const response = await fetch("/api/ownerships/lookups");
-        const payload = (await response.json()) as ApiEnvelope<OwnershipLookupResponse>;
+        const response = await fetch("/api/units/lookups");
+        const payload = (await response.json()) as ApiEnvelope<UnitOption[]>;
 
         if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load ownership lookups."));
+          throw new Error(toErrorMessage(payload, "Unable to load units."));
         }
 
-        setUnits(payload.data.units.sort(compareUnitsByBlockAndDescription));
-        setIndividuals(payload.data.individuals);
+        setUnits(payload.data.sort(compareUnitsByBlockAndDescription));
       } catch (error) {
         setUnits([]);
-        setIndividuals([]);
-        setLoadError(error instanceof Error ? error.message : "Unable to load ownership lookups.");
+        setLoadError(error instanceof Error ? error.message : "Unable to load units.");
       } finally {
-        setLookupLoading(false);
+        setUnitsLoading(false);
       }
     }
 
-    void loadLookups();
+    void loadUnits();
+  }, []);
+
+  useEffect(() => {
+    async function loadIndividuals() {
+      setIndividualsLoading(true);
+
+      try {
+        const response = await fetch("/api/individuals/lookups");
+        const payload = (await response.json()) as ApiEnvelope<IndividualOption[]>;
+
+        if (!response.ok || !payload.ok) {
+          throw new Error(toErrorMessage(payload, "Unable to load individuals."));
+        }
+
+        setIndividuals(payload.data);
+      } catch (error) {
+        setIndividuals([]);
+        setLoadError(error instanceof Error ? error.message : "Unable to load individuals.");
+      } finally {
+        setIndividualsLoading(false);
+      }
+    }
+
+    void loadIndividuals();
   }, []);
 
   useEffect(() => {
@@ -289,34 +294,6 @@ export default function OwnershipsPage() {
     }
   }
 
-  async function deleteOwnership(id: string) {
-    setDeleteLoadingId(id);
-    setSubmitError("");
-    setSubmitSuccess("");
-
-    try {
-      const response = await fetch(`/api/ownerships/${id}`, { method: "DELETE" });
-      if (!response.ok) {
-        const payload = (await response.json()) as ApiEnvelope<null>;
-        throw new Error(toErrorMessage(payload, "Unable to delete ownership."));
-      }
-
-      const nextCount = items.length - 1;
-      setSubmitSuccess("Ownership record deleted.");
-
-      if (nextCount === 0 && page > 1) {
-        setPage(page - 1);
-      } else {
-        setItems((prev) => prev.filter((item) => item.id !== id));
-        setTotalItems((prev) => Math.max(prev - 1, 0));
-      }
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Unable to delete ownership.");
-    } finally {
-      setDeleteLoadingId(null);
-    }
-  }
-
   return (
     <div className="space-y-4">
       <MasterDataNav />
@@ -333,14 +310,14 @@ export default function OwnershipsPage() {
             </p>
           </div>
           <div className="grid gap-2 sm:min-w-85">
-            <select value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
-              <option value="">All units</option>
+            <select value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={unitsLoading}>
+              <option value="">{unitsLoading ? "Loading units..." : "All units"}</option>
               {units.map((unit) => (
                 <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>
               ))}
             </select>
-            <select value={individualFilter} onChange={(event) => setIndividualFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
-              <option value="">All individuals</option>
+            <select value={individualFilter} onChange={(event) => setIndividualFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={individualsLoading}>
+              <option value="">{individualsLoading ? "Loading individuals..." : "All individuals"}</option>
               {individuals.map((individual) => (
                 <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>
               ))}
@@ -366,12 +343,12 @@ export default function OwnershipsPage() {
               <p className="text-sm font-semibold text-slate-900">Create Ownership</p>
               <p className="mt-1 text-sm text-slate-600">Use this for historical or explicit range creation. Active ownership cannot overlap another ownership for the same unit.</p>
               <div className="mt-4 grid gap-3">
-                <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
-                  <option value="">Select unit</option>
+                <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                  <option value="">{unitsLoading ? "Loading units..." : "Select unit"}</option>
                   {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
                 </select>
-                <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
-                  <option value="">Select individual</option>
+                <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || individualsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                  <option value="">{individualsLoading ? "Loading individuals..." : "Select individual"}</option>
                   {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
                 </select>
                 <input type="date" value={createState.fromDt} onChange={(event) => setCreateState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
@@ -384,12 +361,12 @@ export default function OwnershipsPage() {
               <p className="text-sm font-semibold text-slate-900">Transfer Active Ownership</p>
               <p className="mt-1 text-sm text-slate-600">Use the dedicated transfer flow when one active owner should hand over a unit to another individual.</p>
               <div className="mt-4 grid gap-3">
-                <select value={transferState.unitId} onChange={(event) => setTransferState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || lookupLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
-                  <option value="">Select unit</option>
+                <select value={transferState.unitId} onChange={(event) => setTransferState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                  <option value="">{unitsLoading ? "Loading units..." : "Select unit"}</option>
                   {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
                 </select>
-                <select value={transferState.indId} onChange={(event) => setTransferState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || lookupLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
-                  <option value="">Transfer to individual</option>
+                <select value={transferState.indId} onChange={(event) => setTransferState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || individualsLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                  <option value="">{individualsLoading ? "Loading individuals..." : "Transfer to individual"}</option>
                   {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
                 </select>
                 <input type="date" value={transferState.fromDt} onChange={(event) => setTransferState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
@@ -441,7 +418,6 @@ export default function OwnershipsPage() {
                         ) : (
                           <>
                             <button type="button" disabled={!canMutate} onClick={() => { setEditingId(item.id); setEditingState({ unitId: item.unitId, indId: item.indId, fromDt: toDateInputValue(item.fromDt), toDt: toDateInputValue(item.toDt) }); }} className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50">Edit</button>
-                            <button type="button" disabled={!canMutate || deleteLoadingId === item.id} onClick={() => { void deleteOwnership(item.id); }} className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 disabled:cursor-not-allowed disabled:opacity-50">{deleteLoadingId === item.id ? "Deleting..." : "Delete"}</button>
                           </>
                         )}</div></td>
                       </tr>

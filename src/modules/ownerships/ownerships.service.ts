@@ -43,7 +43,7 @@ async function ensureOwnershipReferencesExist(
   indId: string
 ) {
   const [unit, individual] = await Promise.all([
-    tx.unit.findUnique({ where: { id: unitId }, select: { id: true } }),
+    tx.unit.findUnique({ where: { id: unitId }, select: { id: true, inceptionDt: true } }),
     tx.individual.findUnique({ where: { id: indId }, select: { id: true } }),
   ]);
 
@@ -53,6 +53,18 @@ async function ensureOwnershipReferencesExist(
 
   if (!individual) {
     throw new HttpError(404, "NOT_FOUND", "Individual not found.");
+  }
+
+  return unit;
+}
+
+function ensureNotBeforeUnitInception(unitInceptionDt: Date, fromDt: Date, label: string) {
+  if (fromDt.getTime() < unitInceptionDt.getTime()) {
+    throw new HttpError(
+      400,
+      "VALIDATION_ERROR",
+      `${label} cannot be earlier than the unit inception date (${unitInceptionDt.toISOString().slice(0, 10)}).`
+    );
   }
 }
 
@@ -167,7 +179,8 @@ export async function getOwnershipById(id: string) {
 export async function createOwnership(input: CreateOwnershipInput) {
   return db.$transaction(
     async (tx) => {
-      await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
+      const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
+      ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership start date");
       await ensureNoOwnershipOverlap(tx, input.unitId, input.fromDt, input.toDt ?? null);
       return tx.unitOwner.create({
         data: {
@@ -199,7 +212,8 @@ export async function updateOwnership(id: string, input: UpdateOwnershipInput) {
         throw new HttpError(400, "VALIDATION_ERROR", "fromDt must be before or equal to toDt.");
       }
 
-      await ensureOwnershipReferencesExist(tx, nextUnitId, nextIndId);
+      const unit = await ensureOwnershipReferencesExist(tx, nextUnitId, nextIndId);
+      ensureNotBeforeUnitInception(unit.inceptionDt, nextFromDt, "Ownership start date");
       await ensureNoOwnershipOverlap(tx, nextUnitId, nextFromDt, nextToDt, id);
 
       return tx.unitOwner.update({
@@ -217,25 +231,19 @@ export async function updateOwnership(id: string, input: UpdateOwnershipInput) {
 }
 
 export async function deleteOwnership(id: string) {
-  return db.$transaction(async (tx) => {
-    const current = await tx.unitOwner.findUnique({ where: { id } });
-    if (!current) {
-      throw new HttpError(404, "NOT_FOUND", "Ownership record not found.");
-    }
+  const current = await db.unitOwner.findUnique({ where: { id }, select: { id: true } });
+  if (!current) {
+    throw new HttpError(404, "NOT_FOUND", "Ownership record not found.");
+  }
 
-    // Domain rule O4: a unit must always have exactly one active owner.
-    if (current.toDt === null) {
-      throw new HttpError(412, "PRECONDITION_FAILED", "Active ownership cannot be deleted directly.");
-    }
-
-    await tx.unitOwner.delete({ where: { id } });
-  });
+  throw new HttpError(412, "PRECONDITION_FAILED", "Ownership history is immutable and cannot be deleted.");
 }
 
 export async function transferOwnership(input: TransferOwnershipInput) {
   return db.$transaction(
     async (tx) => {
-      await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
+      const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
+      ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership transfer date");
 
       const current = await tx.unitOwner.findFirst({
         where: {

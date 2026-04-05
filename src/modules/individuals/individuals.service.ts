@@ -84,6 +84,18 @@ export async function listIndividuals(searchParams: URLSearchParams) {
   };
 }
 
+export async function listIndividualLookups() {
+  return db.individual.findMany({
+    select: {
+      id: true,
+      fName: true,
+      mName: true,
+      sName: true,
+    },
+    orderBy: [{ sName: "asc" }, { fName: "asc" }, { mName: "asc" }],
+  });
+}
+
 export async function getIndividualById(id: string) {
   const individual = await db.individual.findUnique({
     where: { id },

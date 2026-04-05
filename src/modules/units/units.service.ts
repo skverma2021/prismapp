@@ -63,6 +63,21 @@ export async function listUnits(searchParams: URLSearchParams) {
   };
 }
 
+export async function listUnitLookups() {
+  return db.unit.findMany({
+    select: {
+      id: true,
+      description: true,
+      blockId: true,
+      block: {
+        select: {
+          description: true,
+        },
+      },
+    },
+  });
+}
+
 export async function getUnitById(id: string) {
   const unit = await db.unit.findUnique({
     where: { id },

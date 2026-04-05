@@ -464,7 +464,7 @@ export default function ContributionRatesPage() {
                                 Cancel
                               </button>
                             </div>
-                          ) : (
+                          ) : isCurrentRate(item) ? (
                             <button
                               type="button"
                               disabled={!canMutate}
@@ -479,6 +479,8 @@ export default function ContributionRatesPage() {
                             >
                               Edit
                             </button>
+                          ) : (
+                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</span>
                           )}
                         </td>
                       </tr>

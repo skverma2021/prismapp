@@ -191,6 +191,10 @@ export async function updateContributionRate(id: string, input: UpdateContributi
         throw new HttpError(404, "NOT_FOUND", "Contribution rate not found.");
       }
 
+      if (current.toDt !== null) {
+        throw new HttpError(412, "PRECONDITION_FAILED", "Retired contribution rates are immutable and cannot be edited.");
+      }
+
       const nextToDt = input.toDt === undefined ? current.toDt : input.toDt;
 
       if (nextToDt && current.fromDt.getTime() > nextToDt.getTime()) {

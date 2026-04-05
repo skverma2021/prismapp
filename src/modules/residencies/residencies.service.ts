@@ -13,6 +13,37 @@ function rangesOverlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date
   return aStart.getTime() <= bEndTime && bStart.getTime() <= aEndTime;
 }
 
+async function ensureResidencyReferencesExist(
+  tx: Pick<typeof db, "unit" | "individual">,
+  unitId: string,
+  indId: string
+) {
+  const [unit, individual] = await Promise.all([
+    tx.unit.findUnique({ where: { id: unitId }, select: { id: true, inceptionDt: true } }),
+    tx.individual.findUnique({ where: { id: indId }, select: { id: true } }),
+  ]);
+
+  if (!unit) {
+    throw new HttpError(404, "NOT_FOUND", "Unit not found.");
+  }
+
+  if (!individual) {
+    throw new HttpError(404, "NOT_FOUND", "Individual not found.");
+  }
+
+  return unit;
+}
+
+function ensureNotBeforeUnitInception(unitInceptionDt: Date, fromDt: Date, label: string) {
+  if (fromDt.getTime() < unitInceptionDt.getTime()) {
+    throw new HttpError(
+      400,
+      "VALIDATION_ERROR",
+      `${label} cannot be earlier than the unit inception date (${unitInceptionDt.toISOString().slice(0, 10)}).`
+    );
+  }
+}
+
 async function ensureNoResidencyOverlap(
   tx: Pick<typeof db, "unitResident">,
   unitId: string,
@@ -120,6 +151,8 @@ export async function getResidencyById(id: string) {
 export async function createResidency(input: CreateResidencyInput) {
   return db.$transaction(
     async (tx) => {
+      const unit = await ensureResidencyReferencesExist(tx, input.unitId, input.indId);
+      ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Residency start date");
       await ensureNoResidencyOverlap(tx, input.unitId, input.fromDt, input.toDt ?? null);
 
       return tx.unitResident.create({
@@ -151,6 +184,8 @@ export async function updateResidency(id: string, input: UpdateResidencyInput) {
         throw new HttpError(400, "VALIDATION_ERROR", "fromDt must be before or equal to toDt.");
       }
 
+      const unit = await ensureResidencyReferencesExist(tx, nextUnitId, input.indId ?? current.indId);
+      ensureNotBeforeUnitInception(unit.inceptionDt, nextFromDt, "Residency start date");
       await ensureNoResidencyOverlap(tx, nextUnitId, nextFromDt, nextToDt, id);
 
       return tx.unitResident.update({
@@ -168,5 +203,10 @@ export async function updateResidency(id: string, input: UpdateResidencyInput) {
 }
 
 export async function deleteResidency(id: string) {
-  await db.unitResident.delete({ where: { id } });
+  const current = await db.unitResident.findUnique({ where: { id }, select: { id: true } });
+  if (!current) {
+    throw new HttpError(404, "NOT_FOUND", "Residency record not found.");
+  }
+
+  throw new HttpError(412, "PRECONDITION_FAILED", "Residency history is immutable and cannot be deleted.");
 }
