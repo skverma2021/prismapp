@@ -1,6 +1,6 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
-import type { CreateContributionRateInput } from "./contribution-rates.schemas";
+import type { CreateContributionRateInput, UpdateContributionRateInput } from "./contribution-rates.schemas";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
@@ -165,6 +165,45 @@ export async function createContributionRate(input: CreateContributionRateInput)
           fromDt: input.fromDt,
           toDt: input.toDt ?? null,
           amt: input.amt,
+        },
+        include: {
+          contributionHead: true,
+        },
+      });
+    },
+    { isolationLevel: "Serializable" }
+  );
+}
+
+export async function updateContributionRate(id: string, input: UpdateContributionRateInput) {
+  const parsedId = parseContributionRateId(id);
+
+  return db.$transaction(
+    async (tx) => {
+      const current = await tx.contributionRate.findUnique({
+        where: { id: parsedId },
+        include: {
+          contributionHead: true,
+        },
+      });
+
+      if (!current) {
+        throw new HttpError(404, "NOT_FOUND", "Contribution rate not found.");
+      }
+
+      const nextToDt = input.toDt === undefined ? current.toDt : input.toDt;
+
+      if (nextToDt && current.fromDt.getTime() > nextToDt.getTime()) {
+        throw new HttpError(400, "VALIDATION_ERROR", "toDt must be on or after fromDt.");
+      }
+
+      await ensureNoRateOverlap(tx, current.contributionHeadId, current.fromDt, nextToDt, parsedId);
+
+      return tx.contributionRate.update({
+        where: { id: parsedId },
+        data: {
+          reference: input.reference,
+          toDt: nextToDt,
         },
         include: {
           contributionHead: true,

@@ -59,6 +59,8 @@ Shell and auth baseline are in place. Current focus is expanding the master-data
 44. Contribution heads UI baseline is now available with search, pagination, create, edit, and delete.
 45. Contribution rates UI baseline is now available with head and active-date filters plus append-only rate creation.
 46. Master-data shell navigation and dashboard home cards now include contribution periods, heads, and rates.
+47. Ownership page lookups now load through one lightweight lookup endpoint so unit and individual dropdowns become available sooner.
+48. Contribution rates now support retiring an existing rate window by editing its `toDt` and reference.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.

@@ -120,6 +120,37 @@ export async function listOwnerships(searchParams: URLSearchParams) {
   };
 }
 
+export async function listOwnershipLookups() {
+  const [units, individuals] = await Promise.all([
+    db.unit.findMany({
+      select: {
+        id: true,
+        description: true,
+        blockId: true,
+        block: {
+          select: {
+            description: true,
+          },
+        },
+      },
+    }),
+    db.individual.findMany({
+      select: {
+        id: true,
+        fName: true,
+        mName: true,
+        sName: true,
+      },
+      orderBy: [{ sName: "asc" }, { fName: "asc" }, { mName: "asc" }],
+    }),
+  ]);
+
+  return {
+    units,
+    individuals,
+  };
+}
+
 export async function getOwnershipById(id: string) {
   const ownership = await db.unitOwner.findUnique({
     where: { id },

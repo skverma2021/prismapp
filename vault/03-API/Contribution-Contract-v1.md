@@ -88,6 +88,11 @@ Endpoint: POST /api/contribution-rates
 Endpoint: GET /api/contribution-rates/{id}
 - Returns one rate with contribution head
 
+Endpoint: PATCH /api/contribution-rates/{id}
+- Auth: mutation role required
+- Body optional: toDt, reference
+- Validation: `toDt` must be >= `fromDt`; no overlap for same head rate history
+
 ### 5.3 Contribution Periods
 Endpoint: GET /api/contribution-periods
 - Query: page, pageSize, refYear, refMonth, sortBy, sortDir

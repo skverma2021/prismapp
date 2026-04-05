@@ -8,6 +8,11 @@ export type CreateContributionRateInput = {
   amt: number;
 };
 
+export type UpdateContributionRateInput = {
+  reference?: string | null;
+  toDt?: Date | null;
+};
+
 function parseRequiredDate(value: unknown, field: string): Date {
   const raw = requireString(value, field);
   const parsed = new Date(raw);
@@ -83,4 +88,33 @@ export function parseCreateContributionRateInput(payload: unknown): CreateContri
     toDt,
     amt: parsePositiveAmount(record.amt, "amt"),
   };
+}
+
+export function parseUpdateContributionRateInput(payload: unknown): UpdateContributionRateInput {
+  if (typeof payload !== "object" || payload === null) {
+    throw new HttpError(400, "VALIDATION_ERROR", "Payload must be an object.");
+  }
+
+  const record = payload as Record<string, unknown>;
+  const next: UpdateContributionRateInput = {};
+
+  if (Object.hasOwn(record, "reference")) {
+    if (record.reference === null) {
+      next.reference = null;
+    } else if (typeof record.reference === "string") {
+      next.reference = record.reference.trim().length > 0 ? record.reference.trim() : null;
+    } else {
+      throw new HttpError(400, "VALIDATION_ERROR", "reference must be a string or null.");
+    }
+  }
+
+  if (Object.hasOwn(record, "toDt")) {
+    next.toDt = parseOptionalDate(record.toDt, "toDt");
+  }
+
+  if (Object.keys(next).length === 0) {
+    throw new HttpError(400, "VALIDATION_ERROR", "At least one updatable field is required.");
+  }
+
+  return next;
 }

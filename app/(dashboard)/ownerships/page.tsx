@@ -7,7 +7,6 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
-import { fetchAllPages } from "@/src/lib/paginated-client";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
 type ApiEnvelope<T> =
@@ -58,6 +57,11 @@ type OwnershipFormState = {
   indId: string;
   fromDt: string;
   toDt: string;
+};
+
+type OwnershipLookupResponse = {
+  units: UnitOption[];
+  individuals: IndividualOption[];
 };
 
 const emptyFormState: OwnershipFormState = {
@@ -118,21 +122,18 @@ export default function OwnershipsPage() {
   useEffect(() => {
     async function loadLookups() {
       setLookupLoading(true);
+      setLoadError("");
 
       try {
-        const [allUnits, allIndividuals] = await Promise.all([
-          fetchAllPages<UnitOption>(
-            (currentPage) => `/api/units?page=${currentPage}&pageSize=500&sortBy=description&sortDir=asc`,
-            "Unable to load units."
-          ),
-          fetchAllPages<IndividualOption>(
-            (currentPage) => `/api/individuals?page=${currentPage}&pageSize=100&sortBy=sName&sortDir=asc`,
-            "Unable to load individuals."
-          ),
-        ]);
+        const response = await fetch("/api/ownerships/lookups");
+        const payload = (await response.json()) as ApiEnvelope<OwnershipLookupResponse>;
 
-        setUnits(allUnits.sort(compareUnitsByBlockAndDescription));
-        setIndividuals(allIndividuals);
+        if (!response.ok || !payload.ok) {
+          throw new Error(toErrorMessage(payload, "Unable to load ownership lookups."));
+        }
+
+        setUnits(payload.data.units.sort(compareUnitsByBlockAndDescription));
+        setIndividuals(payload.data.individuals);
       } catch (error) {
         setUnits([]);
         setIndividuals([]);

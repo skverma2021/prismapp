@@ -45,6 +45,11 @@ type ContributionRateItem = {
   contributionHead?: ContributionHeadOption;
 };
 
+type RateEditState = {
+  reference: string;
+  toDt: string;
+};
+
 function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
   return payload.ok ? fallback : payload.error?.message ?? fallback;
 }
@@ -77,6 +82,9 @@ export default function ContributionRatesPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingState, setEditingState] = useState<RateEditState>({ reference: "", toDt: "" });
+  const [updateLoading, setUpdateLoading] = useState(false);
   const [createState, setCreateState] = useState({
     contributionHeadId: "",
     reference: "",
@@ -187,6 +195,39 @@ export default function ContributionRatesPage() {
     }
   }
 
+  async function updateRate(id: number) {
+    setUpdateLoading(true);
+    setSubmitError("");
+    setSubmitSuccess("");
+
+    try {
+      const response = await fetch(`/api/contribution-rates/${id}`, {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          reference: editingState.reference,
+          toDt: editingState.toDt.trim() ? editingState.toDt : null,
+        }),
+      });
+
+      const payload = (await response.json()) as ApiEnvelope<ContributionRateItem>;
+      if (!response.ok || !payload.ok) {
+        throw new Error(toErrorMessage(payload, "Unable to update contribution rate."));
+      }
+
+      setItems((prev) => prev.map((item) => (item.id === id ? payload.data : item)));
+      setEditingId(null);
+      setEditingState({ reference: "", toDt: "" });
+      setSubmitSuccess(`Contribution rate updated for ${payload.data.contributionHead?.description ?? `head ${payload.data.contributionHeadId}`}.`);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Unable to update contribution rate.");
+    } finally {
+      setUpdateLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <MasterDataNav />
@@ -199,7 +240,7 @@ export default function ContributionRatesPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-(--accent-strong)">Contribution Master Data</p>
             <h2 className="mt-2 text-2xl font-semibold text-slate-900">Contribution Rates</h2>
             <p className="mt-2 max-w-3xl text-sm text-slate-600">
-              Rates are append-only history. Add new effective windows here, but do not expect to edit or delete previously posted financial context.
+              Rates remain historical records. Close an active window by setting its end date, then add the successor rate as a new row.
             </p>
           </div>
           <div className="grid gap-2 sm:min-w-90">
@@ -340,6 +381,7 @@ export default function ContributionRatesPage() {
                       <th className="px-3 py-3 font-semibold">Effective Window</th>
                       <th className="px-3 py-3 font-semibold">Reference</th>
                       <th className="px-3 py-3 font-semibold">Status</th>
+                      <th className="px-3 py-3 font-semibold">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
@@ -354,9 +396,37 @@ export default function ContributionRatesPage() {
                         <td className="px-3 py-3 align-top font-medium text-slate-900">{formatAmount(item.amt)}</td>
                         <td className="px-3 py-3 align-top text-slate-600">
                           <div>From {new Date(item.fromDt).toLocaleDateString()}</div>
-                          <div>{item.toDt ? `To ${new Date(item.toDt).toLocaleDateString()}` : "Open-ended"}</div>
+                          {editingId === item.id ? (
+                            <label className="mt-2 grid gap-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                              <span>Retire On (toDt)</span>
+                              <input
+                                type="date"
+                                value={editingState.toDt}
+                                onChange={(event) => setEditingState((prev) => ({ ...prev, toDt: event.target.value }))}
+                                disabled={updateLoading}
+                                className="w-full min-w-36 rounded border border-slate-300 bg-white px-2 py-1 text-sm font-normal normal-case tracking-normal text-slate-700 disabled:cursor-not-allowed disabled:bg-slate-100"
+                              />
+                            </label>
+                          ) : (
+                            <div>{item.toDt ? `To ${new Date(item.toDt).toLocaleDateString()}` : "Open-ended"}</div>
+                          )}
                         </td>
-                        <td className="px-3 py-3 align-top text-slate-600">{item.reference || "-"}</td>
+                        <td className="px-3 py-3 align-top text-slate-600">
+                          {editingId === item.id ? (
+                            <label className="grid gap-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
+                              <span>Reference</span>
+                              <input
+                                value={editingState.reference}
+                                onChange={(event) => setEditingState((prev) => ({ ...prev, reference: event.target.value }))}
+                                disabled={updateLoading}
+                                className="w-full min-w-44 rounded border border-slate-300 bg-white px-2 py-1 text-sm font-normal normal-case tracking-normal text-slate-700 disabled:cursor-not-allowed disabled:bg-slate-100"
+                                placeholder="Reference or approval note"
+                              />
+                            </label>
+                          ) : (
+                            item.reference || "-"
+                          )}
+                        </td>
                         <td className="px-3 py-3 align-top">
                           <span
                             className={[
@@ -368,6 +438,48 @@ export default function ContributionRatesPage() {
                           >
                             {isCurrentRate(item) ? "Current" : "Historical"}
                           </span>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          {editingId === item.id ? (
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void updateRate(item.id);
+                                }}
+                                disabled={updateLoading}
+                                className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {updateLoading ? "Saving..." : "Save"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingId(null);
+                                  setEditingState({ reference: "", toDt: "" });
+                                }}
+                                disabled={updateLoading}
+                                className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={!canMutate}
+                              onClick={() => {
+                                setEditingId(item.id);
+                                setEditingState({
+                                  reference: item.reference ?? "",
+                                  toDt: item.toDt ? new Date(item.toDt).toISOString().slice(0, 10) : "",
+                                });
+                              }}
+                              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Edit
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
