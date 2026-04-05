@@ -332,13 +332,13 @@ export default function OwnershipsPage() {
             </p>
           </div>
           <div className="grid gap-2 sm:min-w-85">
-            <select value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
+            <select value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
               <option value="">All units</option>
               {units.map((unit) => (
                 <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>
               ))}
             </select>
-            <select value={individualFilter} onChange={(event) => setIndividualFilter(event.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
+            <select value={individualFilter} onChange={(event) => setIndividualFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
               <option value="">All individuals</option>
               {individuals.map((individual) => (
                 <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>
@@ -365,16 +365,16 @@ export default function OwnershipsPage() {
               <p className="text-sm font-semibold text-slate-900">Create Ownership</p>
               <p className="mt-1 text-sm text-slate-600">Use this for historical or explicit range creation. Active ownership cannot overlap another ownership for the same unit.</p>
               <div className="mt-4 grid gap-3">
-                <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                   <option value="">Select unit</option>
                   {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
                 </select>
-                <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                   <option value="">Select individual</option>
                   {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
                 </select>
-                <input type="date" value={createState.fromDt} onChange={(event) => setCreateState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || createLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
-                <input type="date" value={createState.toDt} onChange={(event) => setCreateState((prev) => ({ ...prev, toDt: event.target.value }))} disabled={!canMutate || createLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
+                <input type="date" value={createState.fromDt} onChange={(event) => setCreateState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
+                <input type="date" value={createState.toDt} onChange={(event) => setCreateState((prev) => ({ ...prev, toDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
                 <button type="button" disabled={!canMutate || createLoading || !createState.unitId || !createState.indId || !createState.fromDt} onClick={() => { void createOwnership(); }} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">{createLoading ? "Creating..." : "Create Ownership"}</button>
               </div>
             </div>
@@ -383,15 +383,15 @@ export default function OwnershipsPage() {
               <p className="text-sm font-semibold text-slate-900">Transfer Active Ownership</p>
               <p className="mt-1 text-sm text-slate-600">Use the dedicated transfer flow when one active owner should hand over a unit to another individual.</p>
               <div className="mt-4 grid gap-3">
-                <select value={transferState.unitId} onChange={(event) => setTransferState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || lookupLoading || transferLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                <select value={transferState.unitId} onChange={(event) => setTransferState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || lookupLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                   <option value="">Select unit</option>
                   {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
                 </select>
-                <select value={transferState.indId} onChange={(event) => setTransferState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || lookupLoading || transferLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                <select value={transferState.indId} onChange={(event) => setTransferState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || lookupLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                   <option value="">Transfer to individual</option>
                   {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
                 </select>
-                <input type="date" value={transferState.fromDt} onChange={(event) => setTransferState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || transferLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
+                <input type="date" value={transferState.fromDt} onChange={(event) => setTransferState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
                 <button type="button" disabled={!canMutate || transferLoading || !transferState.unitId || !transferState.indId || !transferState.fromDt} onClick={() => { void transferOwnership(); }} className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{transferLoading ? "Transferring..." : "Transfer Ownership"}</button>
               </div>
             </div>

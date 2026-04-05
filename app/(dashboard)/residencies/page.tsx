@@ -297,13 +297,13 @@ export default function ResidenciesPage() {
             </p>
           </div>
           <div className="grid gap-2 sm:min-w-85">
-            <select value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
+            <select value={unitFilter} onChange={(event) => setUnitFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
               <option value="">All units</option>
               {units.map((unit) => (
                 <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>
               ))}
             </select>
-            <select value={individualFilter} onChange={(event) => setIndividualFilter(event.target.value)} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
+            <select value={individualFilter} onChange={(event) => setIndividualFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" disabled={lookupLoading}>
               <option value="">All individuals</option>
               {individuals.map((individual) => (
                 <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>
@@ -329,16 +329,16 @@ export default function ResidenciesPage() {
             <p className="text-sm font-semibold text-slate-900">Create Residency</p>
             <p className="mt-1 text-sm text-slate-600">Residencies may be active or historical, but each unit can have at most one active resident at a time.</p>
             <div className="mt-4 grid gap-3">
-              <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+              <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                 <option value="">Select unit</option>
                 {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
               </select>
-              <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+              <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || lookupLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                 <option value="">Select individual</option>
                 {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
               </select>
-              <input type="date" value={createState.fromDt} onChange={(event) => setCreateState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || createLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
-              <input type="date" value={createState.toDt} onChange={(event) => setCreateState((prev) => ({ ...prev, toDt: event.target.value }))} disabled={!canMutate || createLoading} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
+              <input type="date" value={createState.fromDt} onChange={(event) => setCreateState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
+              <input type="date" value={createState.toDt} onChange={(event) => setCreateState((prev) => ({ ...prev, toDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
               <button type="button" disabled={!canMutate || createLoading || !createState.unitId || !createState.indId || !createState.fromDt} onClick={() => { void createResidency(); }} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">{createLoading ? "Creating..." : "Create Residency"}</button>
             </div>
           </div>
