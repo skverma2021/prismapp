@@ -425,7 +425,7 @@ export default function UnitsPage() {
                             <select
                               value={editingState.blockId}
                               onChange={(event) => setEditingState((prev) => ({ ...prev, blockId: event.target.value }))}
-                              className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                              className="w-full min-w-36 rounded border border-slate-300 bg-white px-3 py-2 text-sm"
                             >
                               <option value="">Select block</option>
                               {blocks.map((block) => (

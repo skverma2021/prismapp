@@ -17,6 +17,10 @@ function rangesOverlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date
   return aStart.getTime() <= bEndTime && bStart.getTime() <= aEndTime;
 }
 
+function addDays(value: Date, days: number) {
+  return new Date(value.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
 async function ensureNoOwnershipOverlap(
   tx: Pick<typeof db, "unitOwner">,
   unitId: string,
@@ -34,6 +38,58 @@ async function ensureNoOwnershipOverlap(
   const hasOverlap = existing.some((row) => rangesOverlap(fromDt, toDt, row.fromDt, row.toDt));
   if (hasOverlap) {
     throw new HttpError(409, "CONFLICT", "Ownership period overlaps with an existing ownership for this unit.");
+  }
+}
+
+async function ensureOwnershipContinuity(
+  tx: Pick<typeof db, "unitOwner">,
+  unitId: string,
+  inceptionDt: Date,
+  candidate?: { id?: string; fromDt: Date; toDt: Date | null }
+) {
+  const existing = await tx.unitOwner.findMany({
+    where: {
+      unitId,
+      ...(candidate?.id ? { id: { not: candidate.id } } : {}),
+    },
+    select: {
+      id: true,
+      fromDt: true,
+      toDt: true,
+    },
+    orderBy: [{ fromDt: "asc" }, { createdAt: "asc" }],
+  });
+
+  const timeline = candidate
+    ? [...existing, { id: candidate.id ?? "candidate", fromDt: candidate.fromDt, toDt: candidate.toDt }].sort(
+        (left, right) => left.fromDt.getTime() - right.fromDt.getTime()
+      )
+    : existing;
+
+  if (timeline.length === 0) {
+    return;
+  }
+
+  if (timeline[0].fromDt.getTime() !== inceptionDt.getTime()) {
+    throw new HttpError(
+      409,
+      "CONFLICT",
+      `Ownership history must start on the unit inception date (${inceptionDt.toISOString().slice(0, 10)}).`
+    );
+  }
+
+  for (let index = 0; index < timeline.length - 1; index += 1) {
+    const current = timeline[index];
+    const next = timeline[index + 1];
+
+    if (current.toDt === null) {
+      throw new HttpError(409, "CONFLICT", "Ownership history cannot contain a future row after an active owner.");
+    }
+
+    const expectedNextFrom = addDays(current.toDt, 1);
+    if (next.fromDt.getTime() !== expectedNextFrom.getTime()) {
+      throw new HttpError(409, "CONFLICT", "Ownership history must remain continuous with no gaps between owners.");
+    }
   }
 }
 
@@ -189,6 +245,11 @@ export async function createOwnership(input: CreateOwnershipInput) {
       const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership start date");
       await ensureNoOwnershipOverlap(tx, input.unitId, input.fromDt, input.toDt ?? null);
+      await ensureOwnershipContinuity(tx, input.unitId, unit.inceptionDt, {
+        fromDt: input.fromDt,
+        toDt: input.toDt ?? null,
+      });
+
       return tx.unitOwner.create({
         data: {
           unitId: input.unitId,
@@ -250,6 +311,11 @@ export async function transferOwnership(input: TransferOwnershipInput) {
       await tx.unitOwner.update({
         where: { id: current.id },
         data: { toDt: previousToDt },
+      });
+
+      await ensureOwnershipContinuity(tx, input.unitId, unit.inceptionDt, {
+        fromDt: input.fromDt,
+        toDt: null,
       });
 
       const created = await tx.unitOwner.create({
