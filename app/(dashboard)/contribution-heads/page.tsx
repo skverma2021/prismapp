@@ -38,6 +38,8 @@ type ContributionHeadItem = {
   };
 };
 
+type SortOption = "description" | "payUnit" | "period" | "createdAt";
+
 const payUnitOptions = [
   { value: "1", label: "1 - Per Sq Ft" },
   { value: "2", label: "2 - Per Resident" },
@@ -78,6 +80,10 @@ export default function ContributionHeadsPage() {
   const [appliedQuery, setAppliedQuery] = useState("");
   const [appliedPeriodFilter, setAppliedPeriodFilter] = useState("");
   const [appliedPayUnitFilter, setAppliedPayUnitFilter] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("description");
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("description");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
@@ -97,8 +103,8 @@ export default function ContributionHeadsPage() {
         const params = new URLSearchParams({
           page: String(page),
           pageSize: "20",
-          sortBy: "description",
-          sortDir: "asc",
+          sortBy: appliedSortBy,
+          sortDir: appliedSortDir,
         });
 
         if (appliedQuery.trim()) {
@@ -134,7 +140,7 @@ export default function ContributionHeadsPage() {
     }
 
     void loadHeads();
-  }, [appliedPayUnitFilter, appliedPeriodFilter, appliedQuery, page]);
+  }, [appliedPayUnitFilter, appliedPeriodFilter, appliedQuery, appliedSortBy, appliedSortDir, page]);
 
   async function createHead() {
     setCreateLoading(true);
@@ -277,6 +283,26 @@ export default function ContributionHeadsPage() {
                 ))}
               </select>
             </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortOption)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="description">Sort by description</option>
+                <option value="period">Sort by period</option>
+                <option value="payUnit">Sort by pay unit</option>
+                <option value="createdAt">Sort by created time</option>
+              </select>
+              <select
+                value={sortDir}
+                onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -285,6 +311,8 @@ export default function ContributionHeadsPage() {
                   setAppliedQuery(query);
                   setAppliedPeriodFilter(periodFilter);
                   setAppliedPayUnitFilter(payUnitFilter);
+                  setAppliedSortBy(sortBy);
+                  setAppliedSortDir(sortDir);
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -299,6 +327,10 @@ export default function ContributionHeadsPage() {
                   setAppliedQuery("");
                   setAppliedPeriodFilter("");
                   setAppliedPayUnitFilter("");
+                  setSortBy("description");
+                  setAppliedSortBy("description");
+                  setSortDir("asc");
+                  setAppliedSortDir("asc");
                   setPage(1);
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"

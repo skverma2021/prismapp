@@ -45,6 +45,8 @@ type UnitItem = {
   };
 };
 
+type SortOption = "description" | "sqFt" | "createdAt";
+
 function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
   return payload.ok ? fallback : payload.error?.message ?? fallback;
 }
@@ -70,6 +72,10 @@ export default function UnitsPage() {
   const [appliedQuery, setAppliedQuery] = useState("");
   const [blockFilter, setBlockFilter] = useState("");
   const [appliedBlockFilter, setAppliedBlockFilter] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("description");
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("description");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
   const [blocksLoading, setBlocksLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -114,8 +120,8 @@ export default function UnitsPage() {
         const params = new URLSearchParams({
           page: String(page),
           pageSize: "20",
-          sortBy: "description",
-          sortDir: "asc",
+          sortBy: appliedSortBy,
+          sortDir: appliedSortDir,
         });
 
         if (appliedQuery.trim()) {
@@ -147,7 +153,7 @@ export default function UnitsPage() {
     }
 
     void loadUnits();
-  }, [appliedBlockFilter, appliedQuery, page]);
+  }, [appliedBlockFilter, appliedQuery, appliedSortBy, appliedSortDir, page]);
 
   async function createUnit() {
     setCreateLoading(true);
@@ -283,18 +289,37 @@ export default function UnitsPage() {
               placeholder="Search unit description"
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                value={blockFilter}
+                onChange={(event) => setBlockFilter(event.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                disabled={blocksLoading}
+              >
+                <option value="">All blocks</option>
+                {blocks.map((block) => (
+                  <option key={block.id} value={block.id}>
+                    {block.description}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortOption)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="description">Sort by unit</option>
+                <option value="sqFt">Sort by sq ft</option>
+                <option value="createdAt">Sort by created time</option>
+              </select>
+            </div>
             <select
-              value={blockFilter}
-              onChange={(event) => setBlockFilter(event.target.value)}
+              value={sortDir}
+              onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-              disabled={blocksLoading}
             >
-              <option value="">All blocks</option>
-              {blocks.map((block) => (
-                <option key={block.id} value={block.id}>
-                  {block.description}
-                </option>
-              ))}
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
             </select>
             <div className="flex gap-2">
               <button
@@ -303,6 +328,8 @@ export default function UnitsPage() {
                   setPage(1);
                   setAppliedQuery(query);
                   setAppliedBlockFilter(blockFilter);
+                  setAppliedSortBy(sortBy);
+                  setAppliedSortDir(sortDir);
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -315,6 +342,10 @@ export default function UnitsPage() {
                   setBlockFilter("");
                   setAppliedQuery("");
                   setAppliedBlockFilter("");
+                  setSortBy("description");
+                  setAppliedSortBy("description");
+                  setSortDir("asc");
+                  setAppliedSortDir("asc");
                   setPage(1);
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"

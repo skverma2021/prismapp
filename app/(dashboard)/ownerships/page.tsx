@@ -48,6 +48,8 @@ type OwnershipFormState = {
   toDt: string;
 };
 
+type SortOption = "fromDt" | "toDt" | "createdAt";
+
 const emptyFormState: OwnershipFormState = {
   unitId: "",
   indId: "",
@@ -109,6 +111,10 @@ export default function OwnershipsPage() {
   const [appliedIndividualFilter, setAppliedIndividualFilter] = useState("");
   const [activeOnly, setActiveOnly] = useState(false);
   const [appliedActiveOnly, setAppliedActiveOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("fromDt");
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("fromDt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("desc");
   const [createState, setCreateState] = useState<OwnershipFormState>(emptyFormState);
   const [transferState, setTransferState] = useState<Omit<OwnershipFormState, "toDt">>({ unitId: "", indId: "", fromDt: "" });
   const [createLoading, setCreateLoading] = useState(false);
@@ -174,8 +180,8 @@ export default function OwnershipsPage() {
         const params = new URLSearchParams({
           page: String(page),
           pageSize: "20",
-          sortBy: "fromDt",
-          sortDir: "desc",
+          sortBy: appliedSortBy,
+          sortDir: appliedSortDir,
         });
 
         if (appliedUnitFilter) {
@@ -211,7 +217,7 @@ export default function OwnershipsPage() {
     }
 
     void loadOwnerships();
-  }, [appliedActiveOnly, appliedIndividualFilter, appliedUnitFilter, page]);
+  }, [appliedActiveOnly, appliedIndividualFilter, appliedUnitFilter, appliedSortBy, appliedSortDir, page]);
 
   async function createOwnership() {
     setCreateLoading(true);
@@ -306,13 +312,24 @@ export default function OwnershipsPage() {
                 <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>
               ))}
             </select>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select value={sortBy} onChange={(event) => setSortBy(event.target.value as SortOption)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+                <option value="fromDt">Sort by start date</option>
+                <option value="toDt">Sort by end date</option>
+                <option value="createdAt">Sort by created time</option>
+              </select>
+              <select value={sortDir} onChange={(event) => setSortDir(event.target.value as "asc" | "desc")} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm">
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+              </select>
+            </div>
             <label className="inline-flex items-center gap-2 text-sm text-slate-700">
               <input type="checkbox" checked={activeOnly} onChange={(event) => setActiveOnly(event.target.checked)} />
               Active ownerships only
             </label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => { setPage(1); setAppliedUnitFilter(unitFilter); setAppliedIndividualFilter(individualFilter); setAppliedActiveOnly(activeOnly); }} className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">Apply Filters</button>
-              <button type="button" onClick={() => { setUnitFilter(""); setIndividualFilter(""); setActiveOnly(false); setAppliedUnitFilter(""); setAppliedIndividualFilter(""); setAppliedActiveOnly(false); setPage(1); }} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Reset</button>
+              <button type="button" onClick={() => { setPage(1); setAppliedUnitFilter(unitFilter); setAppliedIndividualFilter(individualFilter); setAppliedActiveOnly(activeOnly); setAppliedSortBy(sortBy); setAppliedSortDir(sortDir); }} className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">Apply Filters</button>
+              <button type="button" onClick={() => { setUnitFilter(""); setIndividualFilter(""); setActiveOnly(false); setAppliedUnitFilter(""); setAppliedIndividualFilter(""); setAppliedActiveOnly(false); setSortBy("fromDt"); setAppliedSortBy("fromDt"); setSortDir("desc"); setAppliedSortDir("desc"); setPage(1); }} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Reset</button>
             </div>
           </div>
         </div>

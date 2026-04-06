@@ -1,7 +1,7 @@
 # Current Sprint Board
 
 Status: In Progress
-Date: 2026-04-02
+Date: 2026-04-06
 Owner: Engineering
 
 ## Purpose
@@ -11,6 +11,10 @@ This file should stay concise and operational. Historical detail belongs in evid
 
 ## Current Focus
 Shell and auth baseline are in place. Current focus is expanding the master-data UI baseline while continuing to smooth remaining auth feedback gaps.
+
+The next focused pre-production branch is ownership continuity: builder inventory bootstrap plus no-gap ownership enforcement.
+
+In the current branch, near-term operator UX work is browse-page sort consistency plus continued shared table/filter/form consolidation.
 
 ## Done
 1. Week 2 contribution scope completed and validated.
@@ -61,19 +65,28 @@ Shell and auth baseline are in place. Current focus is expanding the master-data
 46. Master-data shell navigation and dashboard home cards now include contribution periods, heads, and rates.
 47. Ownership page lookups now load through one lightweight lookup endpoint so unit and individual dropdowns become available sooner.
 48. Contribution rates now support retiring an existing rate window by editing its `toDt` and reference.
+49. Unit inception date is now enforced as the lower bound for ownership and residency history.
+50. Ownership history now blocks dates before inception, first-row gaps after inception, and in-place edit/delete operations.
+51. Ownership and residency pages now load unit and individual dropdowns through dedicated lightweight lookup endpoints.
+52. Residency history now supports constrained `toDt` edits so operators can mark when someone moved out without reopening the full row.
+53. Retired contribution rates are now immutable and show as locked in the UI.
+54. Sort controls are now exposed across the remaining browse pages that already had backend sort support.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
 2. Standardize shared table/filter/form patterns for operator screens.
 3. Add cross-linking between core master-data workflows and contribution capture.
+4. Normalize sort-control placement and copy so operator pages feel consistent.
+5. Prepare the ownership continuity branch from ADR-003 before any production rollout decision.
 
 ## Next
 
 ### Immediate Next Steps
-1. Finish remaining shell-level auth feedback polish.
-2. Standardize shared table/filter/form patterns for operator screens.
-3. Add cross-linking between units, individuals, ownerships, residencies, and contribution workflows.
-4. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points.
+1. Implement the ownership continuity branch from ADR-003: builder inventory identity, automatic initial ownership, migration/backfill, and regression coverage.
+2. Finish remaining shell-level auth feedback polish.
+3. Standardize shared table/filter/form patterns for operator screens.
+4. Add cross-linking between units, individuals, ownerships, residencies, and contribution workflows.
+5. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.
@@ -82,6 +95,8 @@ Shell and auth baseline are in place. Current focus is expanding the master-data
 4. Master-data UI consistency will drift if the shared table/filter/form patterns are not extracted soon.
 5. Timeline screens will become harder to evolve if lookup loading and mutation feedback patterns diverge between ownerships and residencies.
 6. Contribution-head deletion behavior depends on related rates and posted contributions, so operator-facing error copy must stay clear when FK restrictions fire.
+7. Production rollout should stay blocked until builder-based ownership continuity is modeled, backfilled, and regression-tested.
+8. Operator confidence will stay low if browse pages remain inconsistent about sorting even where APIs already support it.
 
 ## References
 1. `Product-Delivery-Strategy.md`

@@ -32,6 +32,8 @@ type ContributionPeriodItem = {
   createdAt: string;
 };
 
+type SortOption = "id" | "refYear" | "refMonth" | "createdAt";
+
 const monthLabels = [
   "Year",
   "January",
@@ -65,6 +67,10 @@ export default function ContributionPeriodsPage() {
   const [monthFilter, setMonthFilter] = useState("");
   const [appliedYearFilter, setAppliedYearFilter] = useState("");
   const [appliedMonthFilter, setAppliedMonthFilter] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("refYear");
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("refYear");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -77,8 +83,8 @@ export default function ContributionPeriodsPage() {
         const params = new URLSearchParams({
           page: String(page),
           pageSize: "20",
-          sortBy: "refYear",
-          sortDir: "desc",
+          sortBy: appliedSortBy,
+          sortDir: appliedSortDir,
         });
 
         if (appliedYearFilter.trim()) {
@@ -110,7 +116,7 @@ export default function ContributionPeriodsPage() {
     }
 
     void loadPeriods();
-  }, [appliedMonthFilter, appliedYearFilter, page]);
+  }, [appliedMonthFilter, appliedYearFilter, appliedSortBy, appliedSortDir, page]);
 
   return (
     <div className="space-y-4">
@@ -148,6 +154,26 @@ export default function ContributionPeriodsPage() {
                 </option>
               ))}
             </select>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortOption)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="refYear">Sort by year</option>
+                <option value="refMonth">Sort by month code</option>
+                <option value="createdAt">Sort by created time</option>
+                <option value="id">Sort by id</option>
+              </select>
+              <select
+                value={sortDir}
+                onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -155,6 +181,8 @@ export default function ContributionPeriodsPage() {
                   setPage(1);
                   setAppliedYearFilter(yearFilter);
                   setAppliedMonthFilter(monthFilter);
+                  setAppliedSortBy(sortBy);
+                  setAppliedSortDir(sortDir);
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -167,6 +195,10 @@ export default function ContributionPeriodsPage() {
                   setMonthFilter("");
                   setAppliedYearFilter("");
                   setAppliedMonthFilter("");
+                  setSortBy("refYear");
+                  setAppliedSortBy("refYear");
+                  setSortDir("desc");
+                  setAppliedSortDir("desc");
                   setPage(1);
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"

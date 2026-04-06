@@ -50,6 +50,8 @@ type RateEditState = {
   toDt: string;
 };
 
+type SortOption = "fromDt" | "toDt" | "amt" | "createdAt";
+
 function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
   return payload.ok ? fallback : payload.error?.message ?? fallback;
 }
@@ -85,6 +87,10 @@ export default function ContributionRatesPage() {
   const [activeOnFilter, setActiveOnFilter] = useState("");
   const [appliedHeadFilter, setAppliedHeadFilter] = useState("");
   const [appliedActiveOnFilter, setAppliedActiveOnFilter] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("fromDt");
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("fromDt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("desc");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
@@ -133,8 +139,8 @@ export default function ContributionRatesPage() {
         const params = new URLSearchParams({
           page: String(page),
           pageSize: "20",
-          sortBy: "fromDt",
-          sortDir: "desc",
+          sortBy: appliedSortBy,
+          sortDir: appliedSortDir,
         });
 
         if (appliedHeadFilter) {
@@ -166,7 +172,7 @@ export default function ContributionRatesPage() {
     }
 
     void loadRates();
-  }, [appliedActiveOnFilter, appliedHeadFilter, page]);
+  }, [appliedActiveOnFilter, appliedHeadFilter, appliedSortBy, appliedSortDir, page]);
 
   async function createRate() {
     setCreateLoading(true);
@@ -271,6 +277,26 @@ export default function ContributionRatesPage() {
               onChange={(event) => setActiveOnFilter(event.target.value)}
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortOption)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="fromDt">Sort by start date</option>
+                <option value="toDt">Sort by end date</option>
+                <option value="amt">Sort by amount</option>
+                <option value="createdAt">Sort by created time</option>
+              </select>
+              <select
+                value={sortDir}
+                onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="desc">Descending</option>
+                <option value="asc">Ascending</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -278,6 +304,8 @@ export default function ContributionRatesPage() {
                   setPage(1);
                   setAppliedHeadFilter(headFilter);
                   setAppliedActiveOnFilter(activeOnFilter);
+                  setAppliedSortBy(sortBy);
+                  setAppliedSortDir(sortDir);
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -290,6 +318,10 @@ export default function ContributionRatesPage() {
                   setActiveOnFilter("");
                   setAppliedHeadFilter("");
                   setAppliedActiveOnFilter("");
+                  setSortBy("fromDt");
+                  setAppliedSortBy("fromDt");
+                  setSortDir("desc");
+                  setAppliedSortDir("desc");
                   setPage(1);
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"

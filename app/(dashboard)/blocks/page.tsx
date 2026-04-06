@@ -32,6 +32,8 @@ type PaginatedResponse<T> = {
   totalPages: number;
 };
 
+type SortOption = "description" | "createdAt";
+
 function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
   return payload.ok ? fallback : payload.error?.message ?? fallback;
 }
@@ -46,6 +48,10 @@ export default function BlocksPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [query, setQuery] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("description");
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("description");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
@@ -65,8 +71,8 @@ export default function BlocksPage() {
         const params = new URLSearchParams({
           page: String(page),
           pageSize: "20",
-          sortBy: "description",
-          sortDir: "asc",
+          sortBy: appliedSortBy,
+          sortDir: appliedSortDir,
         });
 
         if (appliedQuery.trim()) {
@@ -94,7 +100,7 @@ export default function BlocksPage() {
     }
 
     void loadBlocks();
-  }, [appliedQuery, page]);
+  }, [appliedQuery, appliedSortBy, appliedSortDir, page]);
 
   async function createBlock() {
     setCreateLoading(true);
@@ -207,22 +213,46 @@ export default function BlocksPage() {
               placeholder="Search block description"
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
             />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                value={sortBy}
+                onChange={(event) => setSortBy(event.target.value as SortOption)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="description">Sort by description</option>
+                <option value="createdAt">Sort by created time</option>
+              </select>
+              <select
+                value={sortDir}
+                onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setPage(1);
                   setAppliedQuery(query);
+                  setAppliedSortBy(sortBy);
+                  setAppliedSortDir(sortDir);
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
-                Search
+                Apply Filters
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setQuery("");
                   setAppliedQuery("");
+                  setSortBy("description");
+                  setAppliedSortBy("description");
+                  setSortDir("asc");
+                  setAppliedSortDir("asc");
                   setPage(1);
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"

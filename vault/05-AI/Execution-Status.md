@@ -1,7 +1,7 @@
 # PrismApp Execution Status
 
 Status: In Progress
-Date: 2026-04-02
+Date: 2026-04-06
 Owner: Engineering
 
 ## Purpose
@@ -92,6 +92,11 @@ Not yet complete:
 5. Residency timeline API implemented.
 6. Ownership overlap prevention implemented.
 7. Residency overlap prevention implemented.
+8. Unit inception date (`inceptionDt`) is now modeled and enforced as a lower bound for ownership and residency timelines.
+9. Ownership continuity now requires the first history row to start on the unit inception date and prevents internal gaps.
+10. Ownership history is now immutable in place; direct edit and delete are blocked server-side.
+11. Residency history now allows constrained end-date (`toDt`) updates while keeping unit, resident, and start date locked.
+12. Retired contribution rates are now immutable in place.
 
 ### Contributions Domain
 1. Contribution heads API implemented.
@@ -121,16 +126,17 @@ Not yet complete:
 ### Master-Data UI Baseline
 1. Blocks management screen implemented with search, pagination, and CRUD actions.
 2. Units management screen implemented with block filter, pagination, and CRUD actions.
-3. Individuals management screen implemented with gender filter, pagination, and CRUD actions.
-4. Ownership timeline screen implemented with filters, pagination, CRUD actions, and ownership transfer flow.
-5. Residency timeline screen implemented with filters, pagination, and CRUD actions.
+3. Individuals management screen implemented with gender filter, pagination, sort controls, and CRUD actions.
+4. Ownership timeline screen implemented with filters, pagination, create plus transfer flow, lightweight lookup loading, and immutable history behavior.
+5. Residency timeline screen implemented with filters, pagination, lightweight lookup loading, create flow, and constrained end-date edit behavior.
 6. Contribution periods screen implemented as a read-only seeded reference view with year and month filters.
 7. Contribution heads screen implemented with search, pagination, and CRUD actions.
-8. Contribution rates screen implemented with head and active-date filters plus append-only creation.
+8. Contribution rates screen implemented with head and active-date filters plus controlled retirement of current rates.
 9. Master-data shell navigation and route metadata were added for blocks, units, individuals, ownerships, residencies, contribution periods, contribution heads, and contribution rates.
 10. Dashboard home cards now link to ownership, residency, and contribution master-data workflows.
 11. Read-only individuals view now masks email and mobile in the UI.
 12. Gender types now have a dedicated read endpoint for the individuals form.
+13. Units and individuals now expose lightweight lookup endpoints so timeline dropdowns do not wait on paged browse APIs.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -192,8 +198,9 @@ Not yet complete:
 
 ### Week 5: Master Data UI Baseline
 1. Add cross-linking between units, owners, residents, and contribution flows.
-2. Standardize search, filtering, pagination, and sort behavior across module screens.
-3. Decide whether contribution periods stay reference-only or gain linked drill-through usage.
+2. Complete any remaining browse-page sort coverage and normalize control placement across module screens.
+3. Finish timeline UX hardening around ownership continuity, residency end-date maintenance, and rate-history messaging.
+4. Decide whether contribution periods stay reference-only or gain linked drill-through usage.
 
 ### Shared UI and Platform Work
 1. Create reusable table component baseline.
@@ -201,6 +208,10 @@ Not yet complete:
 3. Create reusable form-shell baseline.
 4. Add masked PII behavior for read-only contexts where required.
 5. Add audit metadata visibility where operator workflows need it.
+
+### Latest Operator UX Progress
+1. Browse-page sort controls are now exposed on blocks, units, ownerships, residencies, contribution heads, contribution rates, and contribution periods.
+2. Sort state is now applied explicitly through the existing API `sortBy` and `sortDir` contracts instead of relying only on fixed defaults.
 
 ### Hardening and Production Readiness
 1. Add audit logging for mutation flows.
@@ -219,5 +230,6 @@ Not yet complete:
 
 ## Current Recommendation
 1. Treat the contribution module as functionally complete for current V1 scope.
-2. Treat shell and auth baseline as delivered enough to move into master-data UI baseline work.
-3. Keep future modules deferred until auth alignment and master-data UI baselines are stable.
+2. Treat shell and auth baseline as delivered enough to keep tightening master-data correctness and operator UX.
+3. Prioritize builder-based ownership continuity rollout, browse-page sort consistency, and shared operator-screen patterns before any production cutover.
+4. Keep future modules deferred until auth alignment and master-data UI baselines are stable.
