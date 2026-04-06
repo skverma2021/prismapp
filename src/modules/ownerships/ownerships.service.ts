@@ -97,10 +97,17 @@ export async function listOwnerships(searchParams: URLSearchParams) {
     throw new HttpError(400, "VALIDATION_ERROR", "Invalid sortBy field.");
   }
 
+  const now = new Date();
+
   const where = {
     ...(unitId ? { unitId } : {}),
     ...(indId ? { indId } : {}),
-    ...(activeOnly ? { toDt: null } : {}),
+    ...(activeOnly
+      ? {
+          fromDt: { lte: now },
+          OR: [{ toDt: null }, { toDt: { gte: now } }],
+        }
+      : {}),
   };
 
   const orderBy = { [sortBy]: sortDir } as const;
@@ -196,38 +203,14 @@ export async function createOwnership(input: CreateOwnershipInput) {
 }
 
 export async function updateOwnership(id: string, input: UpdateOwnershipInput) {
-  return db.$transaction(
-    async (tx) => {
-      const current = await tx.unitOwner.findUnique({ where: { id } });
-      if (!current) {
-        throw new HttpError(404, "NOT_FOUND", "Ownership record not found.");
-      }
+  const current = await db.unitOwner.findUnique({ where: { id }, select: { id: true } });
+  if (!current) {
+    throw new HttpError(404, "NOT_FOUND", "Ownership record not found.");
+  }
 
-      const nextUnitId = input.unitId ?? current.unitId;
-      const nextIndId = input.indId ?? current.indId;
-      const nextFromDt = input.fromDt ?? current.fromDt;
-      const nextToDt = input.toDt === undefined ? current.toDt : input.toDt;
+  void input;
 
-      if (nextToDt && nextFromDt.getTime() > nextToDt.getTime()) {
-        throw new HttpError(400, "VALIDATION_ERROR", "fromDt must be before or equal to toDt.");
-      }
-
-      const unit = await ensureOwnershipReferencesExist(tx, nextUnitId, nextIndId);
-      ensureNotBeforeUnitInception(unit.inceptionDt, nextFromDt, "Ownership start date");
-      await ensureNoOwnershipOverlap(tx, nextUnitId, nextFromDt, nextToDt, id);
-
-      return tx.unitOwner.update({
-        where: { id },
-        data: {
-          unitId: input.unitId,
-          indId: input.indId,
-          fromDt: input.fromDt,
-          toDt: input.toDt,
-        },
-      });
-    },
-    { isolationLevel: "Serializable" }
-  );
+  throw new HttpError(412, "PRECONDITION_FAILED", "Ownership history is immutable. Use transfer to change the active owner.");
 }
 
 export async function deleteOwnership(id: string) {
@@ -248,8 +231,10 @@ export async function transferOwnership(input: TransferOwnershipInput) {
       const current = await tx.unitOwner.findFirst({
         where: {
           unitId: input.unitId,
-          toDt: null,
+          fromDt: { lte: new Date() },
+          OR: [{ toDt: null }, { toDt: { gte: new Date() } }],
         },
+        orderBy: { fromDt: "desc" },
       });
 
       if (!current) {

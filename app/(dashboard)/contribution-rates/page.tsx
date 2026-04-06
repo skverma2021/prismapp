@@ -60,7 +60,15 @@ function formatAmount(value: string | number) {
 }
 
 function isCurrentRate(rate: ContributionRateItem) {
-  return rate.toDt === null;
+  const now = new Date();
+  const fromDt = new Date(rate.fromDt);
+  const toDt = rate.toDt ? new Date(rate.toDt) : null;
+
+  return fromDt.getTime() <= now.getTime() && (!toDt || toDt.getTime() >= now.getTime());
+}
+
+function isScheduledRate(rate: ContributionRateItem) {
+  return new Date(rate.fromDt).getTime() > new Date().getTime();
 }
 
 export default function ContributionRatesPage() {
@@ -433,10 +441,12 @@ export default function ContributionRatesPage() {
                               "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em]",
                               isCurrentRate(item)
                                 ? "bg-emerald-100 text-emerald-700"
-                                : "bg-slate-100 text-slate-700",
+                                : isScheduledRate(item)
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-slate-100 text-slate-700",
                             ].join(" ")}
                           >
-                            {isCurrentRate(item) ? "Current" : "Historical"}
+                            {isCurrentRate(item) ? "Current" : isScheduledRate(item) ? "Scheduled" : "Historical"}
                           </span>
                         </td>
                         <td className="px-3 py-3 align-top">

@@ -71,6 +71,22 @@ function toDateInputValue(value: string | null) {
   return new Date(value).toISOString().slice(0, 10);
 }
 
+function getTimelineStatus(item: { fromDt: string; toDt: string | null }) {
+  const now = new Date();
+  const fromDt = new Date(item.fromDt);
+  const toDt = item.toDt ? new Date(item.toDt) : null;
+
+  if (fromDt.getTime() > now.getTime()) {
+    return "Scheduled";
+  }
+
+  if (toDt && toDt.getTime() < now.getTime()) {
+    return "Historical";
+  }
+
+  return "Active";
+}
+
 export default function OwnershipsPage() {
   const { session } = useAuthSession();
   const canMutate = session.role !== "READ_ONLY";
@@ -97,8 +113,6 @@ export default function OwnershipsPage() {
   const [transferState, setTransferState] = useState<Omit<OwnershipFormState, "toDt">>({ unitId: "", indId: "", fromDt: "" });
   const [createLoading, setCreateLoading] = useState(false);
   const [transferLoading, setTransferLoading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingState, setEditingState] = useState<OwnershipFormState>(emptyFormState);
   const unitMap = useMemo(() => new Map(units.map((item) => [item.id, item])), [units]);
   const individualMap = useMemo(() => new Map(individuals.map((item) => [item.id, item])), [individuals]);
 
@@ -264,36 +278,6 @@ export default function OwnershipsPage() {
     }
   }
 
-  async function updateOwnership(id: string) {
-    setSubmitError("");
-    setSubmitSuccess("");
-
-    try {
-      const response = await fetch(`/api/ownerships/${id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          unitId: editingState.unitId,
-          indId: editingState.indId,
-          fromDt: editingState.fromDt,
-          toDt: editingState.toDt.trim() ? editingState.toDt : null,
-        }),
-      });
-
-      const payload = (await response.json()) as ApiEnvelope<OwnershipItem>;
-      if (!response.ok || !payload.ok) {
-        throw new Error(toErrorMessage(payload, "Unable to update ownership."));
-      }
-
-      setEditingId(null);
-      setEditingState(emptyFormState);
-      setItems((prev) => prev.map((item) => (item.id === id ? payload.data : item)));
-      setSubmitSuccess("Ownership record updated.");
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Unable to update ownership.");
-    }
-  }
-
   return (
     <div className="space-y-4">
       <MasterDataNav />
@@ -341,7 +325,7 @@ export default function OwnershipsPage() {
           <div className="space-y-4">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-900">Create Ownership</p>
-              <p className="mt-1 text-sm text-slate-600">Use this for historical or explicit range creation. Active ownership cannot overlap another ownership for the same unit.</p>
+              <p className="mt-1 text-sm text-slate-600">Use this for historical or explicit range creation on or after the unit inception date. Existing ownership rows are read-only and owner changes should use transfer.</p>
               <div className="mt-4 grid gap-3">
                 <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                   <option value="">{unitsLoading ? "Loading units..." : "Select unit"}</option>
@@ -396,30 +380,11 @@ export default function OwnershipsPage() {
                   ) : (
                     items.map((item) => (
                       <tr key={item.id} className="border-t border-slate-100 align-top text-slate-700">
-                        <td className="px-3 py-3">{editingId === item.id ? (
-                          <select value={editingState.unitId} onChange={(event) => setEditingState((prev) => ({ ...prev, unitId: event.target.value }))} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm">
-                            <option value="">Select unit</option>
-                            {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
-                          </select>
-                        ) : (unitMap.get(item.unitId) ? formatUnitLabel(unitMap.get(item.unitId) as UnitOption) : item.unitId)}</td>
-                        <td className="px-3 py-3">{editingId === item.id ? (
-                          <select value={editingState.indId} onChange={(event) => setEditingState((prev) => ({ ...prev, indId: event.target.value }))} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm">
-                            <option value="">Select individual</option>
-                            {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
-                          </select>
-                        ) : (individualMap.get(item.indId) ? formatIndividualName(individualMap.get(item.indId) as IndividualOption) : item.indId)}</td>
-                        <td className="px-3 py-3">{editingId === item.id ? <input type="date" value={editingState.fromDt} onChange={(event) => setEditingState((prev) => ({ ...prev, fromDt: event.target.value }))} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm" /> : toDateInputValue(item.fromDt)}</td>
-                        <td className="px-3 py-3">{editingId === item.id ? <input type="date" value={editingState.toDt} onChange={(event) => setEditingState((prev) => ({ ...prev, toDt: event.target.value }))} className="rounded border border-slate-300 bg-white px-3 py-2 text-sm" /> : (toDateInputValue(item.toDt) || "Active")}</td>
-                        <td className="px-3 py-3"><div className="flex flex-wrap gap-2">{editingId === item.id ? (
-                          <>
-                            <button type="button" disabled={!editingState.unitId || !editingState.indId || !editingState.fromDt} onClick={() => { void updateOwnership(item.id); }} className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">Save</button>
-                            <button type="button" onClick={() => { setEditingId(null); setEditingState(emptyFormState); }} className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700">Cancel</button>
-                          </>
-                        ) : (
-                          <>
-                            <button type="button" disabled={!canMutate} onClick={() => { setEditingId(item.id); setEditingState({ unitId: item.unitId, indId: item.indId, fromDt: toDateInputValue(item.fromDt), toDt: toDateInputValue(item.toDt) }); }} className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50">Edit</button>
-                          </>
-                        )}</div></td>
+                        <td className="px-3 py-3">{unitMap.get(item.unitId) ? formatUnitLabel(unitMap.get(item.unitId) as UnitOption) : item.unitId}</td>
+                        <td className="px-3 py-3">{individualMap.get(item.indId) ? formatIndividualName(individualMap.get(item.indId) as IndividualOption) : item.indId}</td>
+                        <td className="px-3 py-3">{toDateInputValue(item.fromDt)}</td>
+                        <td className="px-3 py-3">{toDateInputValue(item.toDt) || getTimelineStatus(item)}</td>
+                        <td className="px-3 py-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</td>
                       </tr>
                     ))
                   )}

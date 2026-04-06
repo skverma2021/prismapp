@@ -47,6 +47,7 @@ async function seedUnits() {
   });
 
   const sqFtByColumn = [900, 925, 950, 975, 1000, 1025, 1050, 1075];
+  const inceptionDt = new Date(Date.UTC(new Date().getUTCFullYear(), 0, 1));
 
   for (const block of blocks) {
     for (let floor = 1; floor <= 14; floor += 1) {
@@ -62,11 +63,13 @@ async function seedUnits() {
           },
           update: {
             sqFt: sqFtByColumn[column - 1],
+            inceptionDt,
           },
           create: {
             blockId: block.id,
             description,
             sqFt: sqFtByColumn[column - 1],
+            inceptionDt,
           },
         });
       }

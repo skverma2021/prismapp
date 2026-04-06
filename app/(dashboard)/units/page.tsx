@@ -37,6 +37,7 @@ type UnitItem = {
   description: string;
   blockId: string;
   sqFt: number;
+  inceptionDt: string;
   createdAt: string;
   block?: {
     id: string;
@@ -50,6 +51,10 @@ function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
 
 function resolveBlock(blocks: BlockOption[], blockId: string) {
   return blocks.find((block) => block.id === blockId);
+}
+
+function toDateInputValue(value: string) {
+  return new Date(value).toISOString().slice(0, 10);
 }
 
 export default function UnitsPage() {
@@ -70,10 +75,10 @@ export default function UnitsPage() {
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
-  const [createState, setCreateState] = useState({ description: "", blockId: "", sqFt: "" });
+  const [createState, setCreateState] = useState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
   const [createLoading, setCreateLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingState, setEditingState] = useState({ description: "", blockId: "", sqFt: "" });
+  const [editingState, setEditingState] = useState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -159,6 +164,7 @@ export default function UnitsPage() {
           description: createState.description.trim(),
           blockId: createState.blockId,
           sqFt: Number(createState.sqFt),
+          inceptionDt: createState.inceptionDt,
         }),
       });
 
@@ -167,7 +173,7 @@ export default function UnitsPage() {
         throw new Error(toErrorMessage(payload, "Unable to create unit."));
       }
 
-      setCreateState({ description: "", blockId: "", sqFt: "" });
+      setCreateState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
       setSubmitSuccess(`Unit created: ${payload.data.description}`);
       setPage(1);
     } catch (error) {
@@ -191,6 +197,7 @@ export default function UnitsPage() {
           description: editingState.description.trim(),
           blockId: editingState.blockId,
           sqFt: Number(editingState.sqFt),
+          inceptionDt: editingState.inceptionDt,
         }),
       });
 
@@ -200,7 +207,7 @@ export default function UnitsPage() {
       }
 
       setEditingId(null);
-      setEditingState({ description: "", blockId: "", sqFt: "" });
+      setEditingState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
       setItems((prev) =>
         prev.map((item) =>
           item.id === id
@@ -325,7 +332,7 @@ export default function UnitsPage() {
         <div className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Create Unit</p>
-            <p className="mt-1 text-sm text-slate-600">Unit descriptions are unique within a selected block.</p>
+            <p className="mt-1 text-sm text-slate-600">Unit descriptions are unique within a selected block. Inception date defines the earliest allowed ownership and residency start date.</p>
             <div className="mt-4 grid gap-3">
               <select
                 value={createState.blockId}
@@ -356,6 +363,13 @@ export default function UnitsPage() {
                 disabled={!canMutate || createLoading}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
               />
+              <input
+                type="date"
+                value={createState.inceptionDt}
+                onChange={(event) => setCreateState((prev) => ({ ...prev, inceptionDt: event.target.value }))}
+                disabled={!canMutate || createLoading}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+              />
               <button
                 type="button"
                 disabled={
@@ -363,7 +377,8 @@ export default function UnitsPage() {
                   createLoading ||
                   createState.description.trim().length === 0 ||
                   createState.blockId.length === 0 ||
-                  Number(createState.sqFt) <= 0
+                  Number(createState.sqFt) <= 0 ||
+                  createState.inceptionDt.length === 0
                 }
                 onClick={() => {
                   void createUnit();
@@ -385,19 +400,20 @@ export default function UnitsPage() {
                     <th className="px-3 py-2 text-left">Block</th>
                     <th className="px-3 py-2 text-left">Unit</th>
                     <th className="px-3 py-2 text-left">Sq Ft</th>
+                    <th className="px-3 py-2 text-left">Inception</th>
                     <th className="px-3 py-2 text-left">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td className="px-3 py-4 text-slate-600" colSpan={4}>
+                      <td className="px-3 py-4 text-slate-600" colSpan={5}>
                         Loading units...
                       </td>
                     </tr>
                   ) : items.length === 0 ? (
                     <tr>
-                      <td className="px-3 py-4 text-slate-600" colSpan={4}>
+                      <td className="px-3 py-4 text-slate-600" colSpan={5}>
                         No units found for the current filter.
                       </td>
                     </tr>
@@ -447,6 +463,18 @@ export default function UnitsPage() {
                           )}
                         </td>
                         <td className="px-3 py-3">
+                          {editingId === item.id ? (
+                            <input
+                              type="date"
+                              value={editingState.inceptionDt}
+                              onChange={(event) => setEditingState((prev) => ({ ...prev, inceptionDt: event.target.value }))}
+                              className="w-36 rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                            />
+                          ) : (
+                            toDateInputValue(item.inceptionDt)
+                          )}
+                        </td>
+                        <td className="px-3 py-3">
                           <div className="flex flex-wrap gap-2">
                             {editingId === item.id ? (
                               <>
@@ -455,7 +483,8 @@ export default function UnitsPage() {
                                   disabled={
                                     editingState.description.trim().length === 0 ||
                                     editingState.blockId.length === 0 ||
-                                    Number(editingState.sqFt) <= 0
+                                    Number(editingState.sqFt) <= 0 ||
+                                    editingState.inceptionDt.length === 0
                                   }
                                   onClick={() => {
                                     void updateUnit(item.id);
@@ -468,7 +497,7 @@ export default function UnitsPage() {
                                   type="button"
                                   onClick={() => {
                                     setEditingId(null);
-                                    setEditingState({ description: "", blockId: "", sqFt: "" });
+                                    setEditingState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
                                   }}
                                   className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700"
                                 >
@@ -486,6 +515,7 @@ export default function UnitsPage() {
                                       description: item.description,
                                       blockId: item.blockId,
                                       sqFt: String(item.sqFt),
+                                      inceptionDt: toDateInputValue(item.inceptionDt),
                                     });
                                   }}
                                   className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
