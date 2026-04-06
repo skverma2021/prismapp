@@ -456,11 +456,15 @@ export async function createContribution(input: CreateContributionInput, actor: 
 
       const depositor = await tx.individual.findUnique({
         where: { id: input.depositedBy },
-        select: { id: true },
+        select: { id: true, isSystemIdentity: true },
       });
 
       if (!depositor) {
         throw new HttpError(404, "NOT_FOUND", "Depositor individual not found.");
+      }
+
+      if (depositor.isSystemIdentity) {
+        throw new HttpError(412, "PRECONDITION_FAILED", "System identities cannot be used as depositors.");
       }
 
       const normalizedPeriod = normalizeHeadPeriod(head.period);
@@ -573,11 +577,15 @@ export async function createContributionCorrection(
       const depositorId = input.depositedBy ?? original.depositedBy;
       const depositor = await tx.individual.findUnique({
         where: { id: depositorId },
-        select: { id: true },
+        select: { id: true, isSystemIdentity: true },
       });
 
       if (!depositor) {
         throw new HttpError(404, "NOT_FOUND", "Depositor individual not found.");
+      }
+
+      if (depositor.isSystemIdentity) {
+        throw new HttpError(412, "PRECONDITION_FAILED", "System identities cannot be used as depositors.");
       }
 
       return tx.contribution.create({

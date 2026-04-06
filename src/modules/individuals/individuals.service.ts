@@ -5,6 +5,7 @@ import type { CreateIndividualInput, UpdateIndividualInput } from "./individuals
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+const SYSTEM_IDENTITY_TAG_BUILDER = "BUILDER_INVENTORY";
 
 export async function listIndividuals(searchParams: URLSearchParams) {
   const page = parseQueryInt(searchParams.get("page"), DEFAULT_PAGE);
@@ -36,6 +37,7 @@ export async function listIndividuals(searchParams: URLSearchParams) {
         })();
 
   const where = {
+    isSystemIdentity: false,
     ...(q
       ? {
           OR: [
@@ -86,6 +88,9 @@ export async function listIndividuals(searchParams: URLSearchParams) {
 
 export async function listIndividualLookups() {
   return db.individual.findMany({
+    where: {
+      isSystemIdentity: false,
+    },
     select: {
       id: true,
       fName: true,
@@ -116,6 +121,23 @@ export async function createIndividual(input: CreateIndividualInput) {
 }
 
 export async function updateIndividual(id: string, input: UpdateIndividualInput) {
+  const current = await db.individual.findUnique({
+    where: { id },
+    select: { id: true, isSystemIdentity: true, systemTag: true },
+  });
+
+  if (!current) {
+    throw new HttpError(404, "NOT_FOUND", "Individual not found.");
+  }
+
+  if (current.isSystemIdentity) {
+    throw new HttpError(
+      412,
+      "PRECONDITION_FAILED",
+      `${current.systemTag ?? "System"} identity cannot be edited through the normal individuals workflow.`
+    );
+  }
+
   return db.individual.update({
     where: { id },
     data: input,
@@ -123,5 +145,22 @@ export async function updateIndividual(id: string, input: UpdateIndividualInput)
 }
 
 export async function deleteIndividual(id: string) {
+  const current = await db.individual.findUnique({
+    where: { id },
+    select: { id: true, isSystemIdentity: true, systemTag: true },
+  });
+
+  if (!current) {
+    throw new HttpError(404, "NOT_FOUND", "Individual not found.");
+  }
+
+  if (current.isSystemIdentity || current.systemTag === SYSTEM_IDENTITY_TAG_BUILDER) {
+    throw new HttpError(
+      412,
+      "PRECONDITION_FAILED",
+      "System identities cannot be deleted through the normal individuals workflow."
+    );
+  }
+
   await db.individual.delete({ where: { id } });
 }

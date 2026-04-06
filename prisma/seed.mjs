@@ -12,6 +12,12 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),
 });
 
+const BUILDER_INVENTORY_TAG = "BUILDER_INVENTORY";
+
+function addDays(value, days) {
+  return new Date(value.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
 async function seedGenderTypes() {
   const entries = [
     { id: 0, description: "Male" },
@@ -38,6 +44,33 @@ async function seedBlocks() {
       create: { description },
     });
   }
+}
+
+async function seedBuilderInventoryIdentity() {
+  await prisma.individual.upsert({
+    where: { systemTag: BUILDER_INVENTORY_TAG },
+    update: {
+      fName: "Builder",
+      mName: null,
+      sName: "Inventory",
+      eMail: "builder.inventory@prismapp.local",
+      mobile: "0000000000",
+      altMobile: null,
+      genderId: 2,
+      isSystemIdentity: true,
+    },
+    create: {
+      fName: "Builder",
+      mName: null,
+      sName: "Inventory",
+      eMail: "builder.inventory@prismapp.local",
+      mobile: "0000000000",
+      altMobile: null,
+      genderId: 2,
+      isSystemIdentity: true,
+      systemTag: BUILDER_INVENTORY_TAG,
+    },
+  });
 }
 
 async function seedUnits() {
@@ -73,6 +106,89 @@ async function seedUnits() {
           },
         });
       }
+    }
+  }
+}
+
+async function seedOwnershipBootstrap() {
+  const builder = await prisma.individual.findUnique({
+    where: { systemTag: BUILDER_INVENTORY_TAG },
+    select: { id: true },
+  });
+
+  if (!builder) {
+    throw new Error("Builder inventory identity is required before ownership bootstrap.");
+  }
+
+  const units = await prisma.unit.findMany({
+    select: {
+      id: true,
+      inceptionDt: true,
+      owners: {
+        select: {
+          id: true,
+          indId: true,
+          fromDt: true,
+          toDt: true,
+        },
+        orderBy: [{ fromDt: "asc" }, { createdAt: "asc" }],
+      },
+    },
+  });
+
+  for (const unit of units) {
+    if (unit.owners.length === 0) {
+      await prisma.unitOwner.create({
+        data: {
+          unitId: unit.id,
+          indId: builder.id,
+          fromDt: unit.inceptionDt,
+          toDt: null,
+        },
+      });
+      continue;
+    }
+
+    const firstOwner = unit.owners[0];
+    if (firstOwner.fromDt.getTime() < unit.inceptionDt.getTime()) {
+      await prisma.unit.update({
+        where: { id: unit.id },
+        data: { inceptionDt: firstOwner.fromDt },
+      });
+      unit.inceptionDt = firstOwner.fromDt;
+    }
+
+    let expectedFrom = unit.inceptionDt;
+
+    for (const owner of unit.owners) {
+      if (owner.fromDt.getTime() > expectedFrom.getTime()) {
+        await prisma.unitOwner.create({
+          data: {
+            unitId: unit.id,
+            indId: builder.id,
+            fromDt: expectedFrom,
+            toDt: addDays(owner.fromDt, -1),
+          },
+        });
+      }
+
+      if (owner.toDt === null) {
+        expectedFrom = null;
+        break;
+      }
+
+      expectedFrom = addDays(owner.toDt, 1);
+    }
+
+    if (expectedFrom) {
+      await prisma.unitOwner.create({
+        data: {
+          unitId: unit.id,
+          indId: builder.id,
+          fromDt: expectedFrom,
+          toDt: null,
+        },
+      });
     }
   }
 }
@@ -229,9 +345,11 @@ async function main() {
   const currentYear = new Date().getUTCFullYear();
 
   await seedGenderTypes();
+  await seedBuilderInventoryIdentity();
   await seedAppUsers();
   await seedBlocks();
   await seedUnits();
+  await seedOwnershipBootstrap();
   await seedContributionHeads();
   await seedContributionRates(currentYear);
   await seedContributionPeriods(currentYear);

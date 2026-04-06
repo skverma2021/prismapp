@@ -1,7 +1,7 @@
 # PrismApp Execution Status
 
 Status: In Progress
-Date: 2026-04-06
+Date: 2026-04-07
 Owner: Engineering
 
 ## Purpose
@@ -97,6 +97,11 @@ Not yet complete:
 10. Ownership history is now immutable in place; direct edit and delete are blocked server-side.
 11. Residency history now allows constrained end-date (`toDt`) updates while keeping unit, resident, and start date locked.
 12. Retired contribution rates are now immutable in place.
+13. Individuals now support system-identity flags used for builder inventory bootstrap.
+14. Unit creation now automatically seeds builder inventory as the first ownership row from `inceptionDt`.
+15. Seed/backfill now inserts builder ownership rows where units are missing opening or trailing ownership coverage.
+16. System identities are excluded from ordinary individual browse and lookup APIs.
+17. Contribution posting now rejects system identities as depositors.
 
 ### Contributions Domain
 1. Contribution heads API implemented.
@@ -127,7 +132,7 @@ Not yet complete:
 1. Blocks management screen implemented with search, pagination, and CRUD actions.
 2. Units management screen implemented with block filter, pagination, and CRUD actions.
 3. Individuals management screen implemented with gender filter, pagination, sort controls, and CRUD actions.
-4. Ownership timeline screen implemented with filters, pagination, create plus transfer flow, lightweight lookup loading, and immutable history behavior.
+4. Ownership timeline screen implemented with filters, pagination, lightweight lookup loading, immutable history behavior, and transfer-first workflow.
 5. Residency timeline screen implemented with filters, pagination, lightweight lookup loading, create flow, and constrained end-date edit behavior.
 6. Contribution periods screen implemented as a read-only seeded reference view with year and month filters.
 7. Contribution heads screen implemented with search, pagination, and CRUD actions.
@@ -189,6 +194,7 @@ Not yet complete:
 1. Continue shell-level auth feedback refinements beyond the current public-entry and home redirect states.
 2. Standardize shared table, filter, and form patterns across the new operator pages.
 3. Add cross-linking between units, individuals, timeline screens, and contribution capture.
+4. Validate builder-inventory ownership continuity behavior on the focused branch before merging back into the preview line.
 
 ## Activities Yet To Be Performed
 
@@ -201,6 +207,11 @@ Not yet complete:
 2. Complete any remaining browse-page sort coverage and normalize control placement across module screens.
 3. Finish timeline UX hardening around ownership continuity, residency end-date maintenance, and rate-history messaging.
 4. Decide whether contribution periods stay reference-only or gain linked drill-through usage.
+
+### Current Branch Validation
+1. Confirm newly created units show builder inventory as the initial owner from `inceptionDt`.
+2. Confirm ownership transfer replaces builder inventory or the current natural owner without gaps.
+3. Confirm builder inventory never appears in people-management, residency, or depositor pickers.
 
 ### Shared UI and Platform Work
 1. Create reusable table component baseline.

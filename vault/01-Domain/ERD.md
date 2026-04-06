@@ -27,6 +27,7 @@ Represents a flat within a block
 | description | string | Flat number or label |
 | blockId | string (FK → Blocks.id) | |
 | sqFt | integer | Area |
+| inceptionDt | datetime | Ownership continuity starts here |
 
 ---
 
@@ -43,6 +44,8 @@ Represents a person (owner, resident, or payer)
 | mobile | string | Primary contact |
 | altMobile | string | Optional |
 | genderId | integer (FK → GenderTypes.id) | |
+| isSystemIdentity | boolean | True for operational identities such as builder inventory |
+| systemTag | string (nullable, unique) | e.g. `BUILDER_INVENTORY` |
 
 ---
 
@@ -164,13 +167,15 @@ Maps a contribution to specific periods
 ## ⚖️ DOMAIN RULES (CRITICAL FOR AI)
 
 1. A Unit can have multiple owners over time, but only one active owner at a time.
-2. A Unit can have multiple residents over time.
-3. `toDt = NULL` indicates current ownership/residency.
-4. Contributions are immutable once recorded.
-5. Contribution rate is NOT derived dynamically — it must be captured at time of payment.
-6. ContributionDetails must fully distribute total contribution amount.
-7. A Contribution must map to at least one ContributionPeriod.
-8. depositedBy must always be a valid Individual (no anonymous payments).
+2. Ownership continuity starts on `Units.inceptionDt` and cannot contain gaps.
+3. A Unit enters the system in builder inventory unless a historical import starts a natural owner exactly on `inceptionDt`.
+4. A Unit can have multiple residents over time.
+5. `toDt = NULL` indicates current ownership/residency.
+6. Contributions are immutable once recorded.
+7. Contribution rate is NOT derived dynamically — it must be captured at time of payment.
+8. ContributionDetails must fully distribute total contribution amount.
+9. A Contribution must map to at least one ContributionPeriod.
+10. depositedBy must always be a valid Individual (no anonymous payments).
 
 ---
 
@@ -195,6 +200,7 @@ Maps a contribution to specific periods
 	- Individuals.mobile must be unique
 - Non-overlapping temporal constraint 
 	- UnitOwners: No overlapping date ranges for same unit
+    - UnitOwners: No gaps after Units.inceptionDt for same unit
 	- UnitResidents: No overlapping date ranges for same unit
 - Contribution uniqueness constraint
 	- One unit cannot have multiple contributions for same head + same period

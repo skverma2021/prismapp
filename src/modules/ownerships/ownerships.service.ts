@@ -100,7 +100,7 @@ async function ensureOwnershipReferencesExist(
 ) {
   const [unit, individual] = await Promise.all([
     tx.unit.findUnique({ where: { id: unitId }, select: { id: true, inceptionDt: true } }),
-    tx.individual.findUnique({ where: { id: indId }, select: { id: true } }),
+    tx.individual.findUnique({ where: { id: indId }, select: { id: true, isSystemIdentity: true, systemTag: true } }),
   ]);
 
   if (!unit) {
@@ -109,6 +109,14 @@ async function ensureOwnershipReferencesExist(
 
   if (!individual) {
     throw new HttpError(404, "NOT_FOUND", "Individual not found.");
+  }
+
+  if (individual.isSystemIdentity) {
+    throw new HttpError(
+      412,
+      "PRECONDITION_FAILED",
+      `${individual.systemTag ?? "System"} identity cannot be selected through the normal ownership workflow.`
+    );
   }
 
   return unit;
@@ -210,6 +218,9 @@ export async function listOwnershipLookups() {
       },
     }),
     db.individual.findMany({
+      where: {
+        isSystemIdentity: false,
+      },
       select: {
         id: true,
         fName: true,
@@ -289,11 +300,13 @@ export async function transferOwnership(input: TransferOwnershipInput) {
       const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership transfer date");
 
+      const transferAnchor = input.fromDt;
+
       const current = await tx.unitOwner.findFirst({
         where: {
           unitId: input.unitId,
-          fromDt: { lte: new Date() },
-          OR: [{ toDt: null }, { toDt: { gte: new Date() } }],
+          fromDt: { lte: transferAnchor },
+          OR: [{ toDt: null }, { toDt: { gte: transferAnchor } }],
         },
         orderBy: { fromDt: "desc" },
       });
@@ -307,6 +320,14 @@ export async function transferOwnership(input: TransferOwnershipInput) {
       }
 
       const previousToDt = new Date(input.fromDt.getTime() - 24 * 60 * 60 * 1000);
+
+      if (previousToDt.getTime() < current.fromDt.getTime()) {
+        throw new HttpError(
+          412,
+          "PRECONDITION_FAILED",
+          `Ownership transfer date must be after the current owner's start date (${current.fromDt.toISOString().slice(0, 10)}).`
+        );
+      }
 
       await tx.unitOwner.update({
         where: { id: current.id },

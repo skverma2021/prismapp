@@ -5,6 +5,15 @@
 2. O2- An Individual may own the same Unit multiple times across different time periods.
 3. O3- A Unit cannot have more than one active owner at any given time.
 4. O4- A Unit must always have exactly one active owner.
+5. O5- Ownership continuity starts on `Units.inceptionDt`.
+6. O6- The first owner on `Units.inceptionDt` is `BUILDER_INVENTORY` unless a migrated historical owner starts exactly on that same date.
+7. O7- Ownership periods for a Unit must not have gaps; with current date-only inputs, `next.fromDt` must equal `previous.toDt + 1 day`.
+8. O8- Ownership transfer is contiguous by rule: the outgoing owner ends on the day before the incoming owner starts.
+
+## Unit Lifecycle Rules
+1. U1- Each Unit has an `inceptionDt` that marks when it enters builder inventory and ownership continuity begins.
+2. U2- Creating a Unit also creates its initial active ownership row for `BUILDER_INVENTORY` starting on `inceptionDt`.
+3. U3- `BUILDER_INVENTORY` is a system identity, not a resident and not a normal payer/operator selection option.
 
 
 ## Residency Rules
@@ -16,6 +25,7 @@
 ## Temporal Integrity Rules
 
 1. No overlapping ownership periods for the same Unit.
+2. No ownership gaps for the same Unit after `Units.inceptionDt`.
 2. No overlapping residency periods for the same Unit.
 ## Contribution Rules
 1. **contributionHeads**: This table defines different purposes (description) of payment, unit (payUnit) of payment, and applicable month or year for which payment is made.

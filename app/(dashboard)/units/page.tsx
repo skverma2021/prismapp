@@ -203,7 +203,6 @@ export default function UnitsPage() {
           description: editingState.description.trim(),
           blockId: editingState.blockId,
           sqFt: Number(editingState.sqFt),
-          inceptionDt: editingState.inceptionDt,
         }),
       });
 
@@ -363,7 +362,7 @@ export default function UnitsPage() {
         <div className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Create Unit</p>
-            <p className="mt-1 text-sm text-slate-600">Unit descriptions are unique within a selected block. Inception date defines the earliest allowed ownership and residency start date.</p>
+            <p className="mt-1 text-sm text-slate-600">Unit descriptions are unique within a selected block. Creating a unit also starts builder inventory ownership from the inception date, which becomes the earliest allowed ownership and residency start date.</p>
             <div className="mt-4 grid gap-3">
               <select
                 value={createState.blockId}
@@ -499,7 +498,8 @@ export default function UnitsPage() {
                               type="date"
                               value={editingState.inceptionDt}
                               onChange={(event) => setEditingState((prev) => ({ ...prev, inceptionDt: event.target.value }))}
-                              className="w-36 rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                              disabled
+                              className="w-36 rounded border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500"
                             />
                           ) : (
                             toDateInputValue(item.inceptionDt)

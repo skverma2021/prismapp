@@ -47,16 +47,18 @@ model GenderType {
 }
 
 model Individual {
-  id        String   @id @default(uuid())
-  fName     String
-  mName     String?
-  sName     String
-  eMail     String   @unique
-  mobile    String   @unique
-  altMobile String?
-  genderId  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(uuid())
+  fName            String
+  mName            String?
+  sName            String
+  eMail            String   @unique
+  mobile           String   @unique
+  altMobile        String?
+  genderId         Int
+  isSystemIdentity Boolean  @default(false)
+  systemTag        String?  @unique
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   genderType    GenderType        @relation(fields: [genderId], references: [id], onDelete: Restrict)
   ownedUnits    UnitOwner[]

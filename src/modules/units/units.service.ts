@@ -5,6 +5,42 @@ import type { CreateUnitInput, UpdateUnitInput } from "./units.schemas";
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 500;
+const BUILDER_INVENTORY_TAG = "BUILDER_INVENTORY";
+
+async function ensureBuilderInventoryIdentity(tx: Pick<typeof db, "genderType" | "individual">) {
+  const existing = await tx.individual.findUnique({
+    where: { systemTag: BUILDER_INVENTORY_TAG },
+    select: { id: true },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  const defaultGender = await tx.genderType.findFirst({
+    orderBy: { id: "asc" },
+    select: { id: true },
+  });
+
+  if (!defaultGender) {
+    throw new HttpError(412, "PRECONDITION_FAILED", "Gender types must exist before builder inventory can be created.");
+  }
+
+  return tx.individual.create({
+    data: {
+      fName: "Builder",
+      mName: null,
+      sName: "Inventory",
+      eMail: "builder.inventory@prismapp.local",
+      mobile: "0000000000",
+      altMobile: null,
+      genderId: defaultGender.id,
+      isSystemIdentity: true,
+      systemTag: BUILDER_INVENTORY_TAG,
+    },
+    select: { id: true },
+  });
+}
 
 export async function listUnits(searchParams: URLSearchParams) {
   const page = parseQueryInt(searchParams.get("page"), DEFAULT_PAGE);
@@ -92,12 +128,49 @@ export async function getUnitById(id: string) {
 }
 
 export async function createUnit(input: CreateUnitInput) {
-  return db.unit.create({
-    data: input,
-  });
+  return db.$transaction(
+    async (tx) => {
+      const builder = await ensureBuilderInventoryIdentity(tx);
+      const unit = await tx.unit.create({
+        data: input,
+        include: { block: true },
+      });
+
+      await tx.unitOwner.create({
+        data: {
+          unitId: unit.id,
+          indId: builder.id,
+          fromDt: input.inceptionDt,
+          toDt: null,
+        },
+      });
+
+      return unit;
+    },
+    { isolationLevel: "Serializable" }
+  );
 }
 
 export async function updateUnit(id: string, input: UpdateUnitInput) {
+  if (input.inceptionDt !== undefined) {
+    const [ownerCount, current] = await Promise.all([
+      db.unitOwner.count({ where: { unitId: id } }),
+      db.unit.findUnique({ where: { id }, select: { inceptionDt: true } }),
+    ]);
+
+    if (!current) {
+      throw new HttpError(404, "NOT_FOUND", "Unit not found.");
+    }
+
+    if (ownerCount > 0 && current.inceptionDt.getTime() !== input.inceptionDt.getTime()) {
+      throw new HttpError(
+        412,
+        "PRECONDITION_FAILED",
+        "Unit inception date is locked once ownership continuity exists for the unit."
+      );
+    }
+  }
+
   return db.unit.update({
     where: { id },
     data: input,
@@ -105,5 +178,44 @@ export async function updateUnit(id: string, input: UpdateUnitInput) {
 }
 
 export async function deleteUnit(id: string) {
-  await db.unit.delete({ where: { id } });
+  await db.$transaction(async (tx) => {
+    const unit = await tx.unit.findUnique({ where: { id }, select: { id: true } });
+
+    if (!unit) {
+      throw new HttpError(404, "NOT_FOUND", "Unit not found.");
+    }
+
+    const [owners, residentCount, contributionCount] = await Promise.all([
+      tx.unitOwner.findMany({
+        where: { unitId: id },
+        select: {
+          id: true,
+          individual: {
+            select: {
+              systemTag: true,
+            },
+          },
+        },
+      }),
+      tx.unitResident.count({ where: { unitId: id } }),
+      tx.contribution.count({ where: { unitId: id } }),
+    ]);
+
+    const hasOnlyBuilderBootstrap =
+      owners.length === 1 && owners[0].individual.systemTag === BUILDER_INVENTORY_TAG && residentCount === 0 && contributionCount === 0;
+
+    if (!hasOnlyBuilderBootstrap && (owners.length > 0 || residentCount > 0 || contributionCount > 0)) {
+      throw new HttpError(
+        412,
+        "PRECONDITION_FAILED",
+        "Unit cannot be deleted after ownership, residency, or contribution history exists."
+      );
+    }
+
+    if (hasOnlyBuilderBootstrap) {
+      await tx.unitOwner.delete({ where: { id: owners[0].id } });
+    }
+
+    await tx.unit.delete({ where: { id } });
+  });
 }

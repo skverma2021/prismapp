@@ -1,7 +1,7 @@
 # Current Sprint Board
 
 Status: In Progress
-Date: 2026-04-06
+Date: 2026-04-07
 Owner: Engineering
 
 ## Purpose
@@ -12,7 +12,7 @@ This file should stay concise and operational. Historical detail belongs in evid
 ## Current Focus
 Shell and auth baseline are in place. Current focus is expanding the master-data UI baseline while continuing to smooth remaining auth feedback gaps.
 
-The next focused pre-production branch is ownership continuity: builder inventory bootstrap plus no-gap ownership enforcement.
+The active focused pre-production branch is ownership continuity: builder inventory bootstrap plus no-gap ownership enforcement.
 
 In the current branch, near-term operator UX work is browse-page sort consistency plus continued shared table/filter/form consolidation.
 
@@ -71,18 +71,23 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 52. Residency history now supports constrained `toDt` edits so operators can mark when someone moved out without reopening the full row.
 53. Retired contribution rates are now immutable and show as locked in the UI.
 54. Sort controls are now exposed across the remaining browse pages that already had backend sort support.
+55. Builder inventory system identity fields are now added to Individuals and migrated locally.
+56. Unit creation now seeds builder inventory as the initial ownership row from `inceptionDt`.
+57. Seed/backfill now fills missing opening and trailing ownership coverage with builder inventory rows.
+58. Ownership UI is now transfer-first and no longer exposes direct ownership creation in the operator flow.
+59. Ordinary individual browse and lookup flows now exclude system identities, including builder inventory.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
 2. Standardize shared table/filter/form patterns for operator screens.
 3. Add cross-linking between core master-data workflows and contribution capture.
 4. Normalize sort-control placement and copy so operator pages feel consistent.
-5. Prepare the ownership continuity branch from ADR-003 before any production rollout decision.
+5. Validate the ownership continuity branch behavior before merging back into the preview line.
 
 ## Next
 
 ### Immediate Next Steps
-1. Implement the ownership continuity branch from ADR-003: builder inventory identity, automatic initial ownership, migration/backfill, and regression coverage.
+1. Run focused UAT on the ownership continuity branch: unit creation, builder bootstrap, transfer flow, and picker filtering.
 2. Finish remaining shell-level auth feedback polish.
 3. Standardize shared table/filter/form patterns for operator screens.
 4. Add cross-linking between units, individuals, ownerships, residencies, and contribution workflows.

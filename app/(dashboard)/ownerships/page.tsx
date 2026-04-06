@@ -39,23 +39,15 @@ type OwnershipItem = {
   fromDt: string;
   toDt: string | null;
   createdAt: string;
-};
-
-type OwnershipFormState = {
-  unitId: string;
-  indId: string;
-  fromDt: string;
-  toDt: string;
+  individual?: {
+    id: string;
+    fName: string;
+    mName?: string | null;
+    sName: string;
+  };
 };
 
 type SortOption = "fromDt" | "toDt" | "createdAt";
-
-const emptyFormState: OwnershipFormState = {
-  unitId: "",
-  indId: "",
-  fromDt: "",
-  toDt: "",
-};
 
 function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
   return payload.ok ? fallback : payload.error?.message ?? fallback;
@@ -63,6 +55,19 @@ function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
 
 function formatIndividualName(individual: IndividualOption) {
   return [individual.fName, individual.mName ?? "", individual.sName].filter(Boolean).join(" ");
+}
+
+function formatOwnershipOwner(item: OwnershipItem, individualMap: Map<string, IndividualOption>) {
+  const lookup = individualMap.get(item.indId);
+  if (lookup) {
+    return formatIndividualName(lookup);
+  }
+
+  if (item.individual) {
+    return [item.individual.fName, item.individual.mName ?? "", item.individual.sName].filter(Boolean).join(" ");
+  }
+
+  return item.indId;
 }
 
 function toDateInputValue(value: string | null) {
@@ -115,9 +120,7 @@ export default function OwnershipsPage() {
   const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("fromDt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("desc");
-  const [createState, setCreateState] = useState<OwnershipFormState>(emptyFormState);
-  const [transferState, setTransferState] = useState<Omit<OwnershipFormState, "toDt">>({ unitId: "", indId: "", fromDt: "" });
-  const [createLoading, setCreateLoading] = useState(false);
+  const [transferState, setTransferState] = useState({ unitId: "", indId: "", fromDt: "" });
   const [transferLoading, setTransferLoading] = useState(false);
   const unitMap = useMemo(() => new Map(units.map((item) => [item.id, item])), [units]);
   const individualMap = useMemo(() => new Map(individuals.map((item) => [item.id, item])), [individuals]);
@@ -219,38 +222,6 @@ export default function OwnershipsPage() {
     void loadOwnerships();
   }, [appliedActiveOnly, appliedIndividualFilter, appliedUnitFilter, appliedSortBy, appliedSortDir, page]);
 
-  async function createOwnership() {
-    setCreateLoading(true);
-    setSubmitError("");
-    setSubmitSuccess("");
-
-    try {
-      const response = await fetch("/api/ownerships", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          unitId: createState.unitId,
-          indId: createState.indId,
-          fromDt: createState.fromDt,
-          toDt: createState.toDt.trim() ? createState.toDt : null,
-        }),
-      });
-
-      const payload = (await response.json()) as ApiEnvelope<OwnershipItem>;
-      if (!response.ok || !payload.ok) {
-        throw new Error(toErrorMessage(payload, "Unable to create ownership."));
-      }
-
-      setCreateState(emptyFormState);
-      setSubmitSuccess("Ownership record created.");
-      setPage(1);
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Unable to create ownership.");
-    } finally {
-      setCreateLoading(false);
-    }
-  }
-
   async function transferOwnership() {
     setTransferLoading(true);
     setSubmitError("");
@@ -296,7 +267,7 @@ export default function OwnershipsPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-(--accent-strong)">Timeline Management</p>
             <h2 className="mt-2 text-2xl font-semibold text-slate-900">Ownerships</h2>
             <p className="mt-2 max-w-3xl text-sm text-slate-600">
-              Manage ownership history per unit, review active ownerships, and transfer active ownership without violating overlap rules.
+              Review builder-backed ownership history per unit and use transfer to hand over the active owner without breaking continuity.
             </p>
           </div>
           <div className="grid gap-2 sm:min-w-85">
@@ -341,21 +312,10 @@ export default function OwnershipsPage() {
         <div className="mt-6 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="space-y-4">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-900">Create Ownership</p>
-              <p className="mt-1 text-sm text-slate-600">Use this for historical or explicit range creation on or after the unit inception date. Existing ownership rows are read-only and owner changes should use transfer.</p>
-              <div className="mt-4 grid gap-3">
-                <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
-                  <option value="">{unitsLoading ? "Loading units..." : "Select unit"}</option>
-                  {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
-                </select>
-                <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || individualsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
-                  <option value="">{individualsLoading ? "Loading individuals..." : "Select individual"}</option>
-                  {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
-                </select>
-                <input type="date" value={createState.fromDt} onChange={(event) => setCreateState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
-                <input type="date" value={createState.toDt} onChange={(event) => setCreateState((prev) => ({ ...prev, toDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
-                <button type="button" disabled={!canMutate || createLoading || !createState.unitId || !createState.indId || !createState.fromDt} onClick={() => { void createOwnership(); }} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">{createLoading ? "Creating..." : "Create Ownership"}</button>
-              </div>
+              <p className="text-sm font-semibold text-slate-900">Continuity Rule</p>
+              <p className="mt-1 text-sm text-slate-600">
+                Every unit now starts in Builder Inventory on its inception date. Normal operator workflow should use transfer to move from the current active owner to the next one while keeping the timeline contiguous.
+              </p>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -398,7 +358,7 @@ export default function OwnershipsPage() {
                     items.map((item) => (
                       <tr key={item.id} className="border-t border-slate-100 align-top text-slate-700">
                         <td className="px-3 py-3">{unitMap.get(item.unitId) ? formatUnitLabel(unitMap.get(item.unitId) as UnitOption) : item.unitId}</td>
-                        <td className="px-3 py-3">{individualMap.get(item.indId) ? formatIndividualName(individualMap.get(item.indId) as IndividualOption) : item.indId}</td>
+                        <td className="px-3 py-3">{formatOwnershipOwner(item, individualMap)}</td>
                         <td className="px-3 py-3">{toDateInputValue(item.fromDt)}</td>
                         <td className="px-3 py-3">{toDateInputValue(item.toDt) || getTimelineStatus(item)}</td>
                         <td className="px-3 py-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</td>

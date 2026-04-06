@@ -34,14 +34,16 @@ Represents a residential flat within a Block.
 ### Key Points
 - Each Unit belongs to exactly one Block
 - Units are uniquely identified by description within a Block
+- Each Unit has an `inceptionDt` from which ownership continuity is enforced
+- Each Unit starts in builder inventory until transferred to another owner
 
 ### Sample Data
 
-| id | description | blockId | sqFt |
-|----|------------|--------|------|
-| 1  | V-101      | 1      | 1500 |
-| 2  | V-102      | 1      | 1700 |
-| 3  | V-103      | 1      | 1900 |
+| id | description | blockId | sqFt | inceptionDt |
+|----|------------|--------|------|-------------|
+| 1  | V-101      | 1      | 1500 | 01-01-2024 |
+| 2  | V-102      | 1      | 1700 | 01-01-2024 |
+| 3  | V-103      | 1      | 1900 | 01-01-2024 |
 
 ---
 
@@ -56,6 +58,8 @@ Represents a person associated with the society.
   - Historical (past association)
 - Same individual can own multiple Units
 - Same individual can reside in only one Unit at a time
+- Some Individual rows may be system identities used for operational invariants, such as `BUILDER_INVENTORY`
+- System identities must be excluded from ordinary resident, payer, and people-management pickers
 
 ### Sample Data
 
@@ -87,12 +91,16 @@ Tracks ownership history of Units.
 - A Unit can have only ONE active owner at a time
 - An Individual can own multiple Units
 - `toDt = NULL` → current owner
+- Ownership history starts on the Unit `inceptionDt`
+- Ownership rows must form one continuous chain with no gaps
+- The first row is the builder inventory owner unless historical migration starts a natural owner exactly on `inceptionDt`
 
 ### Sample Data
 
 | id | unitId | indId | fromDt | toDt |
 |----|--------|-------|--------|------|
-| 1  | 1      | 1     | 01-01-2024 | NULL |
+| 1  | 1      | BUILDER_INVENTORY | 01-01-2024 | 30-06-2024 |
+| 2  | 1      | 1     | 01-07-2024 | NULL |
 
 ---
 
