@@ -109,8 +109,12 @@ export default function ResidenciesPage() {
   const [appliedIndividualFilter, setAppliedIndividualFilter] = useState("");
   const [activeOnly, setActiveOnly] = useState(false);
   const [appliedActiveOnly, setAppliedActiveOnly] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [createState, setCreateState] = useState<ResidencyFormState>(emptyFormState);
   const [createLoading, setCreateLoading] = useState(false);
+  const [editingResidencyId, setEditingResidencyId] = useState("");
+  const [editingToDt, setEditingToDt] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
   const unitMap = useMemo(() => new Map(units.map((item) => [item.id, item])), [units]);
   const individualMap = useMemo(() => new Map(individuals.map((item) => [item.id, item])), [individuals]);
 
@@ -209,7 +213,7 @@ export default function ResidenciesPage() {
     }
 
     void loadResidencies();
-  }, [appliedActiveOnly, appliedIndividualFilter, appliedUnitFilter, page]);
+  }, [appliedActiveOnly, appliedIndividualFilter, appliedUnitFilter, page, reloadKey]);
 
   async function createResidency() {
     setCreateLoading(true);
@@ -234,12 +238,54 @@ export default function ResidenciesPage() {
       }
 
       setCreateState(emptyFormState);
+      setReloadKey((value) => value + 1);
       setSubmitSuccess("Residency record created.");
       setPage(1);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Unable to create residency.");
     } finally {
       setCreateLoading(false);
+    }
+  }
+
+  function startEditingResidency(item: ResidencyItem) {
+    setSubmitError("");
+    setSubmitSuccess("");
+    setEditingResidencyId(item.id);
+    setEditingToDt(toDateInputValue(item.toDt));
+  }
+
+  function cancelEditingResidency() {
+    setEditingResidencyId("");
+    setEditingToDt("");
+  }
+
+  async function saveResidencyEndDate(id: string) {
+    setSaveLoading(true);
+    setSubmitError("");
+    setSubmitSuccess("");
+
+    try {
+      const response = await fetch(`/api/residencies/${id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          toDt: editingToDt.trim() ? editingToDt : null,
+        }),
+      });
+
+      const payload = (await response.json()) as ApiEnvelope<ResidencyItem>;
+      if (!response.ok || !payload.ok) {
+        throw new Error(toErrorMessage(payload, "Unable to update residency."));
+      }
+
+      cancelEditingResidency();
+      setReloadKey((value) => value + 1);
+      setSubmitSuccess("Residency end date updated.");
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Unable to update residency.");
+    } finally {
+      setSaveLoading(false);
     }
   }
 
@@ -289,7 +335,7 @@ export default function ResidenciesPage() {
         <div className="mt-6 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Create Residency</p>
-            <p className="mt-1 text-sm text-slate-600">Residencies may be active or historical, but they cannot start before the unit inception date and existing rows are read-only.</p>
+            <p className="mt-1 text-sm text-slate-600">Residencies may be active or historical, but they cannot start before the unit inception date. Existing rows keep unit, resident, and start date locked while still allowing `toDt` to be updated.</p>
             <div className="mt-4 grid gap-3">
               <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                 <option value="">{unitsLoading ? "Loading units..." : "Select unit"}</option>
@@ -329,8 +375,55 @@ export default function ResidenciesPage() {
                         <td className="px-3 py-3">{unitMap.get(item.unitId) ? formatUnitLabel(unitMap.get(item.unitId) as UnitOption) : item.unitId}</td>
                         <td className="px-3 py-3">{individualMap.get(item.indId) ? formatIndividualName(individualMap.get(item.indId) as IndividualOption) : item.indId}</td>
                         <td className="px-3 py-3">{toDateInputValue(item.fromDt)}</td>
-                        <td className="px-3 py-3">{toDateInputValue(item.toDt) || getTimelineStatus(item)}</td>
-                        <td className="px-3 py-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</td>
+                        <td className="px-3 py-3">
+                          {editingResidencyId === item.id ? (
+                            <input
+                              type="date"
+                              value={editingToDt}
+                              onChange={(event) => setEditingToDt(event.target.value)}
+                              disabled={saveLoading}
+                              className="w-40 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                            />
+                          ) : (
+                            toDateInputValue(item.toDt) || getTimelineStatus(item)
+                          )}
+                        </td>
+                        <td className="px-3 py-3">
+                          {canMutate ? (
+                            editingResidencyId === item.id ? (
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void saveResidencyEndDate(item.id);
+                                  }}
+                                  disabled={saveLoading}
+                                  className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+                                >
+                                  {saveLoading ? "Saving..." : "Save"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={cancelEditingResidency}
+                                  disabled={saveLoading}
+                                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 disabled:cursor-not-allowed disabled:bg-slate-100"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => startEditingResidency(item)}
+                                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
+                              >
+                                Edit End
+                              </button>
+                            )
+                          ) : (
+                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</span>
+                          )}
+                        </td>
                       </tr>
                     ))
                   )}

@@ -169,14 +169,41 @@ export async function createResidency(input: CreateResidencyInput) {
 }
 
 export async function updateResidency(id: string, input: UpdateResidencyInput) {
-  const current = await db.unitResident.findUnique({ where: { id }, select: { id: true } });
-  if (!current) {
-    throw new HttpError(404, "NOT_FOUND", "Residency record not found.");
-  }
+  return db.$transaction(
+    async (tx) => {
+      const current = await tx.unitResident.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          unitId: true,
+          indId: true,
+          fromDt: true,
+          toDt: true,
+        },
+      });
 
-  void input;
+      if (!current) {
+        throw new HttpError(404, "NOT_FOUND", "Residency record not found.");
+      }
 
-  throw new HttpError(412, "PRECONDITION_FAILED", "Residency history is immutable and cannot be edited in place.");
+      const nextToDt = input.toDt === undefined ? current.toDt : input.toDt;
+      if (nextToDt !== undefined) {
+        if (nextToDt && current.fromDt.getTime() > nextToDt.getTime()) {
+          throw new HttpError(400, "VALIDATION_ERROR", "fromDt must be before or equal to toDt.");
+        }
+
+        await ensureNoResidencyOverlap(tx, current.unitId, current.fromDt, nextToDt, id);
+      }
+
+      return tx.unitResident.update({
+        where: { id },
+        data: {
+          toDt: nextToDt,
+        },
+      });
+    },
+    { isolationLevel: "Serializable" }
+  );
 }
 
 export async function deleteResidency(id: string) {

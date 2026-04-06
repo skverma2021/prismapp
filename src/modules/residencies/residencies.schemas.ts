@@ -1,4 +1,4 @@
-import { HttpError, parseOptionalString, requireString } from "@/src/lib/api-response";
+import { HttpError, requireString } from "@/src/lib/api-response";
 
 export type CreateResidencyInput = {
   unitId: string;
@@ -8,9 +8,6 @@ export type CreateResidencyInput = {
 };
 
 export type UpdateResidencyInput = {
-  unitId?: string;
-  indId?: string;
-  fromDt?: Date;
   toDt?: Date | null;
 };
 
@@ -80,20 +77,21 @@ export function parseUpdateResidencyInput(payload: unknown): UpdateResidencyInpu
 
   const record = payload as Record<string, unknown>;
 
+  if (record.unitId !== undefined || record.indId !== undefined || record.fromDt !== undefined) {
+    throw new HttpError(
+      400,
+      "VALIDATION_ERROR",
+      "Only toDt can be edited on an existing residency record."
+    );
+  }
+
   const input: UpdateResidencyInput = {
-    unitId: parseOptionalString(record.unitId),
-    indId: parseOptionalString(record.indId),
-    fromDt: record.fromDt === undefined ? undefined : parseRequiredDate(record.fromDt, "fromDt"),
     toDt: parseOptionalDate(record.toDt, "toDt"),
   };
 
   const hasAnyField = Object.values(input).some((value) => value !== undefined);
   if (!hasAnyField) {
     throw new HttpError(400, "VALIDATION_ERROR", "At least one mutable field is required.");
-  }
-
-  if (input.fromDt && input.toDt !== undefined) {
-    ensureRangeValidity(input.fromDt, input.toDt);
   }
 
   return input;
