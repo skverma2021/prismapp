@@ -1,7 +1,7 @@
 # Current Sprint Board
 
 Status: In Progress
-Date: 2026-04-07
+Date: 2026-04-09
 Owner: Engineering
 
 ## Purpose
@@ -78,24 +78,24 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 59. Ordinary individual browse and lookup flows now exclude system identities, including builder inventory.
 60. Browse pages now write applied filter state back to the URL so filtered views are bookmarkable and shareable.
 61. Paid/unpaid matrix now paginates row display at 25 units per page while preserving full filtered totals.
+62. Contribution transactions and paid/unpaid matrix reports now hydrate from URL query state and preserve bookmarkable filter and page context.
+63. Focused preview UAT passed for ownership continuity, picker filtering, and protected-route auth behavior on the deployed `preview/ownership-continuity` branch.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
 2. Standardize shared table/filter/form patterns for operator screens.
 3. Add cross-linking between core master-data workflows and contribution capture.
 4. Normalize sort-control placement and copy so operator pages feel consistent.
-5. Validate the ownership continuity branch behavior before merging back into the preview line.
-6. Decide whether paid/unpaid matrix pagination also needs URL-synced page state and block-deep-link entry points.
 
 ## Next
 
 ### Immediate Next Steps
-1. Run focused UAT on the ownership continuity branch: unit creation, builder bootstrap, transfer flow, and picker filtering.
+1. Decide whether to cut a new preview deployment that includes the newer local report URL-state changes or intentionally hold those changes until after branch validation closes.
 2. Finish remaining shell-level auth feedback polish.
 3. Standardize shared table/filter/form patterns for operator screens.
 4. Add cross-linking between units, individuals, ownerships, residencies, and contribution workflows.
 5. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points.
-6. Extend report UX so paid/unpaid matrix and transactions views share the same bookmarkable-state conventions as the browse pages.
+6. Add pre-filtered report deep links from contribution heads, units, and contribution capture into the bookmarkable report views.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.
@@ -110,6 +110,7 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 ## References
 1. `Product-Delivery-Strategy.md`
 2. `Execution-Status.md`
-3. `Week-3-Kickoff-Items-Home-Nav-Auth-Shell.md`
-4. `Day-10-Release-Readiness.md`
-5. `Evidence/Week-3-Shell-Smoke-Notes.md`
+3. `Evidence/Day-10-Release-Readiness.md`
+4. `Evidence/Week-3-Shell-Smoke-Notes.md`
+5. `Evidence/Preview-Deployment-Status.md`
+6. `Evidence/Ownership-Continuity-Preview-UAT.md`

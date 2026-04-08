@@ -12,7 +12,8 @@ Implementation applied so far:
 2. `Current-Sprint-Board.md` added as the active execution board.
 3. `Evidence/` added as the target landing area for validation and release artifacts.
 4. `Archive/` added as the target landing area for historical closeout artifacts.
-5. Existing files were intentionally left in place to avoid link breakage during the first cleanup pass.
+5. First cleanup pass moved regression, UAT, and release-readiness artifacts into `Evidence/` and moved the Week 1 closeout note into `Archive/`.
+6. Second cleanup pass moved older sprint and kickoff planning artifacts into `Archive/`, leaving only the active working set at the top level of `vault/05-AI/`.
 
 ## Recommendation
 Do a light reorganization, not a rewrite.
@@ -94,8 +95,8 @@ Reason:
 
 ### Keep Active
 1. `Product-Delivery-Strategy.md`
-2. `Week-3-Kickoff-Items-Home-Nav-Auth-Shell.md`
-3. `Execution-Status.md`
+2. `Execution-Status.md`
+3. `Current-Sprint-Board.md`
 
 ### Treat As Evidence
 1. `Day-9-Regression-Notes.md`
@@ -104,7 +105,10 @@ Reason:
 
 ### Candidate For Archive
 1. `Week-1-Day-5-Closeout.md`
-2. Older completed daily execution notes once they are no longer referenced by the active sprint.
+2. `Sprint-1-Checklist.md`
+3. `Week-2-Execution-Board-Day6-to-Day10.md`
+4. `Week-3-Kickoff-Items-Home-Nav-Auth-Shell.md`
+5. Older completed daily execution notes once they are no longer referenced by the active sprint.
 
 ## Additional Metadata Recommendation
 Add a simple frontmatter or top-of-file status field to active planning and evidence docs:
@@ -119,4 +123,4 @@ This will reduce confusion when multiple nearby documents discuss overlapping sc
 ## Final Recommendation
 1. Do not reorganize the entire vault now.
 2. Add current-status and proposal documents first.
-3. Move only `vault/05-AI` files later, and only after agreeing on the target operational structure.
+3. Continue moving only `vault/05-AI` files in small passes, with link updates alongside each move.

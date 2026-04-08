@@ -1,7 +1,7 @@
 # PrismApp Execution Status
 
 Status: In Progress
-Date: 2026-04-07
+Date: 2026-04-09
 Owner: Engineering
 
 ## Purpose
@@ -120,6 +120,7 @@ Not yet complete:
 2. Paid/unpaid matrix report API implemented.
 3. Transactions CSV export implemented.
 4. Paid/unpaid matrix CSV export implemented.
+5. Transactions and paid/unpaid matrix report pages now hydrate bookmarkable filter and page state from the URL.
 
 ### UI Delivered Through Week 2
 1. Contribution capture screen implemented.
@@ -161,6 +162,8 @@ Not yet complete:
 2. Build passed during Week 2 sign-off.
 3. API regression suites passed during Week 2 sign-off.
 4. UAT checklist and release-readiness docs were added.
+5. A Vercel preview deployment for `preview/ownership-continuity` is recorded as ready for review.
+6. Focused preview UAT for ownership continuity and protected-route auth behavior has now been recorded as passing.
 
 ### Shell and Auth Activities Completed
 1. Read relevant App Router docs from installed Next.js docs before shell changes.
@@ -196,8 +199,8 @@ Not yet complete:
 1. Continue shell-level auth feedback refinements beyond the current public-entry and home redirect states.
 2. Standardize shared table, filter, and form patterns across the new operator pages.
 3. Add cross-linking between units, individuals, timeline screens, and contribution capture.
-4. Validate builder-inventory ownership continuity behavior on the focused branch before merging back into the preview line.
-5. Decide whether report screens should also sync page state and filter state into the URL for shareable evidence links.
+4. Decide whether to cut a newer preview deployment for the local report URL-state improvements or intentionally hold them until after the current validation window closes.
+5. Add pre-filtered deep links from master-data and contribution workflows into the now-bookmarkable report views.
 
 ## Activities Yet To Be Performed
 
@@ -215,6 +218,11 @@ Not yet complete:
 1. Confirm newly created units show builder inventory as the initial owner from `inceptionDt`.
 2. Confirm ownership transfer replaces builder inventory or the current natural owner without gaps.
 3. Confirm builder inventory never appears in people-management, residency, or depositor pickers.
+4. Confirm unauthenticated protected-route attempts redirect to auth-required login feedback.
+5. Confirm `READ_ONLY` users are denied from contribution capture while reports remain accessible.
+
+Validation status:
+1. All current branch validation checks above are now recorded as passing in `Evidence/Ownership-Continuity-Preview-UAT.md`.
 
 ### Shared UI and Platform Work
 1. Create reusable table component baseline.
@@ -234,6 +242,7 @@ Not yet complete:
 4. Review performance-sensitive report queries and indexes.
 5. Resolve current PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
 6. Prepare for maker-checker extension hooks in corrections.
+7. Promote from preview to a production-ready release only after ownership-continuity UAT is recorded.
 
 ### Deferred Future Work
 1. Auth Phase 2: OAuth and account linking.
@@ -247,3 +256,5 @@ Not yet complete:
 2. Treat shell and auth baseline as delivered enough to keep tightening master-data correctness and operator UX.
 3. Prioritize builder-based ownership continuity rollout, browse-page sort consistency, and shared operator-screen patterns before any production cutover.
 4. Keep future modules deferred until auth alignment and master-data UI baselines are stable.
+5. Treat the current Vercel preview deployment as the review surface for ownership continuity, while recognizing local report URL-state changes are newer than the last recorded deployed commit.
+6. Use the recorded preview UAT pass as the basis for the next deployment decision rather than re-running the same ownership continuity checks immediately.

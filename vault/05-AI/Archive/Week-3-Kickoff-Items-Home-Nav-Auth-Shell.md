@@ -1,8 +1,11 @@
 # Week 3 Kickoff Items - Home, Navigation, Auth Shell
 
-Status: Draft Ready
+Status: Archived
 Date: 2026-03-31
 Owner: Engineering
+
+## Archive Note
+This kickoff note captured the shell and auth baseline plan that has since been substantially implemented. It remains here as historical context only.
 
 ## Objective
 Establish platform shell foundations before broad module UI expansion.

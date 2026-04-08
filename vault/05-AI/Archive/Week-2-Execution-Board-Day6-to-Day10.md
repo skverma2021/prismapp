@@ -1,8 +1,11 @@
 # Week 2 Execution Board (Day 6 to Day 10)
 
-Status: Active
+Status: Archived
 Date: 2026-03-30
 Owner: Engineering
+
+## Archive Note
+This execution board is retained as a historical record of the Week 2 contribution delivery window. Current short-horizon work is tracked in `../Current-Sprint-Board.md`.
 
 ## Day 6 - Correction Screen (Core)
 
@@ -84,7 +87,7 @@ Actual:
 1. Added Day 10 UAT checklist/results artifact in `vault/05-AI/Evidence/Day-10-UAT-Checklist-and-Results.md`.
 2. Executed final verification pass: lint + build + API smoke suites (timelines, contribution-rates, contributions, reports).
 3. Added release-readiness freeze doc with known limitations and prioritized backlog in `vault/05-AI/Evidence/Day-10-Release-Readiness.md`.
-4. Added Week 3 kickoff plan for home/nav/auth shell in `vault/05-AI/Week-3-Kickoff-Items-Home-Nav-Auth-Shell.md`.
+4. Added Week 3 kickoff plan for home/nav/auth shell in `vault/05-AI/Archive/Week-3-Kickoff-Items-Home-Nav-Auth-Shell.md`.
 5. Executed route and CSV smoke proxy checks successfully (all key pages `200`, CSV endpoints returning attachment headers).
 6. Reduced remaining UAT item to optional visual spot-check for UX presentation only.
 

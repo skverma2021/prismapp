@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
 import { fetchAllPages } from "@/src/lib/paginated-client";
+import { pushQueryState } from "@/src/lib/url-query-state";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
 type ApiEnvelope<T> =
@@ -100,6 +102,10 @@ type FiltersState = {
   sortDir: SortDir;
 };
 
+type SearchParamsReader = {
+  get(key: string): string | null;
+};
+
 function getErrorMessage(payload: unknown, fallback: string) {
   if (!payload || typeof payload !== "object") {
     return fallback;
@@ -107,6 +113,64 @@ function getErrorMessage(payload: unknown, fallback: string) {
 
   const maybeError = (payload as { error?: { message?: string } }).error;
   return maybeError?.message ?? fallback;
+}
+
+function parsePositiveInteger(value: string | null, fallback: number) {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parseMonthFilter(value: string | null): "" | number {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 && parsed <= 12 ? parsed : "";
+}
+
+function parseHeadFilter(value: string | null): "" | number {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : "";
+}
+
+function parsePageSize(value: string | null) {
+  return value === "50" ? 50 : value === "100" ? 100 : 20;
+}
+
+function parseSortField(value: string | null): SortField {
+  return value === "createdAt" || value === "amount" || value === "id" ? value : "transactionDateTime";
+}
+
+function parseSortDir(value: string | null): SortDir {
+  return value === "asc" ? "asc" : "desc";
+}
+
+function parseTransactionsState(searchParams: SearchParamsReader, currentYear: number) {
+  return {
+    page: parsePositiveInteger(searchParams.get("page"), 1),
+    filters: {
+      refYear: parsePositiveInteger(searchParams.get("refYear"), currentYear),
+      refMonth: parseMonthFilter(searchParams.get("refMonth")),
+      headId: parseHeadFilter(searchParams.get("headId")),
+      unitId: searchParams.get("unitId") ?? "",
+      blockId: searchParams.get("blockId") ?? "",
+      depositedBy: searchParams.get("depositedBy") ?? "",
+      transactionDateFrom: searchParams.get("transactionDateFrom") ?? "",
+      transactionDateTo: searchParams.get("transactionDateTo") ?? "",
+      pageSize: parsePageSize(searchParams.get("pageSize")),
+      sortBy: parseSortField(searchParams.get("sortBy")),
+      sortDir: parseSortDir(searchParams.get("sortDir")),
+    } satisfies FiltersState,
+  };
 }
 
 function buildQuery(filters: FiltersState, page: number) {
@@ -152,6 +216,10 @@ function buildQuery(filters: FiltersState, page: number) {
 export default function ContributionTransactionsReportPage() {
   const { session } = useAuthSession();
   const currentYear = new Date().getUTCFullYear();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [page, setPage] = useState(1);
+  const [hasHydratedQuery, setHasHydratedQuery] = useState(false);
 
   const [filters, setFilters] = useState<FiltersState>({
     refYear: currentYear,
@@ -166,6 +234,13 @@ export default function ContributionTransactionsReportPage() {
     sortBy: "transactionDateTime",
     sortDir: "desc",
   });
+
+  useEffect(() => {
+    const nextState = parseTransactionsState(searchParams, currentYear);
+    setFilters(nextState.filters);
+    setPage(nextState.page);
+    setHasHydratedQuery(true);
+  }, [currentYear, searchParams]);
 
   const [heads, setHeads] = useState<HeadOption[]>([]);
   const [blocks, setBlocks] = useState<OptionItem[]>([]);
@@ -236,6 +311,27 @@ export default function ContributionTransactionsReportPage() {
     }
   }, [filters.blockId, filters.unitId, units]);
 
+  useEffect(() => {
+    if (!hasHydratedQuery) {
+      return;
+    }
+
+    pushQueryState(pathname, {
+      refYear: filters.refYear,
+      refMonth: filters.refMonth === "" ? undefined : filters.refMonth,
+      headId: filters.headId === "" ? undefined : filters.headId,
+      unitId: filters.unitId || undefined,
+      blockId: filters.blockId || undefined,
+      depositedBy: filters.depositedBy || undefined,
+      transactionDateFrom: filters.transactionDateFrom || undefined,
+      transactionDateTo: filters.transactionDateTo || undefined,
+      page: page > 1 ? page : undefined,
+      pageSize: filters.pageSize === 20 ? undefined : filters.pageSize,
+      sortBy: filters.sortBy === "transactionDateTime" ? undefined : filters.sortBy,
+      sortDir: filters.sortDir === "desc" ? undefined : filters.sortDir,
+    });
+  }, [filters, hasHydratedQuery, page, pathname]);
+
   async function runReport(page: number) {
     setReportLoading(true);
     setRequestError("");
@@ -289,12 +385,16 @@ export default function ContributionTransactionsReportPage() {
   }
 
   useEffect(() => {
-    void runReport(1);
-    // Intentionally run only on explicit filter state changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, session.role, session.userId]);
+    if (!hasHydratedQuery) {
+      return;
+    }
 
-  const pageLabel = report ? `Page ${report.page} of ${Math.max(report.totalPages, 1)}` : "Page 1 of 1";
+    void runReport(page);
+    // Intentionally run only on explicit filter, page, and auth context changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters, hasHydratedQuery, page, session.role, session.userId]);
+
+  const pageLabel = report ? `Page ${report.page} of ${Math.max(report.totalPages, 1)}` : `Page ${page} of 1`;
 
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-8 sm:px-6">
@@ -307,7 +407,7 @@ export default function ContributionTransactionsReportPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => void runReport(1)}
+                onClick={() => void runReport(page)}
                 disabled={reportLoading || optionsLoading}
                 className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
               >
@@ -361,9 +461,10 @@ export default function ContributionTransactionsReportPage() {
               <input
                 type="number"
                 value={filters.refYear}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, refYear: Number(event.target.value || currentYear) }))
-                }
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, refYear: Number(event.target.value || currentYear) }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
             </label>
@@ -374,6 +475,7 @@ export default function ContributionTransactionsReportPage() {
                 value={String(filters.refMonth)}
                 onChange={(event) => {
                   const value = event.target.value;
+                  setPage(1);
                   setFilters((prev) => ({ ...prev, refMonth: value === "" ? "" : Number(value) }));
                 }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -402,6 +504,7 @@ export default function ContributionTransactionsReportPage() {
                 value={String(filters.headId)}
                 onChange={(event) => {
                   const value = event.target.value;
+                  setPage(1);
                   setFilters((prev) => ({ ...prev, headId: value === "" ? "" : Number(value) }));
                 }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -420,7 +523,10 @@ export default function ContributionTransactionsReportPage() {
               <span className="mb-1 block">Block</span>
               <select
                 value={filters.blockId}
-                onChange={(event) => setFilters((prev) => ({ ...prev, blockId: event.target.value }))}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, blockId: event.target.value }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 disabled={optionsLoading}
               >
@@ -437,7 +543,10 @@ export default function ContributionTransactionsReportPage() {
               <span className="mb-1 block">Unit</span>
               <select
                 value={filters.unitId}
-                onChange={(event) => setFilters((prev) => ({ ...prev, unitId: event.target.value }))}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, unitId: event.target.value }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 disabled={optionsLoading}
               >
@@ -454,7 +563,10 @@ export default function ContributionTransactionsReportPage() {
               <span className="mb-1 block">Depositor</span>
               <select
                 value={filters.depositedBy}
-                onChange={(event) => setFilters((prev) => ({ ...prev, depositedBy: event.target.value }))}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, depositedBy: event.target.value }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 disabled={optionsLoading}
               >
@@ -472,9 +584,10 @@ export default function ContributionTransactionsReportPage() {
               <input
                 type="date"
                 value={filters.transactionDateFrom}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, transactionDateFrom: event.target.value }))
-                }
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, transactionDateFrom: event.target.value }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
             </label>
@@ -484,7 +597,10 @@ export default function ContributionTransactionsReportPage() {
               <input
                 type="date"
                 value={filters.transactionDateTo}
-                onChange={(event) => setFilters((prev) => ({ ...prev, transactionDateTo: event.target.value }))}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, transactionDateTo: event.target.value }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
             </label>
@@ -495,9 +611,10 @@ export default function ContributionTransactionsReportPage() {
               <span className="mb-1 block">Sort by</span>
               <select
                 value={filters.sortBy}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, sortBy: event.target.value as SortField }))
-                }
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, sortBy: event.target.value as SortField }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               >
                 <option value="transactionDateTime">transactionDateTime</option>
@@ -511,9 +628,10 @@ export default function ContributionTransactionsReportPage() {
               <span className="mb-1 block">Sort direction</span>
               <select
                 value={filters.sortDir}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, sortDir: event.target.value as SortDir }))
-                }
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, sortDir: event.target.value as SortDir }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               >
                 <option value="desc">desc</option>
@@ -525,9 +643,10 @@ export default function ContributionTransactionsReportPage() {
               <span className="mb-1 block">Page size</span>
               <select
                 value={String(filters.pageSize)}
-                onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, pageSize: Number(event.target.value) }))
-                }
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, pageSize: Number(event.target.value) }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               >
                 <option value="20">20</option>
@@ -627,7 +746,7 @@ export default function ContributionTransactionsReportPage() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => report && void runReport(Math.max(1, report.page - 1))}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={!report?.hasPrev || reportLoading}
                 className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -635,7 +754,7 @@ export default function ContributionTransactionsReportPage() {
               </button>
               <button
                 type="button"
-                onClick={() => report && void runReport(report.page + 1)}
+                onClick={() => setPage((current) => current + 1)}
                 disabled={!report?.hasNext || reportLoading}
                 className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
               >

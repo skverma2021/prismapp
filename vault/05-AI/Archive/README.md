@@ -1,18 +1,19 @@
 # Archive Index
 
 Status: Active
-Date: 2026-04-01
+Date: 2026-04-08
 Owner: Engineering
 
 ## Purpose
 This folder is the intended landing area for historical closeout notes and completed execution artifacts that are no longer part of the active planning set.
 
-During Option A adoption, existing historical files remain in `vault/05-AI/` to avoid breaking links. Move files here only when:
-1. they are no longer active references, and
-2. link updates are handled intentionally.
+Historical files moved here are no longer part of the active planning set. Keep only current working notes at the top of `vault/05-AI/` and move completed closeout artifacts here once references are updated.
 
-## Current Candidate Archive Files Still Located At Top Level
-1. `../Week-1-Day-5-Closeout.md`
+## Current Archive Files
+1. `Week-1-Day-5-Closeout.md`
+2. `Sprint-1-Checklist.md`
+3. `Week-2-Execution-Board-Day6-to-Day10.md`
+4. `Week-3-Kickoff-Items-Home-Nav-Auth-Shell.md`
 
 ## Suggested Future Contents
 1. completed weekly closeout notes

@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { pushQueryState } from "@/src/lib/url-query-state";
 
 type ApiEnvelope<T> =
   | { ok: true; data: T }
@@ -85,6 +87,10 @@ type FiltersState = {
   blockId: string;
 };
 
+type SearchParamsReader = {
+  get(key: string): string | null;
+};
+
 function getErrorMessage(payload: unknown, fallback: string) {
   if (!payload || typeof payload !== "object") {
     return fallback;
@@ -92,6 +98,35 @@ function getErrorMessage(payload: unknown, fallback: string) {
 
   const maybeError = (payload as { error?: { message?: string } }).error;
   return maybeError?.message ?? fallback;
+}
+
+function parsePositiveInteger(value: string | null, fallback: number) {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parseHeadFilter(value: string | null): "" | number {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : "";
+}
+
+function parseMatrixState(searchParams: SearchParamsReader, currentYear: number) {
+  return {
+    page: parsePositiveInteger(searchParams.get("page"), 1),
+    filters: {
+      refYear: parsePositiveInteger(searchParams.get("refYear"), currentYear),
+      headId: parseHeadFilter(searchParams.get("headId")),
+      blockId: searchParams.get("blockId") ?? "",
+    } satisfies FiltersState,
+  };
 }
 
 function statusClassName(status: MatrixStatus) {
@@ -109,8 +144,11 @@ function statusClassName(status: MatrixStatus) {
 export default function ContributionPaidUnpaidMatrixPage() {
   const { session } = useAuthSession();
   const currentYear = new Date().getUTCFullYear();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
   const pageSize = 25;
+  const [hasHydratedQuery, setHasHydratedQuery] = useState(false);
 
   const [heads, setHeads] = useState<HeadOption[]>([]);
   const [blocks, setBlocks] = useState<BlockOption[]>([]);
@@ -121,6 +159,13 @@ export default function ContributionPaidUnpaidMatrixPage() {
     headId: "",
     blockId: "",
   });
+
+  useEffect(() => {
+    const nextState = parseMatrixState(searchParams, currentYear);
+    setFilters(nextState.filters);
+    setPage(nextState.page);
+    setHasHydratedQuery(true);
+  }, [currentYear, searchParams]);
 
   const [report, setReport] = useState<MatrixResponse | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
@@ -161,6 +206,19 @@ export default function ContributionPaidUnpaidMatrixPage() {
   }, []);
 
   const canRun = useMemo(() => filters.headId !== "" && session.userId.trim().length > 0, [filters.headId, session.userId]);
+
+  useEffect(() => {
+    if (!hasHydratedQuery) {
+      return;
+    }
+
+    pushQueryState(pathname, {
+      refYear: filters.refYear,
+      headId: filters.headId === "" ? undefined : filters.headId,
+      blockId: filters.blockId || undefined,
+      page: page > 1 ? page : undefined,
+    });
+  }, [filters, hasHydratedQuery, page, pathname]);
 
   async function runReport() {
     if (!canRun) {
@@ -239,14 +297,14 @@ export default function ContributionPaidUnpaidMatrixPage() {
   }
 
   useEffect(() => {
-    if (!canRun) {
+    if (!hasHydratedQuery || !canRun) {
       return;
     }
 
     void runReport();
     // Intentionally run only on filter and auth context updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canRun, filters, page, session.role, session.userId]);
+  }, [canRun, filters, hasHydratedQuery, page, session.role, session.userId]);
 
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-8 sm:px-6">

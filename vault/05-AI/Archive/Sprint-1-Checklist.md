@@ -1,11 +1,14 @@
 # Sprint 1 Checklist
 
-Status: In Progress
+Status: Archived
 Owner: Engineering
-Last Updated: 2026-03-20
+Last Updated: 2026-04-08
 
 ## Goal
 Deliver Phase 1, slice 1: `blocks` and `units` APIs with deterministic validation and response envelopes.
+
+## Archive Note
+This checklist is retained as a historical implementation artifact. The slice it describes has been completed and is no longer part of the active planning set.
 
 ## Scope for This Slice
 1. CRUD for blocks.
