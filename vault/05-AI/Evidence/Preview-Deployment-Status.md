@@ -23,8 +23,14 @@ Owner: Engineering
 3. Production state is not asserted by this note; this is preview-only evidence.
 
 ## Known Gap Versus Local Workspace
-1. The local workspace contains newer report URL-state improvements that were completed after the last recorded preview deployment.
-2. Those report bookmarkability changes are therefore not guaranteed to be present in this preview until a newer deployment is created.
+1. The last verified deployed preview commit is `cf74e21`.
+2. A newer branch commit `888ea05` has now been pushed to `preview/ownership-continuity` to bring preview deployment closer to current local progress.
+3. Until Vercel marks a new preview build as ready, the report bookmarkability changes are not yet considered deployment-verified.
+
+## Pending Deployment Verification
+1. Confirm Vercel creates a new preview deployment from commit `888ea05`.
+2. Re-check the transactions and paid/unpaid matrix report pages to confirm URL filter and page state are preserved after reload/share navigation.
+3. Once confirmed, update this note with the new ready deployment metadata and treat the preview as synced with current local progress.
 
 ## Recommended Validation on This Preview
 1. Create a new unit and confirm builder inventory is created from `inceptionDt`.

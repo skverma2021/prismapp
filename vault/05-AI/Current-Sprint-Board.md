@@ -90,7 +90,7 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 ## Next
 
 ### Immediate Next Steps
-1. Decide whether to cut a new preview deployment that includes the newer local report URL-state changes or intentionally hold those changes until after branch validation closes.
+1. Confirm the newly pushed `preview/ownership-continuity` commit `888ea05` is deployed by Vercel and verify report URL-state behavior on the fresh preview.
 2. Finish remaining shell-level auth feedback polish.
 3. Standardize shared table/filter/form patterns for operator screens.
 4. Add cross-linking between units, individuals, ownerships, residencies, and contribution workflows.
