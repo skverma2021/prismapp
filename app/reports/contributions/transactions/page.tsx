@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from "react";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
-import { fetchAllPages } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
@@ -100,6 +99,13 @@ type FiltersState = {
   pageSize: number;
   sortBy: SortField;
   sortDir: SortDir;
+};
+
+type ReportLookupsResponse = {
+  blocks: OptionItem[];
+  contributionHeads: HeadOption[];
+  units: OptionItem[];
+  individuals: IndividualOption[];
 };
 
 type SearchParamsReader = {
@@ -259,28 +265,17 @@ export default function ContributionTransactionsReportPage() {
       setRequestError("");
 
       try {
-        const unitsPromise = fetchAllPages<OptionItem>(
-          (page) => `/api/units?page=${page}&pageSize=500&sortBy=description&sortDir=asc`,
-          "Unable to load units."
-        );
+        const response = await fetch("/api/reports/contributions/lookups");
+        const payload = (await response.json()) as ApiEnvelope<ReportLookupsResponse>;
 
-        const [headsRes, blocksRes, allUnits, individualsRes] = await Promise.all([
-          fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-          fetch("/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-          unitsPromise,
-          fetch("/api/individuals?page=1&pageSize=100&sortBy=sName&sortDir=asc"),
-        ]);
+        if (!response.ok || !payload.ok) {
+          throw new Error(getErrorMessage(payload, "Unable to load report filter options."));
+        }
 
-        const [headsJson, blocksJson, individualsJson] = await Promise.all([
-          headsRes.json(),
-          blocksRes.json(),
-          individualsRes.json(),
-        ]);
-
-        setHeads(headsJson?.data?.items ?? []);
-        setBlocks(blocksJson?.data?.items ?? []);
-        setUnits(allUnits.sort(compareUnitsByBlockAndDescription));
-        setIndividuals(individualsJson?.data?.items ?? []);
+        setHeads(payload.data.contributionHeads ?? []);
+        setBlocks(payload.data.blocks ?? []);
+        setUnits((payload.data.units ?? []).sort(compareUnitsByBlockAndDescription));
+        setIndividuals(payload.data.individuals ?? []);
       } catch {
         setRequestError("Unable to load report filter options.");
       } finally {

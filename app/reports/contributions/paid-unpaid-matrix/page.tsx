@@ -87,6 +87,11 @@ type FiltersState = {
   blockId: string;
 };
 
+type ReportLookupsResponse = {
+  blocks: BlockOption[];
+  contributionHeads: HeadOption[];
+};
+
 type SearchParamsReader = {
   get(key: string): string | null;
 };
@@ -178,16 +183,16 @@ export default function ContributionPaidUnpaidMatrixPage() {
       setRequestError("");
 
       try {
-        const [headsRes, blocksRes] = await Promise.all([
-          fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-          fetch("/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-        ]);
+        const response = await fetch("/api/reports/contributions/lookups");
+        const payload = (await response.json()) as ApiEnvelope<ReportLookupsResponse>;
 
-        const [headsJson, blocksJson] = await Promise.all([headsRes.json(), blocksRes.json()]);
+        if (!response.ok || !payload.ok) {
+          throw new Error(getErrorMessage(payload, "Unable to load report filter options."));
+        }
 
-        const headItems = (headsJson?.data?.items ?? []) as HeadOption[];
+        const headItems = payload.data.contributionHeads ?? [];
         setHeads(headItems);
-        setBlocks((blocksJson?.data?.items ?? []) as BlockOption[]);
+        setBlocks(payload.data.blocks ?? []);
 
         if (headItems.length > 0) {
           setFilters((prev) => ({
