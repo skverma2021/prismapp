@@ -142,6 +142,7 @@ Not yet complete:
 11. Read-only individuals view now masks email and mobile in the UI.
 12. Gender types now have a dedicated read endpoint for the individuals form.
 13. Units and individuals now expose lightweight lookup endpoints so timeline dropdowns do not wait on paged browse APIs.
+14. Browse pages now sync applied filter state into the URL so filtered screens are bookmarkable and shareable.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -153,6 +154,7 @@ Not yet complete:
 7. Paid/unpaid matrix yearly semantics were corrected so yearly heads use refMonth = 0 and display as Year, not January.
 8. Contribution capture payer selection now uses an individual-name dropdown instead of a raw ID text box.
 9. Contribution capture copy now distinguishes payer identity (`depositedBy`) from operator session identity (`actorUserId` / `actorRole`).
+10. Paid/unpaid matrix now paginates unit rows at 25 rows per page while keeping totals and CSV export scoped to the full filtered dataset.
 
 ### Week 2 Validation and Release Readiness
 1. Lint passed during Week 2 sign-off.
@@ -195,6 +197,7 @@ Not yet complete:
 2. Standardize shared table, filter, and form patterns across the new operator pages.
 3. Add cross-linking between units, individuals, timeline screens, and contribution capture.
 4. Validate builder-inventory ownership continuity behavior on the focused branch before merging back into the preview line.
+5. Decide whether report screens should also sync page state and filter state into the URL for shareable evidence links.
 
 ## Activities Yet To Be Performed
 

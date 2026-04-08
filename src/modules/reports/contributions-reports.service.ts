@@ -24,6 +24,8 @@ type MatrixReportParams = {
   refYear: number;
   headId: number;
   blockId?: string;
+  page: number;
+  pageSize: number;
 };
 
 type MatrixMonthStatus = "Paid" | "Unpaid" | "N/A";
@@ -148,8 +150,14 @@ export function parseMatrixReportParams(searchParams: URLSearchParams): MatrixRe
   const refYear = parseRequiredPositiveInt(searchParams.get("refYear"), "refYear");
   const headId = parseRequiredPositiveInt(searchParams.get("headId"), "headId");
   const blockId = searchParams.get("blockId")?.trim() || undefined;
+  const page = parseQueryInt(searchParams.get("page"), DEFAULT_PAGE);
+  const pageSize = parseQueryInt(searchParams.get("pageSize"), 25);
 
-  return { refYear, headId, blockId };
+  if (pageSize > MAX_PAGE_SIZE) {
+    throw new HttpError(400, "VALIDATION_ERROR", `pageSize cannot exceed ${MAX_PAGE_SIZE}.`);
+  }
+
+  return { refYear, headId, blockId, page, pageSize };
 }
 
 function periodLabel(refYear: number, refMonth: number): string {
@@ -499,6 +507,12 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
       headId: params.headId,
       headDescription: head.description,
       periodType: normalizedPeriod,
+      page: params.page,
+      pageSize: params.pageSize,
+      totalPages: 0,
+      totalItems: 0,
+      hasNext: false,
+      hasPrev: false,
       rows: [],
       totals: {
         totalUnits: 0,
@@ -681,12 +695,22 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
     });
   }
 
+  const pagedRows = rows.slice((params.page - 1) * params.pageSize, params.page * params.pageSize);
+  const totalItems = rows.length;
+  const totalPages = Math.ceil(totalItems / params.pageSize);
+
   return {
     refYear: params.refYear,
     headId: params.headId,
     headDescription: head.description,
     periodType: normalizedPeriod,
-    rows,
+    page: params.page,
+    pageSize: params.pageSize,
+    totalPages,
+    totalItems,
+    hasNext: params.page < totalPages,
+    hasPrev: params.page > 1,
+    rows: pagedRows,
     totals: {
       totalUnits: rows.length,
       totalPaidCells,
@@ -736,7 +760,13 @@ export async function getPaidUnpaidMatrixCsv(
     ].join(",")
   );
 
-  for (const row of data.rows) {
+  const csvData = await getPaidUnpaidMatrixReport({
+    ...params,
+    page: 1,
+    pageSize: Number.MAX_SAFE_INTEGER,
+  });
+
+  for (const row of csvData.rows) {
     const periodValues = data.periodType === "YEAR"
       ? [row.annualStatus]
       : [row.jan, row.feb, row.mar, row.apr, row.may, row.jun, row.jul, row.aug, row.sep, row.oct, row.nov, row.dec];
@@ -759,12 +789,12 @@ export async function getPaidUnpaidMatrixCsv(
   }
 
   lines.push("");
-  lines.push(`totalUnits,${formatCsvValue(data.totals.totalUnits)}`);
-  lines.push(`totalPaidCells,${formatCsvValue(data.totals.totalPaidCells)}`);
-  lines.push(`totalUnpaidCells,${formatCsvValue(data.totals.totalUnpaidCells)}`);
-  lines.push(`collectionAmount,${formatCsvValue(data.totals.collectionAmount)}`);
-  lines.push(`expectedAmount,${formatCsvValue(data.totals.expectedAmount)}`);
-  lines.push(`activeRate,${formatCsvValue(data.totals.activeRate)}`);
+  lines.push(`totalUnits,${formatCsvValue(csvData.totals.totalUnits)}`);
+  lines.push(`totalPaidCells,${formatCsvValue(csvData.totals.totalPaidCells)}`);
+  lines.push(`totalUnpaidCells,${formatCsvValue(csvData.totals.totalUnpaidCells)}`);
+  lines.push(`collectionAmount,${formatCsvValue(csvData.totals.collectionAmount)}`);
+  lines.push(`expectedAmount,${formatCsvValue(csvData.totals.expectedAmount)}`);
+  lines.push(`activeRate,${formatCsvValue(csvData.totals.activeRate)}`);
 
   return lines.join("\n");
 }

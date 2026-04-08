@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
+import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
 import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { pushQueryState } from "@/src/lib/url-query-state";
 
 type ApiEnvelope<T> =
   | { ok: true; data: T }
@@ -98,6 +101,8 @@ function maskMobile(value: string) {
 
 export default function IndividualsPage() {
   const { session } = useAuthSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
   const maskSensitiveFields = session.role === "READ_ONLY";
 
@@ -123,6 +128,30 @@ export default function IndividualsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingState, setEditingState] = useState<IndividualFormState>(emptyFormState);
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const nextQuery = searchParams.get("q") ?? "";
+    const nextGenderFilter = searchParams.get("genderId") ?? "";
+    const nextSortBy =
+      searchParams.get("sortBy") === "fName"
+        ? "fName"
+        : searchParams.get("sortBy") === "eMail"
+          ? "eMail"
+          : searchParams.get("sortBy") === "createdAt"
+            ? "createdAt"
+            : "sName";
+    const nextSortDir = searchParams.get("sortDir") === "desc" ? "desc" : "asc";
+
+    setQuery(nextQuery);
+    setAppliedQuery(nextQuery);
+    setGenderFilter(nextGenderFilter);
+    setAppliedGenderFilter(nextGenderFilter);
+    setSortBy(nextSortBy);
+    setAppliedSortBy(nextSortBy);
+    setSortDir(nextSortDir);
+    setAppliedSortDir(nextSortDir);
+    setPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadGenderTypes() {
@@ -360,11 +389,18 @@ export default function IndividualsPage() {
               <button
                 type="button"
                 onClick={() => {
+                  const nextQuery = query.trim();
                   setPage(1);
-                  setAppliedQuery(query);
+                  setAppliedQuery(nextQuery);
                   setAppliedGenderFilter(genderFilter);
                   setAppliedSortBy(sortBy);
                   setAppliedSortDir(sortDir);
+                  pushQueryState(pathname, {
+                    ...(nextQuery ? { q: nextQuery } : {}),
+                    ...(genderFilter ? { genderId: genderFilter } : {}),
+                    sortBy,
+                    sortDir,
+                  });
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -382,10 +418,11 @@ export default function IndividualsPage() {
                   setAppliedSortBy("sName");
                   setAppliedSortDir("asc");
                   setPage(1);
+                  pushQueryState(pathname, {});
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
               >
-                Reset
+                Reset Filters
               </button>
             </div>
           </div>
@@ -582,6 +619,19 @@ export default function IndividualsPage() {
                                 >
                                   {deleteLoadingId === item.id ? "Deleting..." : "Delete"}
                                 </button>
+                                <ContextLinkChips
+                                  label="Go To"
+                                  items={[
+                                    {
+                                      href: { pathname: "/ownerships", query: { indId: item.id, activeOnly: "true" } },
+                                      label: "Ownerships",
+                                    },
+                                    {
+                                      href: { pathname: "/residencies", query: { indId: item.id, activeOnly: "true" } },
+                                      label: "Residencies",
+                                    },
+                                  ]}
+                                />
                               </>
                             )}
                           </div>

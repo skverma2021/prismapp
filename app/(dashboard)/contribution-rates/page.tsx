@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
@@ -9,6 +10,7 @@ import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { StateSurface } from "@/src/components/ui/state-surface";
 import { useAuthSession } from "@/src/lib/auth-session";
 import { fetchAllPages } from "@/src/lib/paginated-client";
+import { pushQueryState } from "@/src/lib/url-query-state";
 
 type ApiEnvelope<T> =
   | { ok: true; data: T }
@@ -69,13 +71,47 @@ function isCurrentRate(rate: ContributionRateItem) {
   return fromDt.getTime() <= now.getTime() && (!toDt || toDt.getTime() >= now.getTime());
 }
 
+function getLatestCurrentRateIds(rates: ContributionRateItem[]) {
+  const latestByHead = new Map<number, number>();
+
+  for (const rate of rates) {
+    if (!isCurrentRate(rate)) {
+      continue;
+    }
+
+    const previousId = latestByHead.get(rate.contributionHeadId);
+    if (previousId === undefined) {
+      latestByHead.set(rate.contributionHeadId, rate.id);
+      continue;
+    }
+
+    const previousRate = rates.find((item) => item.id === previousId);
+    if (!previousRate) {
+      latestByHead.set(rate.contributionHeadId, rate.id);
+      continue;
+    }
+
+    const previousFromDt = new Date(previousRate.fromDt).getTime();
+    const currentFromDt = new Date(rate.fromDt).getTime();
+
+    if (currentFromDt > previousFromDt || (currentFromDt === previousFromDt && rate.id > previousRate.id)) {
+      latestByHead.set(rate.contributionHeadId, rate.id);
+    }
+  }
+
+  return latestByHead;
+}
+
 function isScheduledRate(rate: ContributionRateItem) {
   return new Date(rate.fromDt).getTime() > new Date().getTime();
 }
 
 export default function ContributionRatesPage() {
   const { session } = useAuthSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
+  const initialHeadFilter = searchParams.get("contributionHeadId") ?? searchParams.get("headId") ?? "";
 
   const [items, setItems] = useState<ContributionRateItem[]>([]);
   const [heads, setHeads] = useState<ContributionHeadOption[]>([]);
@@ -83,9 +119,9 @@ export default function ContributionRatesPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [headFilter, setHeadFilter] = useState("");
+  const [headFilter, setHeadFilter] = useState(initialHeadFilter);
   const [activeOnFilter, setActiveOnFilter] = useState("");
-  const [appliedHeadFilter, setAppliedHeadFilter] = useState("");
+  const [appliedHeadFilter, setAppliedHeadFilter] = useState(initialHeadFilter);
   const [appliedActiveOnFilter, setAppliedActiveOnFilter] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("fromDt");
   const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("fromDt");
@@ -106,6 +142,31 @@ export default function ContributionRatesPage() {
     toDt: "",
     amt: "",
   });
+  const latestCurrentRateIds = useMemo(() => getLatestCurrentRateIds(items), [items]);
+
+  useEffect(() => {
+    const nextHeadFilter = searchParams.get("contributionHeadId") ?? searchParams.get("headId") ?? "";
+    const nextActiveOnFilter = searchParams.get("activeOn") ?? "";
+    const nextSortBy =
+      searchParams.get("sortBy") === "toDt"
+        ? "toDt"
+        : searchParams.get("sortBy") === "amt"
+          ? "amt"
+          : searchParams.get("sortBy") === "createdAt"
+            ? "createdAt"
+            : "fromDt";
+    const nextSortDir = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
+
+    setHeadFilter(nextHeadFilter);
+    setAppliedHeadFilter(nextHeadFilter);
+    setActiveOnFilter(nextActiveOnFilter);
+    setAppliedActiveOnFilter(nextActiveOnFilter);
+    setSortBy(nextSortBy);
+    setAppliedSortBy(nextSortBy);
+    setSortDir(nextSortDir);
+    setAppliedSortDir(nextSortDir);
+    setPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadHeads() {
@@ -132,6 +193,7 @@ export default function ContributionRatesPage() {
 
   useEffect(() => {
     async function loadRates() {
+      const controller = new AbortController();
       setLoading(true);
       setLoadError("");
 
@@ -151,8 +213,14 @@ export default function ContributionRatesPage() {
           params.set("activeOn", appliedActiveOnFilter);
         }
 
-        const response = await fetch(`/api/contribution-rates?${params.toString()}`);
+        const response = await fetch(`/api/contribution-rates?${params.toString()}`, {
+          signal: controller.signal,
+        });
         const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<ContributionRateItem>>;
+
+        if (controller.signal.aborted) {
+          return;
+        }
 
         if (!response.ok || !payload.ok) {
           throw new Error(toErrorMessage(payload, "Unable to load contribution rates."));
@@ -162,16 +230,30 @@ export default function ContributionRatesPage() {
         setTotalPages(Math.max(payload.data.totalPages, 1));
         setTotalItems(payload.data.totalItems);
       } catch (error) {
+        if ((error as Error).name === "AbortError") {
+          return;
+        }
+
         setItems([]);
         setTotalPages(1);
         setTotalItems(0);
         setLoadError(error instanceof Error ? error.message : "Unable to load contribution rates.");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
+
+      return () => {
+        controller.abort();
+      };
     }
 
-    void loadRates();
+    const cleanupPromise = loadRates();
+
+    return () => {
+      void cleanupPromise.then((cleanup) => cleanup?.());
+    };
   }, [appliedActiveOnFilter, appliedHeadFilter, appliedSortBy, appliedSortDir, page]);
 
   async function createRate() {
@@ -306,6 +388,12 @@ export default function ContributionRatesPage() {
                   setAppliedActiveOnFilter(activeOnFilter);
                   setAppliedSortBy(sortBy);
                   setAppliedSortDir(sortDir);
+                  pushQueryState(pathname, {
+                    ...(headFilter ? { contributionHeadId: headFilter } : {}),
+                    ...(activeOnFilter ? { activeOn: activeOnFilter } : {}),
+                    sortBy,
+                    sortDir,
+                  });
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -323,10 +411,11 @@ export default function ContributionRatesPage() {
                   setSortDir("desc");
                   setAppliedSortDir("desc");
                   setPage(1);
+                  pushQueryState(pathname, {});
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
               >
-                Reset
+                Reset Filters
               </button>
             </div>
           </div>
@@ -471,14 +560,18 @@ export default function ContributionRatesPage() {
                           <span
                             className={[
                               "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.18em]",
-                              isCurrentRate(item)
+                              isCurrentRate(item) && latestCurrentRateIds.get(item.contributionHeadId) === item.id
                                 ? "bg-emerald-100 text-emerald-700"
                                 : isScheduledRate(item)
                                   ? "bg-amber-100 text-amber-700"
                                   : "bg-slate-100 text-slate-700",
                             ].join(" ")}
                           >
-                            {isCurrentRate(item) ? "Current" : isScheduledRate(item) ? "Scheduled" : "Historical"}
+                            {isCurrentRate(item) && latestCurrentRateIds.get(item.contributionHeadId) === item.id
+                              ? "Current"
+                              : isScheduledRate(item)
+                                ? "Scheduled"
+                                : "Historical"}
                           </span>
                         </td>
                         <td className="px-3 py-3 align-top">

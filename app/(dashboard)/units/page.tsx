@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
+import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
 import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { pushQueryState } from "@/src/lib/url-query-state";
 import { formatUnitLabel } from "@/src/lib/unit-format";
 
 type ApiEnvelope<T> =
@@ -61,6 +64,8 @@ function toDateInputValue(value: string) {
 
 export default function UnitsPage() {
   const { session } = useAuthSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
 
   const [items, setItems] = useState<UnitItem[]>([]);
@@ -86,6 +91,28 @@ export default function UnitsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingState, setEditingState] = useState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
   const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const nextQuery = searchParams.get("q") ?? "";
+    const nextBlockFilter = searchParams.get("blockId") ?? "";
+    const nextSortBy =
+      searchParams.get("sortBy") === "sqFt"
+        ? "sqFt"
+        : searchParams.get("sortBy") === "createdAt"
+          ? "createdAt"
+          : "description";
+    const nextSortDir = searchParams.get("sortDir") === "desc" ? "desc" : "asc";
+
+    setQuery(nextQuery);
+    setAppliedQuery(nextQuery);
+    setBlockFilter(nextBlockFilter);
+    setAppliedBlockFilter(nextBlockFilter);
+    setSortBy(nextSortBy);
+    setAppliedSortBy(nextSortBy);
+    setSortDir(nextSortDir);
+    setAppliedSortDir(nextSortDir);
+    setPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadBlocks() {
@@ -324,11 +351,18 @@ export default function UnitsPage() {
               <button
                 type="button"
                 onClick={() => {
+                  const nextQuery = query.trim();
                   setPage(1);
-                  setAppliedQuery(query);
+                  setAppliedQuery(nextQuery);
                   setAppliedBlockFilter(blockFilter);
                   setAppliedSortBy(sortBy);
                   setAppliedSortDir(sortDir);
+                  pushQueryState(pathname, {
+                    ...(nextQuery ? { q: nextQuery } : {}),
+                    ...(blockFilter ? { blockId: blockFilter } : {}),
+                    sortBy,
+                    sortDir,
+                  });
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -346,10 +380,11 @@ export default function UnitsPage() {
                   setSortDir("asc");
                   setAppliedSortDir("asc");
                   setPage(1);
+                  pushQueryState(pathname, {});
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
               >
-                Reset
+                Reset Filters
               </button>
             </div>
           </div>
@@ -563,6 +598,19 @@ export default function UnitsPage() {
                                 >
                                   {deleteLoadingId === item.id ? "Deleting..." : "Delete"}
                                 </button>
+                                <ContextLinkChips
+                                  label="Go To"
+                                  items={[
+                                    {
+                                      href: { pathname: "/ownerships", query: { unitId: item.id, activeOnly: "true" } },
+                                      label: "Ownerships",
+                                    },
+                                    {
+                                      href: { pathname: "/residencies", query: { unitId: item.id, activeOnly: "true" } },
+                                      label: "Residencies",
+                                    },
+                                  ]}
+                                />
                               </>
                             )}
                           </div>

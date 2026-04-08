@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
@@ -61,6 +62,12 @@ type MatrixResponse = {
   headId: number;
   headDescription: string;
   periodType: "MONTH" | "YEAR";
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
   rows: MatrixRow[];
   totals: {
     totalUnits: number;
@@ -102,6 +109,8 @@ function statusClassName(status: MatrixStatus) {
 export default function ContributionPaidUnpaidMatrixPage() {
   const { session } = useAuthSession();
   const currentYear = new Date().getUTCFullYear();
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const [heads, setHeads] = useState<HeadOption[]>([]);
   const [blocks, setBlocks] = useState<BlockOption[]>([]);
@@ -165,6 +174,8 @@ export default function ContributionPaidUnpaidMatrixPage() {
       const params = new URLSearchParams();
       params.set("refYear", String(filters.refYear));
       params.set("headId", String(filters.headId));
+      params.set("page", String(page));
+      params.set("pageSize", String(pageSize));
 
       if (filters.blockId.trim().length > 0) {
         params.set("blockId", filters.blockId.trim());
@@ -235,7 +246,7 @@ export default function ContributionPaidUnpaidMatrixPage() {
     void runReport();
     // Intentionally run only on filter and auth context updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canRun, filters, session.role, session.userId]);
+  }, [canRun, filters, page, session.role, session.userId]);
 
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-8 sm:px-6">
@@ -296,7 +307,10 @@ export default function ContributionPaidUnpaidMatrixPage() {
                 type="number"
                 value={filters.refYear}
                 onChange={(event) =>
-                  setFilters((prev) => ({ ...prev, refYear: Number(event.target.value || currentYear) }))
+                  setFilters((prev) => {
+                    setPage(1);
+                    return { ...prev, refYear: Number(event.target.value || currentYear) };
+                  })
                 }
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
@@ -308,6 +322,7 @@ export default function ContributionPaidUnpaidMatrixPage() {
                 value={String(filters.headId)}
                 onChange={(event) => {
                   const value = event.target.value;
+                  setPage(1);
                   setFilters((prev) => ({ ...prev, headId: value === "" ? "" : Number(value) }));
                 }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -326,7 +341,10 @@ export default function ContributionPaidUnpaidMatrixPage() {
               <span className="mb-1 block">Block (optional)</span>
               <select
                 value={filters.blockId}
-                onChange={(event) => setFilters((prev) => ({ ...prev, blockId: event.target.value }))}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, blockId: event.target.value }));
+                }}
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 disabled={optionsLoading}
               >
@@ -367,6 +385,15 @@ export default function ContributionPaidUnpaidMatrixPage() {
               <p className="text-xs uppercase tracking-wide text-slate-500">Active Rate</p>
               <p className="mt-1 text-xl font-semibold text-slate-900">{(report?.totals.activeRate ?? 0).toFixed(2)}</p>
             </div>
+          </div>
+
+          <div className="mt-4">
+            <PaginationControls
+              page={report?.page ?? page}
+              totalPages={report?.totalPages ?? 0}
+              totalItems={report?.totalItems ?? 0}
+              onPageChange={setPage}
+            />
           </div>
 
           <div className="mt-4 overflow-auto rounded-lg border border-slate-200">
@@ -429,7 +456,9 @@ export default function ContributionPaidUnpaidMatrixPage() {
           {report && (
             <p className="mt-3 text-sm text-slate-600">
               Head: <span className="font-medium text-slate-900">{report.headDescription}</span> | Period type:{" "}
-              <span className="font-medium text-slate-900">{report.periodType}</span>
+              <span className="font-medium text-slate-900">{report.periodType}</span> | Showing{" "}
+              <span className="font-medium text-slate-900">{report.rows.length}</span> of{" "}
+              <span className="font-medium text-slate-900">{report.totalItems}</span> units
             </p>
           )}
         </section>

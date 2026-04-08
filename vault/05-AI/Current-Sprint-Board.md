@@ -76,6 +76,8 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 57. Seed/backfill now fills missing opening and trailing ownership coverage with builder inventory rows.
 58. Ownership UI is now transfer-first and no longer exposes direct ownership creation in the operator flow.
 59. Ordinary individual browse and lookup flows now exclude system identities, including builder inventory.
+60. Browse pages now write applied filter state back to the URL so filtered views are bookmarkable and shareable.
+61. Paid/unpaid matrix now paginates row display at 25 units per page while preserving full filtered totals.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
@@ -83,6 +85,7 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 3. Add cross-linking between core master-data workflows and contribution capture.
 4. Normalize sort-control placement and copy so operator pages feel consistent.
 5. Validate the ownership continuity branch behavior before merging back into the preview line.
+6. Decide whether paid/unpaid matrix pagination also needs URL-synced page state and block-deep-link entry points.
 
 ## Next
 
@@ -92,6 +95,7 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 3. Standardize shared table/filter/form patterns for operator screens.
 4. Add cross-linking between units, individuals, ownerships, residencies, and contribution workflows.
 5. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points.
+6. Extend report UX so paid/unpaid matrix and transactions views share the same bookmarkable-state conventions as the browse pages.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.

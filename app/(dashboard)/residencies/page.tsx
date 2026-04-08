@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
+import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
 import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { pushQueryState } from "@/src/lib/url-query-state";
 import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
@@ -91,6 +94,8 @@ function getTimelineStatus(item: { fromDt: string; toDt: string | null }) {
 
 export default function ResidenciesPage() {
   const { session } = useAuthSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
 
   const [units, setUnits] = useState<UnitOption[]>([]);
@@ -123,6 +128,31 @@ export default function ResidenciesPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const unitMap = useMemo(() => new Map(units.map((item) => [item.id, item])), [units]);
   const individualMap = useMemo(() => new Map(individuals.map((item) => [item.id, item])), [individuals]);
+
+  useEffect(() => {
+    const nextUnitFilter = searchParams.get("unitId") ?? "";
+    const nextIndividualFilter = searchParams.get("indId") ?? "";
+    const nextActiveOnly = searchParams.get("activeOnly") === "true";
+    const nextSortBy =
+      searchParams.get("sortBy") === "toDt"
+        ? "toDt"
+        : searchParams.get("sortBy") === "createdAt"
+          ? "createdAt"
+          : "fromDt";
+    const nextSortDir = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
+
+    setUnitFilter(nextUnitFilter);
+    setAppliedUnitFilter(nextUnitFilter);
+    setIndividualFilter(nextIndividualFilter);
+    setAppliedIndividualFilter(nextIndividualFilter);
+    setActiveOnly(nextActiveOnly);
+    setAppliedActiveOnly(nextActiveOnly);
+    setSortBy(nextSortBy);
+    setAppliedSortBy(nextSortBy);
+    setSortDir(nextSortDir);
+    setAppliedSortDir(nextSortDir);
+    setPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadUnits() {
@@ -339,8 +369,8 @@ export default function ResidenciesPage() {
               Active residencies only
             </label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => { setPage(1); setAppliedUnitFilter(unitFilter); setAppliedIndividualFilter(individualFilter); setAppliedActiveOnly(activeOnly); setAppliedSortBy(sortBy); setAppliedSortDir(sortDir); }} className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">Apply Filters</button>
-              <button type="button" onClick={() => { setUnitFilter(""); setIndividualFilter(""); setActiveOnly(false); setAppliedUnitFilter(""); setAppliedIndividualFilter(""); setAppliedActiveOnly(false); setSortBy("fromDt"); setAppliedSortBy("fromDt"); setSortDir("desc"); setAppliedSortDir("desc"); setPage(1); }} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Reset</button>
+              <button type="button" onClick={() => { setPage(1); setAppliedUnitFilter(unitFilter); setAppliedIndividualFilter(individualFilter); setAppliedActiveOnly(activeOnly); setAppliedSortBy(sortBy); setAppliedSortDir(sortDir); pushQueryState(pathname, { ...(unitFilter ? { unitId: unitFilter } : {}), ...(individualFilter ? { indId: individualFilter } : {}), activeOnly, sortBy, sortDir }); }} className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">Apply Filters</button>
+              <button type="button" onClick={() => { setUnitFilter(""); setIndividualFilter(""); setActiveOnly(false); setAppliedUnitFilter(""); setAppliedIndividualFilter(""); setAppliedActiveOnly(false); setSortBy("fromDt"); setAppliedSortBy("fromDt"); setSortDir("desc"); setAppliedSortDir("desc"); setPage(1); pushQueryState(pathname, {}); }} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">Reset Filters</button>
             </div>
           </div>
         </div>
@@ -348,6 +378,27 @@ export default function ResidenciesPage() {
         {submitError ? <InlineNotice className="mt-4" tone="danger" message={submitError} /> : null}
         {submitSuccess ? <InlineNotice className="mt-4" tone="success" message={submitSuccess} /> : null}
         {loadError ? <InlineNotice className="mt-4" tone="danger" message={loadError} /> : null}
+
+        {appliedUnitFilter || appliedIndividualFilter ? (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <ContextLinkChips
+              label="Filtered Context"
+              items={[
+                {
+                  href: {
+                    pathname: "/ownerships",
+                    query: {
+                      ...(appliedUnitFilter ? { unitId: appliedUnitFilter } : {}),
+                      ...(appliedIndividualFilter ? { indId: appliedIndividualFilter } : {}),
+                      activeOnly: String(appliedActiveOnly),
+                    },
+                  },
+                  label: "Match Ownerships",
+                },
+              ]}
+            />
+          </div>
+        ) : null}
 
         <div className="mt-6 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -429,16 +480,38 @@ export default function ResidenciesPage() {
                                 </button>
                               </div>
                             ) : (
-                              <button
-                                type="button"
-                                onClick={() => startEditingResidency(item)}
-                                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
-                              >
-                                Edit End
-                              </button>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => startEditingResidency(item)}
+                                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
+                                >
+                                  Edit End
+                                </button>
+                                <ContextLinkChips
+                                  label="Go To"
+                                  items={[
+                                    {
+                                      href: { pathname: "/ownerships", query: { unitId: item.unitId, activeOnly: "true" } },
+                                      label: "Ownerships",
+                                    },
+                                  ]}
+                                />
+                              </div>
                             )
                           ) : (
-                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</span>
+                            <div className="space-y-2">
+                              <ContextLinkChips
+                                label="Go To"
+                                items={[
+                                  {
+                                    href: { pathname: "/ownerships", query: { unitId: item.unitId, activeOnly: "true" } },
+                                    label: "Ownerships",
+                                  },
+                                ]}
+                              />
+                              <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</span>
+                            </div>
                           )}
                         </td>
                       </tr>

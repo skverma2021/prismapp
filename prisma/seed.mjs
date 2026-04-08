@@ -225,6 +225,10 @@ function toSeedRef(description, year) {
   return `seed-default-${year}-${slug}`;
 }
 
+function addUtcDays(date, days) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + days));
+}
+
 async function seedContributionRates(year) {
   const fromDt = new Date(Date.UTC(year, 0, 1));
   const defaults = [
@@ -260,12 +264,26 @@ async function seedContributionRates(year) {
       select: { id: true },
     });
 
+    const nextSuccessor = await prisma.contributionRate.findFirst({
+      where: {
+        contributionHeadId: head.id,
+        reference: { not: reference },
+        fromDt: { gt: fromDt },
+      },
+      orderBy: [{ fromDt: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+      select: {
+        fromDt: true,
+      },
+    });
+
+    const seededToDt = nextSuccessor ? addUtcDays(nextSuccessor.fromDt, -1) : null;
+
     if (existing) {
       await prisma.contributionRate.update({
         where: { id: existing.id },
         data: {
           fromDt,
-          toDt: null,
+          toDt: seededToDt,
           amt: item.amt,
         },
       });
@@ -277,7 +295,7 @@ async function seedContributionRates(year) {
         contributionHeadId: head.id,
         reference,
         fromDt,
-        toDt: null,
+        toDt: seededToDt,
         amt: item.amt,
       },
     });

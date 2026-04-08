@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
+import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
 import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { StateSurface } from "@/src/components/ui/state-surface";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { pushQueryState } from "@/src/lib/url-query-state";
 
 type ApiEnvelope<T> =
   | { ok: true; data: T }
@@ -68,6 +71,8 @@ function describePayUnit(payUnit: number) {
 
 export default function ContributionHeadsPage() {
   const { session } = useAuthSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
 
   const [items, setItems] = useState<ContributionHeadItem[]>([]);
@@ -93,6 +98,33 @@ export default function ContributionHeadsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingState, setEditingState] = useState({ description: "", payUnit: "1", period: "MONTH" });
   const [deleteLoadingId, setDeleteLoadingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const nextQuery = searchParams.get("q") ?? "";
+    const nextPeriodFilter = searchParams.get("period") ?? "";
+    const nextPayUnitFilter = searchParams.get("payUnit") ?? "";
+    const nextSortBy =
+      searchParams.get("sortBy") === "payUnit"
+        ? "payUnit"
+        : searchParams.get("sortBy") === "period"
+          ? "period"
+          : searchParams.get("sortBy") === "createdAt"
+            ? "createdAt"
+            : "description";
+    const nextSortDir = searchParams.get("sortDir") === "desc" ? "desc" : "asc";
+
+    setQuery(nextQuery);
+    setAppliedQuery(nextQuery);
+    setPeriodFilter(nextPeriodFilter);
+    setAppliedPeriodFilter(nextPeriodFilter);
+    setPayUnitFilter(nextPayUnitFilter);
+    setAppliedPayUnitFilter(nextPayUnitFilter);
+    setSortBy(nextSortBy);
+    setAppliedSortBy(nextSortBy);
+    setSortDir(nextSortDir);
+    setAppliedSortDir(nextSortDir);
+    setPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadHeads() {
@@ -307,12 +339,20 @@ export default function ContributionHeadsPage() {
               <button
                 type="button"
                 onClick={() => {
+                  const nextQuery = query.trim();
                   setPage(1);
-                  setAppliedQuery(query);
+                  setAppliedQuery(nextQuery);
                   setAppliedPeriodFilter(periodFilter);
                   setAppliedPayUnitFilter(payUnitFilter);
                   setAppliedSortBy(sortBy);
                   setAppliedSortDir(sortDir);
+                  pushQueryState(pathname, {
+                    ...(nextQuery ? { q: nextQuery } : {}),
+                    ...(periodFilter ? { period: periodFilter } : {}),
+                    ...(payUnitFilter ? { payUnit: payUnitFilter } : {}),
+                    sortBy,
+                    sortDir,
+                  });
                 }}
                 className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
               >
@@ -332,10 +372,11 @@ export default function ContributionHeadsPage() {
                   setSortDir("asc");
                   setAppliedSortDir("asc");
                   setPage(1);
+                  pushQueryState(pathname, {});
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
               >
-                Reset
+                Reset Filters
               </button>
             </div>
           </div>
@@ -518,6 +559,15 @@ export default function ContributionHeadsPage() {
                                   >
                                     {deleteLoadingId === item.id ? "Deleting..." : "Delete"}
                                   </button>
+                                  <ContextLinkChips
+                                    label="Go To"
+                                    items={[
+                                      {
+                                        href: { pathname: "/contribution-rates", query: { contributionHeadId: String(item.id) } },
+                                        label: "Rates",
+                                      },
+                                    ]}
+                                  />
                                 </>
                               )}
                             </div>
