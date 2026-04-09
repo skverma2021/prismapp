@@ -8,10 +8,10 @@ Owner: Engineering
 1. Environment: Preview
 2. Provider: Vercel
 3. Source branch: `preview/ownership-continuity`
-4. Deployed commit: `cf74e21`
-5. Commit message: `feat(ownership): bootstrap builder inventory continuity`
-6. Deployment duration: `40s`
-7. Deployment age at record time: approximately 1 day
+4. Last validated deployed commit: `29dc19f`
+5. Latest verified fix message: `fix(reports): use stable lookup endpoints on preview`
+6. Latest observed deployment duration: `38s`
+7. Earlier validated preview baseline: `cf74e21` (`feat(ownership): bootstrap builder inventory continuity`)
 
 ## Preview Domains
 1. `prismapp-git-preview-owner-a08c65-shyam-krishna-vermas-projects.vercel.app`
@@ -22,15 +22,15 @@ Owner: Engineering
 2. The preview is suitable for UAT of builder bootstrap, continuity enforcement, transfer flow, and picker filtering.
 3. Production state is not asserted by this note; this is preview-only evidence.
 
-## Known Gap Versus Local Workspace
-1. The last verified deployed preview commit is `cf74e21`.
-2. A newer branch commit `888ea05` has now been pushed to `preview/ownership-continuity` to bring preview deployment closer to current local progress.
-3. Until Vercel marks a new preview build as ready, the report bookmarkability changes are not yet considered deployment-verified.
+## Deployment Verification
+1. A newer preview deployment is now live from commit `29dc19f`.
+2. Transactions report filter dropdown activation on preview improved to approximately `7-8s` after the lookup-endpoint fix.
+3. The earlier failing `Unable to load report filter options.` behavior is no longer observed in the verified preview.
+4. Localhost still remains faster at approximately `2-3s`, but preview behavior is now materially improved from the earlier `21s` observation.
 
-## Pending Deployment Verification
-1. Confirm Vercel creates a new preview deployment from commit `888ea05`.
-2. Re-check the transactions and paid/unpaid matrix report pages to confirm URL filter and page state are preserved after reload/share navigation.
-3. Once confirmed, update this note with the new ready deployment metadata and treat the preview as synced with current local progress.
+## Remaining Gap Versus Localhost
+1. Preview dropdown activation is still slower than localhost, which suggests residual preview environment latency rather than a blocking application regression.
+2. Further optimization should be treated as performance tuning, not release-blocking correctness work.
 
 ## Recommended Validation on This Preview
 1. Create a new unit and confirm builder inventory is created from `inceptionDt`.
@@ -40,3 +40,4 @@ Owner: Engineering
 
 ## Validation Evidence
 1. See `Ownership-Continuity-Preview-UAT.md` for the recorded manual confirmation results against this preview deployment.
+2. Preview report-loading improvement was manually rechecked after commit `29dc19f` and observed as successful.

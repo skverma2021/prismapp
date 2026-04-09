@@ -413,6 +413,13 @@ export default function BlocksPage() {
                                       href: { pathname: "/units", query: { blockId: item.id } },
                                       label: "Units",
                                     },
+                                    {
+                                      href: {
+                                        pathname: "/reports/contributions/transactions",
+                                        query: { refYear: String(new Date().getUTCFullYear()), blockId: item.id },
+                                      },
+                                      label: "Transactions",
+                                    },
                                   ]}
                                 />
                               </>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
 import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
@@ -267,6 +268,7 @@ export default function ContributionPeriodsPage() {
                     <th className="px-3 py-3 font-semibold">Year</th>
                     <th className="px-3 py-3 font-semibold">Month Code</th>
                     <th className="px-3 py-3 font-semibold">Created</th>
+                    <th className="px-3 py-3 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
@@ -276,6 +278,23 @@ export default function ContributionPeriodsPage() {
                       <td className="px-3 py-3">{item.refYear}</td>
                       <td className="px-3 py-3">{item.refMonth}</td>
                       <td className="px-3 py-3">{new Date(item.createdAt).toLocaleDateString()}</td>
+                      <td className="px-3 py-3">
+                        <ContextLinkChips
+                          label="Go To"
+                          items={[
+                            {
+                              href: {
+                                pathname: "/reports/contributions/transactions",
+                                query: {
+                                  refYear: String(item.refYear),
+                                  ...(item.refMonth > 0 ? { refMonth: String(item.refMonth) } : {}),
+                                },
+                              },
+                              label: "Transactions",
+                            },
+                          ]}
+                        />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

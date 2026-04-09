@@ -355,6 +355,16 @@ export default function OwnershipsPage() {
                   },
                   label: "Match Residencies",
                 },
+                {
+                  href: {
+                    pathname: "/reports/contributions/transactions",
+                    query: {
+                      refYear: String(new Date().getUTCFullYear()),
+                      ...(appliedUnitFilter ? { unitId: appliedUnitFilter } : {}),
+                    },
+                  },
+                  label: "Transactions",
+                },
               ]}
             />
           </div>
@@ -420,6 +430,20 @@ export default function OwnershipsPage() {
                                 {
                                   href: { pathname: "/residencies", query: { unitId: item.unitId, activeOnly: "true" } },
                                   label: "Residencies",
+                                },
+                                {
+                                  href: {
+                                    pathname: "/contributions",
+                                    query: { unitId: item.unitId, depositedBy: item.indId },
+                                  },
+                                  label: "Contribution Capture",
+                                },
+                                {
+                                  href: {
+                                    pathname: "/reports/contributions/transactions",
+                                    query: { refYear: String(new Date().getUTCFullYear()), unitId: item.unitId },
+                                  },
+                                  label: "Transactions",
                                 },
                               ]}
                             />

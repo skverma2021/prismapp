@@ -1,7 +1,9 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
+import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
@@ -176,9 +178,23 @@ type CorrectionSuccessState = {
   correctionId: number;
   originalContributionId: number;
   correctionTransactionId: string;
+  contributionHeadId: number;
+  unitId: string;
+  refYear: number;
   unitLabel: string;
   headDescription: string;
   detailCount: number;
+};
+
+type ContributionSuccessState = {
+  contributionId: number;
+  contributionHeadId: number;
+  unitId: string;
+  depositedBy: string;
+  refYear: number;
+  headDescription: string;
+  unitLabel: string;
+  payerLabel: string;
 };
 
 function payUnitLabel(payUnit: number) {
@@ -253,6 +269,7 @@ function getCorrectionActionHint(code: string | undefined, message: string): Act
 export default function ContributionCapturePage() {
   const { session, sessionMode } = useAuthSession();
   const currentYear = new Date().getUTCFullYear();
+  const searchParams = useSearchParams();
   const [heads, setHeads] = useState<Head[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [residentEligibleUnitIds, setResidentEligibleUnitIds] = useState<string[]>([]);
@@ -283,7 +300,7 @@ export default function ContributionCapturePage() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitHint, setSubmitHint] = useState<ActionHint | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState<ContributionSuccessState | null>(null);
   const [showTestHeads, setShowTestHeads] = useState(false);
   const [activeResidents, setActiveResidents] = useState<ActiveResidency[]>([]);
   const [activeResidentsLoading, setActiveResidentsLoading] = useState(false);
@@ -382,6 +399,22 @@ export default function ContributionCapturePage() {
     void loadIndividuals();
   }, []);
 
+  useEffect(() => {
+    const nextHeadId = searchParams.get("headId");
+    const nextUnitId = searchParams.get("unitId");
+    const nextDepositedBy = searchParams.get("depositedBy");
+
+    const parsedHeadId =
+      nextHeadId && Number.isInteger(Number(nextHeadId)) && Number(nextHeadId) > 0 ? Number(nextHeadId) : "";
+
+    setHeadId(parsedHeadId);
+    setUnitId(nextUnitId?.trim() ?? "");
+    setDepositedBy(nextDepositedBy?.trim() ?? "");
+    setSubmitError("");
+    setSubmitHint(null);
+    setSubmitSuccess(null);
+  }, [searchParams]);
+
   const selectedHead = useMemo(
     () => heads.find((head) => head.id === Number(headId)),
     [heads, headId]
@@ -404,6 +437,7 @@ export default function ContributionCapturePage() {
   const selectedMonths = months.filter((m) => m.selected).map((m) => m.month);
   const selectedMonthLabels = months.filter((m) => m.selected).map((m) => m.label);
   const selectedUnit = units.find((unit) => unit.id === unitId);
+  const selectedDepositor = individuals.find((individual) => individual.id === depositedBy);
   const selectedResident = activeResidents.find((row) => row.indId === selectedResidentId);
   const visibleUnits = useMemo(() => {
     if (payUnit !== 2) {
@@ -485,6 +519,65 @@ export default function ContributionCapturePage() {
   if (payUnit === 3) {
     captureGuardChecks.push({ label: "Lumpsum quantity fixed to 1", ok: true });
   }
+
+  const contributionContextLinks = useMemo(() => {
+    const items: Array<{ href: string | { pathname: string; query: Record<string, string> }; label: string }> = [];
+
+    if (selectedUnit) {
+      items.push(
+        {
+          href: { pathname: "/ownerships", query: { unitId: selectedUnit.id, activeOnly: "true" } },
+          label: "Ownerships",
+        },
+        {
+          href: { pathname: "/residencies", query: { unitId: selectedUnit.id, activeOnly: "true" } },
+          label: "Residencies",
+        },
+        {
+          href: {
+            pathname: "/reports/contributions/transactions",
+            query: { refYear: String(year), unitId: selectedUnit.id },
+          },
+          label: "Transactions",
+        }
+      );
+    }
+
+    if (selectedHead) {
+      items.push(
+        {
+          href: { pathname: "/contribution-heads", query: { q: selectedHead.description } },
+          label: "Head Setup",
+        },
+        {
+          href: {
+            pathname: "/reports/contributions/transactions",
+            query: { refYear: String(year), headId: String(selectedHead.id) },
+          },
+          label: "Head Transactions",
+        }
+      );
+
+      if (selectedHead.period === "MONTH" || selectedHead.period === "YEAR") {
+        items.push({
+          href: {
+            pathname: "/reports/contributions/paid-unpaid-matrix",
+            query: { refYear: String(year), headId: String(selectedHead.id) },
+          },
+          label: "Paid/Unpaid",
+        });
+      }
+    }
+
+    if (selectedDepositor) {
+      items.push({
+        href: { pathname: "/individuals", query: { q: selectedDepositor.sName } },
+        label: "Payer Profile",
+      });
+    }
+
+    return items;
+  }, [selectedDepositor, selectedHead, selectedUnit, year]);
 
   function toggleMonth(month: number) {
     setMonths((prev) =>
@@ -742,7 +835,7 @@ export default function ContributionCapturePage() {
   async function onSubmitContribution() {
     setSubmitError("");
     setSubmitHint(null);
-    setSubmitSuccess("");
+    setSubmitSuccess(null);
 
     if (!selectedHead || !headId) {
       setSubmitError("Select a contribution head before submitting.");
@@ -808,7 +901,16 @@ export default function ContributionCapturePage() {
         return;
       }
 
-      setSubmitSuccess(`Contribution recorded successfully (id: ${result.data.id}).`);
+      setSubmitSuccess({
+        contributionId: result.data.id,
+        contributionHeadId: Number(headId),
+        unitId,
+        depositedBy: depositedBy.trim(),
+        refYear: year,
+        headDescription: selectedHead?.description ?? `Head ${String(headId)}`,
+        unitLabel: selectedUnit ? formatUnitLabel(selectedUnit) : unitId,
+        payerLabel: selectedDepositor ? formatIndividualName(selectedDepositor) : depositedBy.trim(),
+      });
 
       if (isMonthly) {
         setMonths((prev) => prev.map((row) => ({ ...row, selected: false })));
@@ -935,6 +1037,9 @@ export default function ContributionCapturePage() {
         correctionId: result.data.id,
         originalContributionId: correctionBase.id,
         correctionTransactionId: correctionTransactionId.trim(),
+        contributionHeadId: correctionBase.contributionHeadId,
+        unitId: correctionBase.unitId,
+        refYear: correctionBase.details[0]?.contributionPeriod.refYear ?? year,
         unitLabel: correctionBase.unit?.description ?? correctionBase.unitId,
         headDescription: correctionBase.contributionHead?.description ?? "Unknown head",
         detailCount: correctionBase.details.length,
@@ -1173,6 +1278,10 @@ export default function ContributionCapturePage() {
                 This posting request is sourced from the authenticated operator session, not from the payer identity above.
               </p>
             </div>
+
+            <div className="md:col-span-2">
+              <ContextLinkChips label="Working Context" items={contributionContextLinks} />
+            </div>
           </div>
 
           {payUnit === 2 && (
@@ -1364,7 +1473,75 @@ export default function ContributionCapturePage() {
           )}
 
           {submitSuccess && (
-            <InlineNotice className="mt-4" tone="success" message={submitSuccess} />
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+              <p className="font-semibold text-emerald-900">Contribution recorded successfully</p>
+              <p className="mt-1">Contribution {submitSuccess.contributionId} has been posted successfully.</p>
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                <p>
+                  <span className="font-semibold">Head:</span> {submitSuccess.headDescription}
+                </p>
+                <p>
+                  <span className="font-semibold">Unit:</span> {submitSuccess.unitLabel}
+                </p>
+                <p>
+                  <span className="font-semibold">Payer:</span> {submitSuccess.payerLabel}
+                </p>
+                <p>
+                  <span className="font-semibold">Year:</span> {submitSuccess.refYear}
+                </p>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void copyValue(String(submitSuccess.contributionId), "contribution-id");
+                  }}
+                  className="rounded border border-emerald-300 bg-white px-2 py-1 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+                >
+                  {copiedKey === "contribution-id" ? "Copied contribution ID" : "Copy contribution ID"}
+                </button>
+              </div>
+              <div className="mt-3">
+                <ContextLinkChips
+                  label="Next"
+                  items={[
+                    {
+                      href: {
+                        pathname: "/reports/contributions/transactions",
+                        query: {
+                          refYear: String(submitSuccess.refYear),
+                          headId: String(submitSuccess.contributionHeadId),
+                          unitId: submitSuccess.unitId,
+                          depositedBy: submitSuccess.depositedBy,
+                        },
+                      },
+                      label: "View Transaction",
+                    },
+                    {
+                      href: {
+                        pathname: "/reports/contributions/paid-unpaid-matrix",
+                        query: {
+                          refYear: String(submitSuccess.refYear),
+                          headId: String(submitSuccess.contributionHeadId),
+                        },
+                      },
+                      label: "Paid/Unpaid",
+                    },
+                    {
+                      href: {
+                        pathname: "/contributions",
+                        query: {
+                          headId: String(submitSuccess.contributionHeadId),
+                          unitId: submitSuccess.unitId,
+                          depositedBy: submitSuccess.depositedBy,
+                        },
+                      },
+                      label: "Record Another",
+                    },
+                  ]}
+                />
+              </div>
+            </div>
           )}
 
           <button
@@ -1588,6 +1765,44 @@ export default function ContributionCapturePage() {
                     >
                       Load posted correction
                     </button>
+                  </div>
+                  <div className="mt-3">
+                    <ContextLinkChips
+                      label="Next"
+                      items={[
+                        {
+                          href: {
+                            pathname: "/reports/contributions/transactions",
+                            query: {
+                              refYear: String(correctionSubmitSuccess.refYear),
+                              headId: String(correctionSubmitSuccess.contributionHeadId),
+                              unitId: correctionSubmitSuccess.unitId,
+                            },
+                          },
+                          label: "Transactions",
+                        },
+                        {
+                          href: {
+                            pathname: "/reports/contributions/paid-unpaid-matrix",
+                            query: {
+                              refYear: String(correctionSubmitSuccess.refYear),
+                              headId: String(correctionSubmitSuccess.contributionHeadId),
+                            },
+                          },
+                          label: "Paid/Unpaid",
+                        },
+                        {
+                          href: {
+                            pathname: "/contributions",
+                            query: {
+                              headId: String(correctionSubmitSuccess.contributionHeadId),
+                              unitId: correctionSubmitSuccess.unitId,
+                            },
+                          },
+                          label: "Contribution Capture",
+                        },
+                      ]}
+                    />
                   </div>
                 </div>
               )}

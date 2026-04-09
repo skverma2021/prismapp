@@ -74,6 +74,7 @@ export default function ContributionHeadsPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
+  const currentYear = new Date().getUTCFullYear();
 
   const [items, setItems] = useState<ContributionHeadItem[]>([]);
   const [page, setPage] = useState(1);
@@ -565,6 +566,24 @@ export default function ContributionHeadsPage() {
                                       {
                                         href: { pathname: "/contribution-rates", query: { contributionHeadId: String(item.id) } },
                                         label: "Rates",
+                                      },
+                                      {
+                                        href: { pathname: "/contributions", query: { headId: String(item.id) } },
+                                        label: "Contribution Capture",
+                                      },
+                                      {
+                                        href: {
+                                          pathname: "/reports/contributions/transactions",
+                                          query: { refYear: String(currentYear), headId: String(item.id) },
+                                        },
+                                        label: "Transactions",
+                                      },
+                                      {
+                                        href: {
+                                          pathname: "/reports/contributions/paid-unpaid-matrix",
+                                          query: { refYear: String(currentYear), headId: String(item.id) },
+                                        },
+                                        label: "Paid/Unpaid",
                                       },
                                     ]}
                                   />

@@ -58,7 +58,7 @@ Completed:
 Not yet complete:
 1. Shell-wide auth feedback is not yet uniform across every protected redirect path.
 2. Shared table, filter-bar, and form-shell component library is not complete yet.
-3. Cross-linking between master-data modules and contribution capture is not complete yet.
+3. Cross-linking is implemented for the main operator paths, but secondary contribution surfaces still need follow-through.
 
 ### Objective 3: Keep architecture ready for Safety, Security, Events, and AI features without rework
 Status: Partially complete by architecture, not by feature implementation
@@ -121,6 +121,8 @@ Not yet complete:
 3. Transactions CSV export implemented.
 4. Paid/unpaid matrix CSV export implemented.
 5. Transactions and paid/unpaid matrix report pages now hydrate bookmarkable filter and page state from the URL.
+6. Contribution capture now accepts URL-prefilled `headId`, `unitId`, and `depositedBy` context.
+7. Contribution success and correction success states now provide direct drill-through links back into report and repeat-capture flows.
 
 ### UI Delivered Through Week 2
 1. Contribution capture screen implemented.
@@ -144,6 +146,8 @@ Not yet complete:
 12. Gender types now have a dedicated read endpoint for the individuals form.
 13. Units and individuals now expose lightweight lookup endpoints so timeline dropdowns do not wait on paged browse APIs.
 14. Browse pages now sync applied filter state into the URL so filtered screens are bookmarkable and shareable.
+15. First-pass contextual navigation chips now link blocks, units, individuals, ownerships, residencies, and contribution heads into contribution capture and filtered report views.
+16. Contribution rates and contribution periods now include second-pass operator shortcuts into contribution capture and filtered transactions views.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -164,6 +168,7 @@ Not yet complete:
 4. UAT checklist and release-readiness docs were added.
 5. A Vercel preview deployment for `preview/ownership-continuity` is recorded as ready for review.
 6. Focused preview UAT for ownership continuity and protected-route auth behavior has now been recorded as passing.
+7. Preview deployment now includes the report lookup fix and improved transactions report filter activation to approximately `7-8s` on Vercel.
 
 ### Shell and Auth Activities Completed
 1. Read relevant App Router docs from installed Next.js docs before shell changes.
@@ -198,9 +203,8 @@ Not yet complete:
 
 1. Continue shell-level auth feedback refinements beyond the current public-entry and home redirect states.
 2. Standardize shared table, filter, and form patterns across the new operator pages.
-3. Add cross-linking between units, individuals, timeline screens, and contribution capture.
-4. Decide whether to cut a newer preview deployment for the local report URL-state improvements or intentionally hold them until after the current validation window closes.
-5. Add pre-filtered deep links from master-data and contribution workflows into the now-bookmarkable report views.
+3. Push the latest second-pass cross-link changes and verify the new deep-link flows on preview.
+4. Continue non-blocking performance tuning where preview latency remains materially above localhost.
 
 ## Activities Yet To Be Performed
 
@@ -209,10 +213,10 @@ Not yet complete:
 2. Remove any remaining test-style auth assumptions from operator-facing flows while preserving payer-versus-operator separation in contribution capture.
 
 ### Week 5: Master Data UI Baseline
-1. Add cross-linking between units, owners, residents, and contribution flows.
-2. Complete any remaining browse-page sort coverage and normalize control placement across module screens.
-3. Finish timeline UX hardening around ownership continuity, residency end-date maintenance, and rate-history messaging.
-4. Decide whether contribution periods stay reference-only or gain linked drill-through usage.
+1. Complete any remaining browse-page sort coverage and normalize control placement across module screens.
+2. Finish timeline UX hardening around ownership continuity, residency end-date maintenance, and rate-history messaging.
+3. Decide whether contribution periods stay reference-only or gain linked drill-through usage.
+4. Decide whether contribution periods should remain reference-only or gain additional drill-through behaviors beyond report navigation.
 
 ### Current Branch Validation
 1. Confirm newly created units show builder inventory as the initial owner from `inceptionDt`.
@@ -257,4 +261,4 @@ Validation status:
 3. Prioritize builder-based ownership continuity rollout, browse-page sort consistency, and shared operator-screen patterns before any production cutover.
 4. Keep future modules deferred until auth alignment and master-data UI baselines are stable.
 5. Treat the current Vercel preview deployment as the review surface for ownership continuity, while recognizing local report URL-state changes are newer than the last recorded deployed commit.
-6. Use the recorded preview UAT pass as the basis for the next deployment decision rather than re-running the same ownership continuity checks immediately.
+6. Use the recorded preview UAT pass and the latest preview verification as the basis for moving on to the next operator UX priorities rather than repeating the same deployment checks.

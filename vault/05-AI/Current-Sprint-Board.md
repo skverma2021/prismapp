@@ -80,22 +80,26 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 61. Paid/unpaid matrix now paginates row display at 25 units per page while preserving full filtered totals.
 62. Contribution transactions and paid/unpaid matrix reports now hydrate from URL query state and preserve bookmarkable filter and page context.
 63. Focused preview UAT passed for ownership continuity, picker filtering, and protected-route auth behavior on the deployed `preview/ownership-continuity` branch.
+64. Latest preview deployment now includes the report lookup fix and improves transactions report filter activation from approximately `21s` to `7-8s` on Vercel preview.
+65. First-pass cross-linking now connects blocks, units, individuals, ownerships, residencies, and contribution heads into contribution capture and filtered contribution reports.
+66. Contribution capture now hydrates `headId`, `unitId`, and `depositedBy` from URL query context and shows matching working-context navigation chips.
+67. Contribution rates and contribution periods now expose operator shortcuts into contribution capture and filtered transactions views.
+68. Contribution success and correction success states now expose direct follow-through links into transactions, paid/unpaid, and prefilled repeat-capture flows.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
 2. Standardize shared table/filter/form patterns for operator screens.
-3. Add cross-linking between core master-data workflows and contribution capture.
+3. Confirm the newly pushed preview deployment preserves the new second-pass deep-link flows in runtime behavior.
 4. Normalize sort-control placement and copy so operator pages feel consistent.
 
 ## Next
 
 ### Immediate Next Steps
-1. Confirm the newly pushed `preview/ownership-continuity` commit `888ea05` is deployed by Vercel and verify report URL-state behavior on the fresh preview.
-2. Finish remaining shell-level auth feedback polish.
-3. Standardize shared table/filter/form patterns for operator screens.
-4. Add cross-linking between units, individuals, ownerships, residencies, and contribution workflows.
-5. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points.
-6. Add pre-filtered report deep links from contribution heads, units, and contribution capture into the bookmarkable report views.
+1. Finish remaining shell-level auth feedback polish.
+2. Standardize shared table/filter/form patterns for operator screens.
+3. Push the current branch and verify the new contribution-period, contribution-rate, and contribution success deep links on preview.
+4. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points beyond report navigation.
+5. Normalize sort-control placement and copy across the remaining browse pages.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.

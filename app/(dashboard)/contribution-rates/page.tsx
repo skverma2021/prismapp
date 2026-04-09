@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
 import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
@@ -111,6 +112,7 @@ export default function ContributionRatesPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
+  const currentYear = new Date().getUTCFullYear();
   const initialHeadFilter = searchParams.get("contributionHeadId") ?? searchParams.get("headId") ?? "";
 
   const [items, setItems] = useState<ContributionRateItem[]>([]);
@@ -599,23 +601,50 @@ export default function ContributionRatesPage() {
                                 Cancel
                               </button>
                             </div>
-                          ) : isCurrentRate(item) ? (
-                            <button
-                              type="button"
-                              disabled={!canMutate}
-                              onClick={() => {
-                                setEditingId(item.id);
-                                setEditingState({
-                                  reference: item.reference ?? "",
-                                  toDt: item.toDt ? new Date(item.toDt).toISOString().slice(0, 10) : "",
-                                });
-                              }}
-                              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              Edit
-                            </button>
                           ) : (
-                            <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</span>
+                            <div className="space-y-2">
+                              <ContextLinkChips
+                                label="Go To"
+                                items={[
+                                  {
+                                    href: { pathname: "/contributions", query: { headId: String(item.contributionHeadId) } },
+                                    label: "Contribution Capture",
+                                  },
+                                  {
+                                    href: {
+                                      pathname: "/reports/contributions/transactions",
+                                      query: { refYear: String(currentYear), headId: String(item.contributionHeadId) },
+                                    },
+                                    label: "Transactions",
+                                  },
+                                  {
+                                    href: {
+                                      pathname: "/reports/contributions/paid-unpaid-matrix",
+                                      query: { refYear: String(currentYear), headId: String(item.contributionHeadId) },
+                                    },
+                                    label: "Paid/Unpaid",
+                                  },
+                                ]}
+                              />
+                              {isCurrentRate(item) ? (
+                                <button
+                                  type="button"
+                                  disabled={!canMutate}
+                                  onClick={() => {
+                                    setEditingId(item.id);
+                                    setEditingState({
+                                      reference: item.reference ?? "",
+                                      toDt: item.toDt ? new Date(item.toDt).toISOString().slice(0, 10) : "",
+                                    });
+                                  }}
+                                  className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  Edit
+                                </button>
+                              ) : (
+                                <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">Locked</span>
+                              )}
+                            </div>
                           )}
                         </td>
                       </tr>

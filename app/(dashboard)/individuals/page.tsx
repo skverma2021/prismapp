@@ -630,6 +630,17 @@ export default function IndividualsPage() {
                                       href: { pathname: "/residencies", query: { indId: item.id, activeOnly: "true" } },
                                       label: "Residencies",
                                     },
+                                    {
+                                      href: { pathname: "/contributions", query: { depositedBy: item.id } },
+                                      label: "Contribution Capture",
+                                    },
+                                    {
+                                      href: {
+                                        pathname: "/reports/contributions/transactions",
+                                        query: { refYear: String(new Date().getUTCFullYear()), depositedBy: item.id },
+                                      },
+                                      label: "Transactions",
+                                    },
                                   ]}
                                 />
                               </>

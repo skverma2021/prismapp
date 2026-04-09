@@ -395,6 +395,16 @@ export default function ResidenciesPage() {
                   },
                   label: "Match Ownerships",
                 },
+                {
+                  href: {
+                    pathname: "/reports/contributions/transactions",
+                    query: {
+                      refYear: String(new Date().getUTCFullYear()),
+                      ...(appliedUnitFilter ? { unitId: appliedUnitFilter } : {}),
+                    },
+                  },
+                  label: "Transactions",
+                },
               ]}
             />
           </div>
@@ -495,6 +505,20 @@ export default function ResidenciesPage() {
                                       href: { pathname: "/ownerships", query: { unitId: item.unitId, activeOnly: "true" } },
                                       label: "Ownerships",
                                     },
+                                    {
+                                      href: {
+                                        pathname: "/contributions",
+                                        query: { unitId: item.unitId, depositedBy: item.indId },
+                                      },
+                                      label: "Contribution Capture",
+                                    },
+                                    {
+                                      href: {
+                                        pathname: "/reports/contributions/transactions",
+                                        query: { refYear: String(new Date().getUTCFullYear()), unitId: item.unitId },
+                                      },
+                                      label: "Transactions",
+                                    },
                                   ]}
                                 />
                               </div>
@@ -507,6 +531,20 @@ export default function ResidenciesPage() {
                                   {
                                     href: { pathname: "/ownerships", query: { unitId: item.unitId, activeOnly: "true" } },
                                     label: "Ownerships",
+                                  },
+                                  {
+                                    href: {
+                                      pathname: "/contributions",
+                                      query: { unitId: item.unitId, depositedBy: item.indId },
+                                    },
+                                    label: "Contribution Capture",
+                                  },
+                                  {
+                                    href: {
+                                      pathname: "/reports/contributions/transactions",
+                                      query: { refYear: String(new Date().getUTCFullYear()), unitId: item.unitId },
+                                    },
+                                    label: "Transactions",
                                   },
                                 ]}
                               />
