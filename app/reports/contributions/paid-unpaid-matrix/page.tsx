@@ -87,9 +87,8 @@ type FiltersState = {
   blockId: string;
 };
 
-type ReportLookupsResponse = {
-  blocks: BlockOption[];
-  contributionHeads: HeadOption[];
+type PaginatedItemsResponse<T> = {
+  items: T[];
 };
 
 type SearchParamsReader = {
@@ -183,16 +182,27 @@ export default function ContributionPaidUnpaidMatrixPage() {
       setRequestError("");
 
       try {
-        const response = await fetch("/api/reports/contributions/lookups");
-        const payload = (await response.json()) as ApiEnvelope<ReportLookupsResponse>;
+        const [headsRes, blocksRes] = await Promise.all([
+          fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
+          fetch("/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc"),
+        ]);
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(getErrorMessage(payload, "Unable to load report filter options."));
+        const [headsPayload, blocksPayload] = (await Promise.all([headsRes.json(), blocksRes.json()])) as [
+          ApiEnvelope<PaginatedItemsResponse<HeadOption>>,
+          ApiEnvelope<PaginatedItemsResponse<BlockOption>>
+        ];
+
+        if (!headsRes.ok || !headsPayload.ok) {
+          throw new Error(getErrorMessage(headsPayload, "Unable to load contribution heads."));
         }
 
-        const headItems = payload.data.contributionHeads ?? [];
+        if (!blocksRes.ok || !blocksPayload.ok) {
+          throw new Error(getErrorMessage(blocksPayload, "Unable to load blocks."));
+        }
+
+        const headItems = headsPayload.data.items ?? [];
         setHeads(headItems);
-        setBlocks(payload.data.blocks ?? []);
+        setBlocks(blocksPayload.data.items ?? []);
 
         if (headItems.length > 0) {
           setFilters((prev) => ({
@@ -200,8 +210,8 @@ export default function ContributionPaidUnpaidMatrixPage() {
             headId: prev.headId === "" ? headItems[0].id : prev.headId,
           }));
         }
-      } catch {
-        setRequestError("Unable to load report filter options.");
+      } catch (error) {
+        setRequestError(error instanceof Error ? error.message : "Unable to load report filter options.");
       } finally {
         setOptionsLoading(false);
       }

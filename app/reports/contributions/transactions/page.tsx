@@ -101,11 +101,8 @@ type FiltersState = {
   sortDir: SortDir;
 };
 
-type ReportLookupsResponse = {
-  blocks: OptionItem[];
-  contributionHeads: HeadOption[];
-  units: OptionItem[];
-  individuals: IndividualOption[];
+type PaginatedItemsResponse<T> = {
+  items: T[];
 };
 
 type SearchParamsReader = {
@@ -265,19 +262,47 @@ export default function ContributionTransactionsReportPage() {
       setRequestError("");
 
       try {
-        const response = await fetch("/api/reports/contributions/lookups");
-        const payload = (await response.json()) as ApiEnvelope<ReportLookupsResponse>;
+        const [headsRes, blocksRes, unitsRes, individualsRes] = await Promise.all([
+          fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
+          fetch("/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc"),
+          fetch("/api/units/lookups"),
+          fetch("/api/individuals/lookups"),
+        ]);
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(getErrorMessage(payload, "Unable to load report filter options."));
+        const [headsPayload, blocksPayload, unitsPayload, individualsPayload] = (await Promise.all([
+          headsRes.json(),
+          blocksRes.json(),
+          unitsRes.json(),
+          individualsRes.json(),
+        ])) as [
+          ApiEnvelope<PaginatedItemsResponse<HeadOption>>,
+          ApiEnvelope<PaginatedItemsResponse<OptionItem>>,
+          ApiEnvelope<OptionItem[]>,
+          ApiEnvelope<IndividualOption[]>
+        ];
+
+        if (!headsRes.ok || !headsPayload.ok) {
+          throw new Error(getErrorMessage(headsPayload, "Unable to load contribution heads."));
         }
 
-        setHeads(payload.data.contributionHeads ?? []);
-        setBlocks(payload.data.blocks ?? []);
-        setUnits((payload.data.units ?? []).sort(compareUnitsByBlockAndDescription));
-        setIndividuals(payload.data.individuals ?? []);
-      } catch {
-        setRequestError("Unable to load report filter options.");
+        if (!blocksRes.ok || !blocksPayload.ok) {
+          throw new Error(getErrorMessage(blocksPayload, "Unable to load blocks."));
+        }
+
+        if (!unitsRes.ok || !unitsPayload.ok) {
+          throw new Error(getErrorMessage(unitsPayload, "Unable to load units."));
+        }
+
+        if (!individualsRes.ok || !individualsPayload.ok) {
+          throw new Error(getErrorMessage(individualsPayload, "Unable to load individuals."));
+        }
+
+        setHeads(headsPayload.data.items ?? []);
+        setBlocks(blocksPayload.data.items ?? []);
+        setUnits((unitsPayload.data ?? []).sort(compareUnitsByBlockAndDescription));
+        setIndividuals(individualsPayload.data ?? []);
+      } catch (error) {
+        setRequestError(error instanceof Error ? error.message : "Unable to load report filter options.");
       } finally {
         setOptionsLoading(false);
       }

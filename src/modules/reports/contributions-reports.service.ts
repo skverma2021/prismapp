@@ -57,30 +57,6 @@ type MatrixRow = MatrixStatusColumns & {
   unpaidMonthsCount: number;
 };
 
-type ContributionReportLookups = {
-  blocks: Array<{
-    id: string;
-    description: string;
-  }>;
-  contributionHeads: Array<{
-    id: number;
-    description: string;
-  }>;
-  units: Array<{
-    id: string;
-    blockId: string;
-    description: string;
-    block: {
-      description: string;
-    };
-  }>;
-  individuals: Array<{
-    id: string;
-    fName: string;
-    sName: string;
-  }>;
-};
-
 function parseRequiredPositiveInt(value: string | null, field: string): number {
   if (value === null || value.trim().length === 0) {
     throw new HttpError(400, "VALIDATION_ERROR", `${field} is required.`);
@@ -218,56 +194,6 @@ function formatCsvValue(value: string | number): string {
 
 function roundTo2(value: number): number {
   return Math.round(value * 100) / 100;
-}
-
-export async function getContributionReportLookups(): Promise<ContributionReportLookups> {
-  const [blocks, contributionHeads, units, individuals] = await db.$transaction([
-    db.block.findMany({
-      select: {
-        id: true,
-        description: true,
-      },
-      orderBy: { description: "asc" },
-    }),
-    db.contributionHead.findMany({
-      select: {
-        id: true,
-        description: true,
-      },
-      orderBy: { description: "asc" },
-    }),
-    db.unit.findMany({
-      select: {
-        id: true,
-        blockId: true,
-        description: true,
-        block: {
-          select: {
-            description: true,
-          },
-        },
-      },
-      orderBy: [{ block: { description: "asc" } }, { description: "asc" }],
-    }),
-    db.individual.findMany({
-      where: {
-        isSystemIdentity: false,
-      },
-      select: {
-        id: true,
-        fName: true,
-        sName: true,
-      },
-      orderBy: [{ sName: "asc" }, { fName: "asc" }],
-    }),
-  ]);
-
-  return {
-    blocks,
-    contributionHeads,
-    units,
-    individuals,
-  };
 }
 
 export async function getContributionTransactionsReport(params: TransactionsReportParams) {
