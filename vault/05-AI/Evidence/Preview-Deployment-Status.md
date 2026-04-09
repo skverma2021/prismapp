@@ -28,6 +28,12 @@ Owner: Engineering
 3. The earlier failing `Unable to load report filter options.` behavior is no longer observed in the verified preview.
 4. Localhost still remains faster at approximately `2-3s`, but preview behavior is now materially improved from the earlier `21s` observation.
 
+## New Candidate Awaiting Verification
+1. Branch `preview/ownership-continuity` has now been pushed to commit `7edd720` (`feat(ux): extend contribution cross-links`).
+2. This candidate includes the second-pass deep links for contribution rates, contribution periods, and contribution success/correction follow-through.
+3. Public HTTP probes against the known preview domain currently return `401`, so fresh runtime verification of commit `7edd720` could not be completed from an unauthenticated session.
+4. The next authenticated preview check should confirm the new deep links on contribution capture, contribution rates, contribution periods, and report follow-through states.
+
 ## Remaining Gap Versus Localhost
 1. Preview dropdown activation is still slower than localhost, which suggests residual preview environment latency rather than a blocking application regression.
 2. Further optimization should be treated as performance tuning, not release-blocking correctness work.
