@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
@@ -128,6 +128,8 @@ export default function ResidenciesPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const unitMap = useMemo(() => new Map(units.map((item) => [item.id, item])), [units]);
   const individualMap = useMemo(() => new Map(individuals.map((item) => [item.id, item])), [individuals]);
+  const deferredUnits = useDeferredValue(units);
+  const deferredIndividuals = useDeferredValue(individuals);
 
   useEffect(() => {
     const nextUnitFilter = searchParams.get("unitId") ?? "";
@@ -415,13 +417,13 @@ export default function ResidenciesPage() {
             <p className="text-sm font-semibold text-slate-900">Create Residency</p>
             <p className="mt-1 text-sm text-slate-600">Residencies may be active or historical, but they cannot start before the unit inception date. Existing rows keep unit, resident, and start date locked while still allowing `toDt` to be updated.</p>
             <div className="mt-4 grid gap-3">
-              <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+              <select value={createState.unitId} onChange={(event) => startTransition(() => setCreateState((prev) => ({ ...prev, unitId: event.target.value })))} disabled={!canMutate || unitsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                 <option value="">{unitsLoading ? "Loading units..." : "Select unit"}</option>
-                {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
+                {deferredUnits.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
               </select>
-              <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || individualsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+              <select value={createState.indId} onChange={(event) => startTransition(() => setCreateState((prev) => ({ ...prev, indId: event.target.value })))} disabled={!canMutate || individualsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                 <option value="">{individualsLoading ? "Loading individuals..." : "Select individual"}</option>
-                {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
+                {deferredIndividuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
               </select>
               <input type="date" value={createState.fromDt} onChange={(event) => setCreateState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
               <input type="date" value={createState.toDt} onChange={(event) => setCreateState((prev) => ({ ...prev, toDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />

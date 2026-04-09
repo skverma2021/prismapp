@@ -29,10 +29,10 @@ Owner: Engineering
 4. Localhost still remains faster at approximately `2-3s`, but preview behavior is now materially improved from the earlier `21s` observation.
 
 ## New Candidate Awaiting Verification
-1. Branch `preview/ownership-continuity` has now been pushed to commit `7edd720` (`feat(ux): extend contribution cross-links`).
-2. This candidate includes the second-pass deep links for contribution rates, contribution periods, and contribution success/correction follow-through.
-3. Public HTTP probes against the known preview domain currently return `401`, so fresh runtime verification of commit `7edd720` could not be completed from an unauthenticated session.
-4. The next authenticated preview check should confirm the new deep links on contribution capture, contribution rates, contribution periods, and report follow-through states.
+1. Branch `preview/ownership-continuity` now has a newer local candidate pending push for dropdown interaction responsiveness on preview.
+2. This candidate reduces synchronous select-driven rerender pressure in contribution capture, ownership transfer, and residency creation flows.
+3. After push, the next authenticated preview check should specifically re-measure the previously reported `INP Issue` on the affected dropdowns.
+4. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
 
 ## Remaining Gap Versus Localhost
 1. Preview dropdown activation is still slower than localhost, which suggests residual preview environment latency rather than a blocking application regression.

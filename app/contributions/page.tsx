@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
@@ -446,6 +446,10 @@ export default function ContributionCapturePage() {
 
     return units.filter((unit) => residentEligibleUnitIdSet.has(unit.id));
   }, [payUnit, residentEligibleUnitIdSet, units]);
+  const deferredVisibleHeads = useDeferredValue(visibleHeads);
+  const deferredVisibleUnits = useDeferredValue(visibleUnits);
+  const deferredIndividuals = useDeferredValue(individuals);
+  const deferredActiveResidents = useDeferredValue(activeResidents);
 
   useEffect(() => {
     if (!unitId) {
@@ -1137,14 +1141,17 @@ export default function ContributionCapturePage() {
               <select
                 value={headId}
                 onChange={(event) => {
-                  setHeadId(event.target.value ? Number(event.target.value) : "");
-                  setMonths(defaultMonths());
+                  const nextHeadId = event.target.value ? Number(event.target.value) : "";
+                  startTransition(() => {
+                    setHeadId(nextHeadId);
+                    setMonths(defaultMonths());
+                  });
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                 disabled={loading}
               >
                 <option value="">Select head</option>
-                {visibleHeads.map((head) => (
+                {deferredVisibleHeads.map((head) => (
                   <option key={head.id} value={head.id}>
                     {head.description} ({payUnitLabel(head.payUnit)} | {head.period})
                   </option>
@@ -1165,8 +1172,11 @@ export default function ContributionCapturePage() {
               <select
                 value={unitId}
                 onChange={(event) => {
-                  setUnitId(event.target.value);
-                  setSelectedResidentId("");
+                  const nextUnitId = event.target.value;
+                  startTransition(() => {
+                    setUnitId(nextUnitId);
+                    setSelectedResidentId("");
+                  });
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                 disabled={loading || unitsLoading || (payUnit === 2 && residentEligibleLoading)}
@@ -1180,7 +1190,7 @@ export default function ContributionCapturePage() {
                         ? "Select resident-eligible unit"
                         : "Select unit"}
                 </option>
-                {visibleUnits.map((unit) => (
+                {deferredVisibleUnits.map((unit) => (
                   <option key={unit.id} value={unit.id}>
                     {formatUnitLabel(unit)} (Unit ID: {unit.id})
                   </option>
@@ -1229,12 +1239,15 @@ export default function ContributionCapturePage() {
               <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Payer (Deposited By)</span>
               <select
                 value={depositedBy}
-                onChange={(event) => setDepositedBy(event.target.value)}
+                onChange={(event) => {
+                  const nextDepositedBy = event.target.value;
+                  startTransition(() => setDepositedBy(nextDepositedBy));
+                }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
                 disabled={individualsLoading}
               >
                 <option value="">{individualsLoading ? "Loading individuals..." : "Select payer"}</option>
-                {individuals.map((individual) => (
+                {deferredIndividuals.map((individual) => (
                   <option key={individual.id} value={individual.id}>
                     {formatIndividualName(individual)}
                   </option>
@@ -1294,16 +1307,18 @@ export default function ContributionCapturePage() {
                   value={selectedResidentId}
                   onChange={(event) => {
                     const nextId = event.target.value;
-                    setSelectedResidentId(nextId);
-                    if (nextId) {
-                      setDepositedBy(nextId);
-                    }
+                    startTransition(() => {
+                      setSelectedResidentId(nextId);
+                      if (nextId) {
+                        setDepositedBy(nextId);
+                      }
+                    });
                   }}
                   className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"
                   disabled={!unitId || activeResidentsLoading}
                 >
                   <option value="">Select active resident (optional helper)</option>
-                  {activeResidents.map((resident) => {
+                  {deferredActiveResidents.map((resident) => {
                     const displayName = resident.individual
                       ? `${resident.individual.fName} ${resident.individual.sName}`
                       : "Resident";
