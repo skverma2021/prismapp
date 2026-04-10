@@ -29,9 +29,9 @@ Owner: Engineering
 4. Localhost still remains faster at approximately `2-3s`, but preview behavior is now materially improved from the earlier `21s` observation.
 
 ## New Candidate Awaiting Verification
-1. Branch `preview/ownership-continuity` now has a newer preview candidate that removes the remaining contribution-page head-loading gate from the unit dropdown.
-2. The same pass also adds transient retry hardening to the other unit-selector screens that operators use in ownership and residency workflows.
-3. The next authenticated preview check should specifically re-measure contribution unit-dropdown time-to-enable and confirm whether the related unit-selector flows still surface intermittent `Unexpected server error` after logout-login.
+1. Branch `preview/ownership-continuity` now has a newer preview candidate that adds a shared session-scoped client cache for unit, individual, contribution-head, and resident-eligible-unit lookups.
+2. Within the same authenticated browser session, repeated opens of contribution, ownership, and residency forms should now avoid refetching the same protected lookup datasets.
+3. The next authenticated preview check should specifically compare first-open versus second-open dropdown readiness and note whether the refresh-clears-error pattern is reduced on the affected forms.
 4. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
 
 ## Remaining Gap Versus Localhost

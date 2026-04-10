@@ -9,6 +9,7 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { loadIndividualLookupsCached, loadUnitLookupsCached } from "@/src/lib/master-data-lookups";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
@@ -97,31 +98,6 @@ function getTimelineStatus(item: { fromDt: string; toDt: string | null }) {
   return "Active";
 }
 
-async function fetchWithRetry<T>(url: string, fallbackMessage: string, maxAttempts = 2): Promise<T> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      const response = await fetch(url);
-      const payload = (await response.json()) as ApiEnvelope<T>;
-
-      if (!response.ok || !payload.ok) {
-        throw new Error(toErrorMessage(payload, fallbackMessage));
-      }
-
-      return payload.data;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(fallbackMessage);
-
-      if (attempt < maxAttempts) {
-        await new Promise((resolve) => window.setTimeout(resolve, 250 * attempt));
-      }
-    }
-  }
-
-  throw lastError ?? new Error(fallbackMessage);
-}
-
 export default function OwnershipsPage() {
   const { session } = useAuthSession();
   const pathname = usePathname();
@@ -188,7 +164,7 @@ export default function OwnershipsPage() {
       setLoadError("");
 
       try {
-        const data = await fetchWithRetry<UnitOption[]>("/api/units/lookups", "Unable to load units.");
+        const data = await loadUnitLookupsCached();
         setUnits(data.sort(compareUnitsByBlockAndDescription));
       } catch (error) {
         setUnits([]);
@@ -206,10 +182,7 @@ export default function OwnershipsPage() {
       setIndividualsLoading(true);
 
       try {
-        const data = await fetchWithRetry<IndividualOption[]>(
-          "/api/individuals/lookups",
-          "Unable to load individuals."
-        );
+        const data = await loadIndividualLookupsCached();
         setIndividuals(data);
       } catch (error) {
         setIndividuals([]);

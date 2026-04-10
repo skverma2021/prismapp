@@ -7,8 +7,15 @@ import { ContextLinkChips } from "@/src/components/master-data/context-link-chip
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
-import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
-import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
+import {
+  loadContributionHeadLookupsCached,
+  loadIndividualLookupsCached,
+  loadResidentEligibleUnitIdsCached,
+  loadUnitLookupsCached,
+  type IndividualLookupOption,
+  type UnitLookupOption,
+} from "@/src/lib/master-data-lookups";
+import { formatUnitLabel } from "@/src/lib/unit-format";
 
 type Head = {
   id: number;
@@ -109,31 +116,6 @@ function defaultMonths(): MonthState[] {
 
 function formatIndividualName(individual: IndividualOption) {
   return [individual.fName, individual.mName ?? "", individual.sName].filter(Boolean).join(" ");
-}
-
-async function fetchWithRetry<T>(url: string, fallbackMessage: string, maxAttempts = 2): Promise<T> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      const response = await fetch(url);
-      const payload = (await response.json()) as ApiEnvelope<T>;
-
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.ok ? fallbackMessage : payload.error?.message ?? fallbackMessage);
-      }
-
-      return payload.data;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(fallbackMessage);
-
-      if (attempt < maxAttempts) {
-        await new Promise((resolve) => window.setTimeout(resolve, 250 * attempt));
-      }
-    }
-  }
-
-  throw lastError ?? new Error(fallbackMessage);
 }
 
 type ContributionPeriod = {
@@ -341,10 +323,7 @@ export default function ContributionCapturePage() {
     setInitialLoadError("");
 
     try {
-      const data = await fetchWithRetry<Head[]>(
-        "/api/contribution-heads/lookups",
-        "Unable to load contribution heads."
-      );
+      const data = await loadContributionHeadLookupsCached();
 
       setHeads(data);
     } catch (error) {
@@ -368,9 +347,9 @@ export default function ContributionCapturePage() {
     setUnitsLoadError("");
 
     try {
-      const data = await fetchWithRetry<Unit[]>("/api/units/lookups", "Unable to load units.");
+      const data = await loadUnitLookupsCached();
 
-      setUnits(data.sort(compareUnitsByBlockAndDescription));
+      setUnits(data);
     } catch (error) {
       setUnits([]);
       setUnitsLoadError(error instanceof Error ? error.message : "Unable to load units.");
@@ -388,10 +367,7 @@ export default function ContributionCapturePage() {
     setIndividualsLoadError("");
 
     try {
-      const data = await fetchWithRetry<IndividualOption[]>(
-        "/api/individuals/lookups",
-        "Unable to load individuals."
-      );
+      const data = await loadIndividualLookupsCached();
 
       setIndividuals(data);
     } catch (error) {
@@ -708,10 +684,7 @@ export default function ContributionCapturePage() {
       setResidentEligibleLoadError("");
 
       try {
-        const data = await fetchWithRetry<string[]>(
-          "/api/residencies/eligible-unit-ids",
-          "Unable to load resident-eligible units."
-        );
+        const data = await loadResidentEligibleUnitIdsCached();
 
         if (controller.signal.aborted) {
           return;
