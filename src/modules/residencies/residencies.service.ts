@@ -135,6 +135,23 @@ export async function listResidencies(searchParams: URLSearchParams) {
   };
 }
 
+export async function listResidentEligibleUnitIds() {
+  const now = new Date();
+
+  const rows = await db.unitResident.findMany({
+    where: {
+      fromDt: { lte: now },
+      OR: [{ toDt: null }, { toDt: { gte: now } }],
+    },
+    select: {
+      unitId: true,
+    },
+    distinct: ["unitId"],
+  });
+
+  return rows.map((row) => row.unitId);
+}
+
 export async function getResidencyById(id: string) {
   const residency = await db.unitResident.findUnique({
     where: { id },

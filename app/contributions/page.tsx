@@ -8,7 +8,6 @@ import { SessionContextNotice } from "@/src/components/shell/session-context-not
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
 import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
-import { fetchAllPages } from "@/src/lib/paginated-client";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
 type Head = {
@@ -701,9 +700,8 @@ export default function ContributionCapturePage() {
       setResidentEligibleLoadError("");
 
       try {
-        const items = await fetchAllPages<ActiveResidency>(
-          (page) =>
-            `/api/residencies?activeOnly=true&page=${page}&pageSize=500&sortBy=fromDt&sortDir=desc`,
+        const data = await fetchWithRetry<string[]>(
+          "/api/residencies/eligible-unit-ids",
           "Unable to load resident-eligible units."
         );
 
@@ -711,8 +709,7 @@ export default function ContributionCapturePage() {
           return;
         }
 
-        const uniqueUnitIds = [...new Set(items.map((row) => row.unitId))];
-        setResidentEligibleUnitIds(uniqueUnitIds);
+        setResidentEligibleUnitIds(data);
       } catch (error) {
         if (controller.signal.aborted || (error as Error).name === "AbortError") {
           return;
