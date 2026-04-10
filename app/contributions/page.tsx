@@ -1197,7 +1197,7 @@ export default function ContributionCapturePage() {
                   });
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                disabled={loading || unitsLoading}
+                disabled={unitsLoading}
               >
                 <option value="">
                   {unitsLoading

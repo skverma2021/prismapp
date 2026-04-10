@@ -97,6 +97,31 @@ function getTimelineStatus(item: { fromDt: string; toDt: string | null }) {
   return "Active";
 }
 
+async function fetchWithRetry<T>(url: string, fallbackMessage: string, maxAttempts = 2): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url);
+      const payload = (await response.json()) as ApiEnvelope<T>;
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(toErrorMessage(payload, fallbackMessage));
+      }
+
+      return payload.data;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(fallbackMessage);
+
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => window.setTimeout(resolve, 250 * attempt));
+      }
+    }
+  }
+
+  throw lastError ?? new Error(fallbackMessage);
+}
+
 export default function OwnershipsPage() {
   const { session } = useAuthSession();
   const pathname = usePathname();
@@ -163,14 +188,8 @@ export default function OwnershipsPage() {
       setLoadError("");
 
       try {
-        const response = await fetch("/api/units/lookups");
-        const payload = (await response.json()) as ApiEnvelope<UnitOption[]>;
-
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load units."));
-        }
-
-        setUnits(payload.data.sort(compareUnitsByBlockAndDescription));
+        const data = await fetchWithRetry<UnitOption[]>("/api/units/lookups", "Unable to load units.");
+        setUnits(data.sort(compareUnitsByBlockAndDescription));
       } catch (error) {
         setUnits([]);
         setLoadError(error instanceof Error ? error.message : "Unable to load units.");
@@ -187,14 +206,11 @@ export default function OwnershipsPage() {
       setIndividualsLoading(true);
 
       try {
-        const response = await fetch("/api/individuals/lookups");
-        const payload = (await response.json()) as ApiEnvelope<IndividualOption[]>;
-
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load individuals."));
-        }
-
-        setIndividuals(payload.data);
+        const data = await fetchWithRetry<IndividualOption[]>(
+          "/api/individuals/lookups",
+          "Unable to load individuals."
+        );
+        setIndividuals(data);
       } catch (error) {
         setIndividuals([]);
         setLoadError(error instanceof Error ? error.message : "Unable to load individuals.");
