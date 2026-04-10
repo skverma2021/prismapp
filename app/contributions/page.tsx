@@ -7,6 +7,7 @@ import { ContextLinkChips } from "@/src/components/master-data/context-link-chip
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
 import { fetchAllPages } from "@/src/lib/paginated-client";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
@@ -17,14 +18,7 @@ type Head = {
   period: "MONTH" | "YEAR" | string;
 };
 
-type Unit = {
-  id: string;
-  description: string;
-  blockId: string;
-  block?: {
-    description: string;
-  };
-};
+type Unit = UnitLookupOption;
 
 type ActiveResidency = {
   id: string;
@@ -37,12 +31,7 @@ type ActiveResidency = {
   };
 };
 
-type IndividualOption = {
-  id: string;
-  fName: string;
-  mName?: string | null;
-  sName: string;
-};
+type IndividualOption = IndividualLookupOption;
 
 type MonthState = {
   month: number;
@@ -358,12 +347,14 @@ export default function ContributionCapturePage() {
     setUnitsLoadError("");
 
     try {
-      const allUnits = await fetchAllPages<Unit>(
-        (page) => `/api/units?page=${page}&pageSize=500&sortBy=description&sortDir=asc`,
-        "Unable to load units."
-      );
+      const response = await fetch("/api/units/lookups");
+      const payload = (await response.json()) as ApiEnvelope<Unit[]>;
 
-      setUnits(allUnits.sort(compareUnitsByBlockAndDescription));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.ok ? "Unable to load units." : payload.error?.message ?? "Unable to load units.");
+      }
+
+      setUnits(payload.data.sort(compareUnitsByBlockAndDescription));
     } catch (error) {
       setUnits([]);
       setUnitsLoadError(error instanceof Error ? error.message : "Unable to load units.");
@@ -381,12 +372,16 @@ export default function ContributionCapturePage() {
     setIndividualsLoadError("");
 
     try {
-      const allIndividuals = await fetchAllPages<IndividualOption>(
-        (page) => `/api/individuals?page=${page}&pageSize=100&sortBy=sName&sortDir=asc`,
-        "Unable to load individuals."
-      );
+      const response = await fetch("/api/individuals/lookups");
+      const payload = (await response.json()) as ApiEnvelope<IndividualOption[]>;
 
-      setIndividuals(allIndividuals);
+      if (!response.ok || !payload.ok) {
+        throw new Error(
+          payload.ok ? "Unable to load individuals." : payload.error?.message ?? "Unable to load individuals."
+        );
+      }
+
+      setIndividuals(payload.data);
     } catch (error) {
       setIndividuals([]);
       setIndividualsLoadError(error instanceof Error ? error.message : "Unable to load individuals.");
