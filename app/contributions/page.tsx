@@ -341,12 +341,12 @@ export default function ContributionCapturePage() {
     setInitialLoadError("");
 
     try {
-      const data = await fetchWithRetry<{ items: Head[] }>(
-        "/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc",
+      const data = await fetchWithRetry<Head[]>(
+        "/api/contribution-heads/lookups",
         "Unable to load contribution heads."
       );
 
-      setHeads(data.items ?? []);
+      setHeads(data);
     } catch (error) {
       setHeads([]);
       setInitialLoadError(
@@ -456,8 +456,12 @@ export default function ContributionCapturePage() {
       return units;
     }
 
+    if (residentEligibleLoading && residentEligibleUnitIds.length === 0) {
+      return units;
+    }
+
     return units.filter((unit) => residentEligibleUnitIdSet.has(unit.id));
-  }, [payUnit, residentEligibleUnitIdSet, units]);
+  }, [payUnit, residentEligibleLoading, residentEligibleUnitIdSet, residentEligibleUnitIds.length, units]);
   const deferredVisibleHeads = useDeferredValue(visibleHeads);
   const deferredVisibleUnits = useDeferredValue(visibleUnits);
   const deferredIndividuals = useDeferredValue(individuals);
@@ -468,12 +472,16 @@ export default function ContributionCapturePage() {
       return;
     }
 
+    if (payUnit === 2 && residentEligibleLoading && residentEligibleUnitIds.length === 0) {
+      return;
+    }
+
     const unitStillVisible = visibleUnits.some((unit) => unit.id === unitId);
     if (!unitStillVisible) {
       setUnitId("");
       setSelectedResidentId("");
     }
-  }, [unitId, visibleUnits]);
+  }, [payUnit, residentEligibleLoading, residentEligibleUnitIds.length, unitId, visibleUnits]);
 
   const isCorrectionOfCorrection =
     correctionBase?.correctionOfContributionId !== null || Boolean(correctionBase?.correctionOf);
@@ -1189,14 +1197,12 @@ export default function ContributionCapturePage() {
                   });
                 }}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                disabled={loading || unitsLoading || (payUnit === 2 && residentEligibleLoading)}
+                disabled={loading || unitsLoading}
               >
                 <option value="">
                   {unitsLoading
                     ? "Loading units..."
-                    : payUnit === 2 && residentEligibleLoading
-                      ? "Loading resident-eligible units..."
-                      : payUnit === 2
+                    : payUnit === 2
                         ? "Select resident-eligible unit"
                         : "Select unit"}
                 </option>
@@ -1215,7 +1221,7 @@ export default function ContributionCapturePage() {
                 </p>
               )}
               {payUnit === 2 && residentEligibleLoading && (
-                <p className="text-xs text-amber-700">Loading resident-eligible unit list...</p>
+                <p className="text-xs text-amber-700">Loading resident-eligible unit list. Showing all units until filtering is ready.</p>
               )}
               {payUnit === 2 && residentEligibleLoadError && (
                 <p className="text-xs text-rose-700">{residentEligibleLoadError}</p>

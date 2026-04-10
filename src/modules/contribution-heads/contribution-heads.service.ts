@@ -109,6 +109,20 @@ export async function listContributionHeads(searchParams: URLSearchParams) {
   };
 }
 
+export async function listContributionHeadLookups() {
+  return db.contributionHead.findMany({
+    select: {
+      id: true,
+      description: true,
+      payUnit: true,
+      period: true,
+    },
+    orderBy: {
+      description: "asc",
+    },
+  });
+}
+
 export async function getContributionHeadById(id: string) {
   const parsedId = parseContributionHeadId(id);
 
