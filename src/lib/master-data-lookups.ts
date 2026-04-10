@@ -20,7 +20,7 @@ export type ContributionHeadLookupOption = {
   id: number;
   description: string;
   payUnit: number;
-  period: "MONTH" | "YEAR" | string;
+  period: "MONTH" | "YEAR";
 };
 
 type CacheEntry<T> = {

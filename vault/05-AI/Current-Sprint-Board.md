@@ -85,21 +85,27 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 66. Contribution capture now hydrates `headId`, `unitId`, and `depositedBy` from URL query context and shows matching working-context navigation chips.
 67. Contribution rates and contribution periods now expose operator shortcuts into contribution capture and filtered transactions views.
 68. Contribution success and correction success states now expose direct follow-through links into transactions, paid/unpaid, and prefilled repeat-capture flows.
+69. Shared session-scoped lookup caching now covers repeated contribution, ownership, and residency lookup loads within the same authenticated browser session.
+70. Blocks, units, individuals, contribution heads, contribution rates, and transactions report pages now retry transient protected-read failures instead of failing immediately on a single preview miss.
+71. Contribution rates and transactions report filter setup now reuse lightweight cached contribution-head lookups instead of always loading heads through paginated browse endpoints.
+72. Unknown `500`-class API failures are now logged server-side so remaining preview-only `Unexpected server error` cases can be traced in Vercel logs.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
 2. Standardize shared table/filter/form patterns for operator screens.
-3. Confirm the newly pushed preview deployment preserves the new second-pass deep-link flows in runtime behavior.
-4. Normalize sort-control placement and copy so operator pages feel consistent.
+3. Confirm the newly pushed preview deployment reduces transient first-load failures on contribution heads, contribution rates, and transactions report.
+4. Continue focused tuning for the slower unit dropdown path on preview.
+5. Normalize sort-control placement and copy so operator pages feel consistent.
 
 ## Next
 
 ### Immediate Next Steps
 1. Finish remaining shell-level auth feedback polish.
 2. Standardize shared table/filter/form patterns for operator screens.
-3. Push the current branch and verify the new contribution-period, contribution-rate, and contribution success deep links on preview.
-4. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points beyond report navigation.
-5. Normalize sort-control placement and copy across the remaining browse pages.
+3. Push the current branch and verify that first-load preview stability now holds on contribution heads, contribution rates, and transactions report.
+4. Re-check whether unit dropdown latency remains the main visible preview gap after the read-retry hardening.
+5. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points beyond report navigation.
+6. Normalize sort-control placement and copy across the remaining browse pages.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.

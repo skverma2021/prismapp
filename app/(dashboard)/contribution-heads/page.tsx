@@ -10,6 +10,7 @@ import { SessionContextNotice } from "@/src/components/shell/session-context-not
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { StateSurface } from "@/src/components/ui/state-surface";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 
 type ApiEnvelope<T> =
@@ -152,16 +153,14 @@ export default function ContributionHeadsPage() {
           params.set("payUnit", appliedPayUnitFilter);
         }
 
-        const response = await fetch(`/api/contribution-heads?${params.toString()}`);
-        const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<ContributionHeadItem>>;
+        const data = await fetchJsonWithRetry<PaginatedResponse<ContributionHeadItem>>(
+          `/api/contribution-heads?${params.toString()}`,
+          "Unable to load contribution heads."
+        );
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load contribution heads."));
-        }
-
-        setItems(payload.data.items);
-        setTotalPages(Math.max(payload.data.totalPages, 1));
-        setTotalItems(payload.data.totalItems);
+        setItems(data.items);
+        setTotalPages(Math.max(data.totalPages, 1));
+        setTotalItems(data.totalItems);
       } catch (error) {
         setItems([]);
         setTotalPages(1);
@@ -286,7 +285,7 @@ export default function ContributionHeadsPage() {
               Manage the charge heads that drive posting. Pay unit 1 derives quantity from unit area, pay unit 2 uses resident count, and pay unit 3 behaves as a flat amount.
             </p>
           </div>
-          <div className="grid gap-2 sm:min-w-[360px]">
+          <div className="grid gap-2 sm:min-w-90">
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}

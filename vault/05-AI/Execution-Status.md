@@ -148,6 +148,10 @@ Not yet complete:
 14. Browse pages now sync applied filter state into the URL so filtered screens are bookmarkable and shareable.
 15. First-pass contextual navigation chips now link blocks, units, individuals, ownerships, residencies, and contribution heads into contribution capture and filtered report views.
 16. Contribution rates and contribution periods now include second-pass operator shortcuts into contribution capture and filtered transactions views.
+17. Shared session-scoped lookup caching now covers repeated contribution, ownership, and residency lookup loads within the same authenticated session.
+18. Remaining browse and reporting reads now retry transient preview failures on blocks, units, individuals, contribution heads, contribution rates, and transactions report.
+19. Contribution-head filter setup on contribution rates and transactions report now uses the lightweight lookup path instead of the heavier paginated browse API.
+20. Unknown `500`-class API failures are now logged server-side to improve preview diagnosis.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -204,7 +208,8 @@ Not yet complete:
 1. Continue shell-level auth feedback refinements beyond the current public-entry and home redirect states.
 2. Standardize shared table, filter, and form patterns across the new operator pages.
 3. Push the latest second-pass cross-link changes and verify the new deep-link flows on preview.
-4. Continue non-blocking performance tuning where preview latency remains materially above localhost.
+4. Continue non-blocking performance tuning where preview latency remains materially above localhost, with unit dropdown latency still the clearest remaining gap.
+5. Verify that the latest preview candidate removes the remaining transient first-load failures previously seen on contribution heads, contribution rates, and transactions report.
 
 ## Activities Yet To Be Performed
 

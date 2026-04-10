@@ -10,7 +10,8 @@ import { SessionContextNotice } from "@/src/components/shell/session-context-not
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { StateSurface } from "@/src/components/ui/state-surface";
 import { useAuthSession } from "@/src/lib/auth-session";
-import { fetchAllPages } from "@/src/lib/paginated-client";
+import { loadContributionHeadLookupsCached } from "@/src/lib/master-data-lookups";
+import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 
 type ApiEnvelope<T> =
@@ -173,13 +174,10 @@ export default function ContributionRatesPage() {
   useEffect(() => {
     async function loadHeads() {
       setHeadsLoading(true);
+      setLoadError("");
 
       try {
-        const loadedHeads = await fetchAllPages<ContributionHeadOption>(
-          (currentPage) =>
-            `/api/contribution-heads?page=${currentPage}&pageSize=100&sortBy=description&sortDir=asc`,
-          "Unable to load contribution heads."
-        );
+        const loadedHeads = await loadContributionHeadLookupsCached();
 
         setHeads(loadedHeads);
       } catch (error) {
@@ -215,22 +213,21 @@ export default function ContributionRatesPage() {
           params.set("activeOn", appliedActiveOnFilter);
         }
 
-        const response = await fetch(`/api/contribution-rates?${params.toString()}`, {
+        const data = await fetchJsonWithRetry<PaginatedResponse<ContributionRateItem>>(
+          `/api/contribution-rates?${params.toString()}`,
+          "Unable to load contribution rates.",
+          {
           signal: controller.signal,
-        });
-        const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<ContributionRateItem>>;
+          }
+        );
 
         if (controller.signal.aborted) {
           return;
         }
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load contribution rates."));
-        }
-
-        setItems(payload.data.items);
-        setTotalPages(Math.max(payload.data.totalPages, 1));
-        setTotalItems(payload.data.totalItems);
+        setItems(data.items);
+        setTotalPages(Math.max(data.totalPages, 1));
+        setTotalItems(data.totalItems);
       } catch (error) {
         if ((error as Error).name === "AbortError") {
           return;

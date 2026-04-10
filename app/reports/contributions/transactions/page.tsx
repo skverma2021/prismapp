@@ -7,18 +7,14 @@ import { useEffect, useMemo, useState } from "react";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import {
+  loadContributionHeadLookupsCached,
+  loadIndividualLookupsCached,
+  loadUnitLookupsCached,
+} from "@/src/lib/master-data-lookups";
+import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        code?: string;
-        message?: string;
-      };
-    };
 
 type OptionItem = {
   id: string;
@@ -262,45 +258,20 @@ export default function ContributionTransactionsReportPage() {
       setRequestError("");
 
       try {
-        const [headsRes, blocksRes, unitsRes, individualsRes] = await Promise.all([
-          fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-          fetch("/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc"),
-          fetch("/api/units/lookups"),
-          fetch("/api/individuals/lookups"),
+        const [loadedHeads, blocksPayload, loadedUnits, loadedIndividuals] = await Promise.all([
+          loadContributionHeadLookupsCached(),
+          fetchJsonWithRetry<PaginatedItemsResponse<OptionItem>>(
+            "/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc",
+            "Unable to load blocks."
+          ),
+          loadUnitLookupsCached(),
+          loadIndividualLookupsCached(),
         ]);
 
-        const [headsPayload, blocksPayload, unitsPayload, individualsPayload] = (await Promise.all([
-          headsRes.json(),
-          blocksRes.json(),
-          unitsRes.json(),
-          individualsRes.json(),
-        ])) as [
-          ApiEnvelope<PaginatedItemsResponse<HeadOption>>,
-          ApiEnvelope<PaginatedItemsResponse<OptionItem>>,
-          ApiEnvelope<OptionItem[]>,
-          ApiEnvelope<IndividualOption[]>
-        ];
-
-        if (!headsRes.ok || !headsPayload.ok) {
-          throw new Error(getErrorMessage(headsPayload, "Unable to load contribution heads."));
-        }
-
-        if (!blocksRes.ok || !blocksPayload.ok) {
-          throw new Error(getErrorMessage(blocksPayload, "Unable to load blocks."));
-        }
-
-        if (!unitsRes.ok || !unitsPayload.ok) {
-          throw new Error(getErrorMessage(unitsPayload, "Unable to load units."));
-        }
-
-        if (!individualsRes.ok || !individualsPayload.ok) {
-          throw new Error(getErrorMessage(individualsPayload, "Unable to load individuals."));
-        }
-
-        setHeads(headsPayload.data.items ?? []);
-        setBlocks(blocksPayload.data.items ?? []);
-        setUnits((unitsPayload.data ?? []).sort(compareUnitsByBlockAndDescription));
-        setIndividuals(individualsPayload.data ?? []);
+        setHeads(loadedHeads);
+        setBlocks(blocksPayload.items ?? []);
+        setUnits((loadedUnits ?? []).sort(compareUnitsByBlockAndDescription));
+        setIndividuals(loadedIndividuals ?? []);
       } catch (error) {
         setRequestError(error instanceof Error ? error.message : "Unable to load report filter options.");
       } finally {
@@ -358,15 +329,12 @@ export default function ContributionTransactionsReportPage() {
 
     try {
       const params = buildQuery(filters, page);
-      const response = await fetch(`/api/reports/contributions/transactions?${params.toString()}`);
+      const data = await fetchJsonWithRetry<TransactionsResponse>(
+        `/api/reports/contributions/transactions?${params.toString()}`,
+        "Unable to load contribution transactions report."
+      );
 
-      const payload = (await response.json()) as ApiEnvelope<TransactionsResponse>;
-
-      if (!response.ok || !payload.ok) {
-        throw new Error(getErrorMessage(payload, "Unable to load contribution transactions report."));
-      }
-
-      setReport(payload.data);
+      setReport(data);
     } catch (error) {
       setReport(null);
       setRequestError(error instanceof Error ? error.message : "Unable to load report data.");

@@ -23,8 +23,7 @@ const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 
 function isRetryableError(error: unknown) {
   return (
-    error instanceof TypeError ||
-    (error instanceof Error && error.name === "AbortError")
+    error instanceof TypeError
   );
 }
 
