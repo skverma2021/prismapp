@@ -112,6 +112,31 @@ function formatIndividualName(individual: IndividualOption) {
   return [individual.fName, individual.mName ?? "", individual.sName].filter(Boolean).join(" ");
 }
 
+async function fetchWithRetry<T>(url: string, fallbackMessage: string, maxAttempts = 2): Promise<T> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url);
+      const payload = (await response.json()) as ApiEnvelope<T>;
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.ok ? fallbackMessage : payload.error?.message ?? fallbackMessage);
+      }
+
+      return payload.data;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(fallbackMessage);
+
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => window.setTimeout(resolve, 250 * attempt));
+      }
+    }
+  }
+
+  throw lastError ?? new Error(fallbackMessage);
+}
+
 type ContributionPeriod = {
   id: number;
   refYear: number;
@@ -317,15 +342,12 @@ export default function ContributionCapturePage() {
     setInitialLoadError("");
 
     try {
-      const headsRes = await fetch("/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc");
+      const data = await fetchWithRetry<{ items: Head[] }>(
+        "/api/contribution-heads?page=1&pageSize=100&sortBy=description&sortDir=asc",
+        "Unable to load contribution heads."
+      );
 
-      const headsJson = await headsRes.json();
-
-      if (!headsRes.ok || !headsJson?.ok) {
-        throw new Error(headsJson?.error?.message ?? "Unable to load contribution heads.");
-      }
-
-      setHeads(headsJson?.data?.items ?? []);
+      setHeads(data.items ?? []);
     } catch (error) {
       setHeads([]);
       setInitialLoadError(
@@ -347,14 +369,9 @@ export default function ContributionCapturePage() {
     setUnitsLoadError("");
 
     try {
-      const response = await fetch("/api/units/lookups");
-      const payload = (await response.json()) as ApiEnvelope<Unit[]>;
+      const data = await fetchWithRetry<Unit[]>("/api/units/lookups", "Unable to load units.");
 
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.ok ? "Unable to load units." : payload.error?.message ?? "Unable to load units.");
-      }
-
-      setUnits(payload.data.sort(compareUnitsByBlockAndDescription));
+      setUnits(data.sort(compareUnitsByBlockAndDescription));
     } catch (error) {
       setUnits([]);
       setUnitsLoadError(error instanceof Error ? error.message : "Unable to load units.");
@@ -372,16 +389,12 @@ export default function ContributionCapturePage() {
     setIndividualsLoadError("");
 
     try {
-      const response = await fetch("/api/individuals/lookups");
-      const payload = (await response.json()) as ApiEnvelope<IndividualOption[]>;
+      const data = await fetchWithRetry<IndividualOption[]>(
+        "/api/individuals/lookups",
+        "Unable to load individuals."
+      );
 
-      if (!response.ok || !payload.ok) {
-        throw new Error(
-          payload.ok ? "Unable to load individuals." : payload.error?.message ?? "Unable to load individuals."
-        );
-      }
-
-      setIndividuals(payload.data);
+      setIndividuals(data);
     } catch (error) {
       setIndividuals([]);
       setIndividualsLoadError(error instanceof Error ? error.message : "Unable to load individuals.");
@@ -410,9 +423,14 @@ export default function ContributionCapturePage() {
     setSubmitSuccess(null);
   }, [searchParams]);
 
+  const deferredHeadId = useDeferredValue(headId);
+  const deferredUnitId = useDeferredValue(unitId);
+  const deferredDepositedBy = useDeferredValue(depositedBy);
+  const deferredSelectedResidentId = useDeferredValue(selectedResidentId);
+
   const selectedHead = useMemo(
-    () => heads.find((head) => head.id === Number(headId)),
-    [heads, headId]
+    () => heads.find((head) => head.id === Number(deferredHeadId)),
+    [deferredHeadId, heads]
   );
 
   const visibleHeads = useMemo(() => {
@@ -431,9 +449,9 @@ export default function ContributionCapturePage() {
 
   const selectedMonths = months.filter((m) => m.selected).map((m) => m.month);
   const selectedMonthLabels = months.filter((m) => m.selected).map((m) => m.label);
-  const selectedUnit = units.find((unit) => unit.id === unitId);
-  const selectedDepositor = individuals.find((individual) => individual.id === depositedBy);
-  const selectedResident = activeResidents.find((row) => row.indId === selectedResidentId);
+  const selectedUnit = units.find((unit) => unit.id === deferredUnitId);
+  const selectedDepositor = individuals.find((individual) => individual.id === deferredDepositedBy);
+  const selectedResident = activeResidents.find((row) => row.indId === deferredSelectedResidentId);
   const visibleUnits = useMemo(() => {
     if (payUnit !== 2) {
       return units;

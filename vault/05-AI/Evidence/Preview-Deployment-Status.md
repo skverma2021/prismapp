@@ -29,9 +29,9 @@ Owner: Engineering
 4. Localhost still remains faster at approximately `2-3s`, but preview behavior is now materially improved from the earlier `21s` observation.
 
 ## New Candidate Awaiting Verification
-1. Branch `preview/ownership-continuity` now has a newer preview candidate that combines the select-rerender responsiveness pass with contribution capture lookup-endpoint loading.
-2. Contribution capture now uses `/api/units/lookups` and `/api/individuals/lookups` instead of paginated browse endpoints during initial load.
-3. The next authenticated preview check should specifically re-measure the reported contribution-form `INP Issue` and confirm whether the intermittent `Unexpected server error / Retry load` occurrence drops.
+1. Branch `preview/ownership-continuity` now has a newer preview candidate that adds transient retry for contribution setup loads and defers selected-value-dependent work on the contribution form.
+2. Contribution capture now combines lightweight lookup endpoints with one retry cycle for initial heads/unit/individual loads, aimed at reducing preview-only transient failures after login or refresh.
+3. The next authenticated preview check should specifically re-measure the reported contribution-form `INP Issue` and confirm whether the intermittent `Unexpected server error / Retry load` occurrence drops after logout-login and refresh.
 4. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
 
 ## Remaining Gap Versus Localhost
