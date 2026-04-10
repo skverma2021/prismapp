@@ -29,10 +29,10 @@ Owner: Engineering
 4. Localhost still remains faster at approximately `2-3s`, but preview behavior is now materially improved from the earlier `21s` observation.
 
 ## New Candidate Awaiting Verification
-1. Branch `preview/ownership-continuity` now has a newer preview candidate that extends transient-read retry hardening to contribution heads, contribution rates, and transactions report, which were the last pages still showing occasional first-load `Unexpected server error` in manual preview checks.
-2. This candidate also switches contribution-rate and transactions-report head-filter setup to the lightweight cached contribution-head lookup path instead of the paginated browse API.
-3. The existing shared session-scoped client cache remains in place for contribution, ownership, and residency lookups, and server-side logging for unknown `500`-class API failures remains enabled for Vercel diagnosis.
-4. The next authenticated preview check should specifically re-run contribution heads, contribution rates, and transactions report on first load and confirm whether the remaining transient error cases are gone or at least reduced to loggable server-side outliers.
+1. Branch `preview/ownership-continuity` now has a newer preview candidate that extends transient-read retry hardening to ownership and residency list loads, which were still showing occasional first-load `Unexpected server error` even after their dropdown lookups had been cached.
+2. This candidate also prewarms common authenticated lookup caches from the dashboard shell so unit, individual, contribution-head, and resident-eligible selectors can populate sooner on the first page visit after sign-in.
+3. Earlier retry hardening for contribution heads, contribution rates, transactions report, and browse pages remains in place, and server-side logging for unknown `500`-class API failures remains enabled for Vercel diagnosis.
+4. The next authenticated preview check should specifically re-run ownership and residency after logout-login, and compare the first-open unit dropdown delay on contribution capture against the prior approximately `5s` observation.
 5. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
 
 ## Remaining Gap Versus Localhost

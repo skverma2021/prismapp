@@ -162,3 +162,12 @@ export function loadResidentEligibleUnitIdsCached() {
     "Unable to load resident-eligible units."
   );
 }
+
+export async function prewarmCommonLookups() {
+  await Promise.allSettled([
+    loadUnitLookupsCached(),
+    loadIndividualLookupsCached(),
+    loadContributionHeadLookupsCached(),
+    loadResidentEligibleUnitIdsCached(),
+  ]);
+}

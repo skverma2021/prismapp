@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 import { SignOutButton } from "@/src/components/auth/sign-out-button";
 import { PageHeader } from "@/src/components/shell/page-header";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { prewarmCommonLookups } from "@/src/lib/master-data-lookups";
 import { getBreadcrumbs, getRouteMeta, getVisibleNavItems, isNavItemActive } from "@/src/lib/navigation";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -13,6 +15,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { session, sessionMode } = useAuthSession();
   const items = getVisibleNavItems(session.role);
   const meta = getRouteMeta(pathname);
+
+  useEffect(() => {
+    void prewarmCommonLookups();
+  }, [session.userId]);
 
   return (
     <div className="min-h-screen px-4 py-4 sm:px-6 sm:py-6">

@@ -10,6 +10,7 @@ import { SessionContextNotice } from "@/src/components/shell/session-context-not
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
 import { loadIndividualLookupsCached, loadUnitLookupsCached } from "@/src/lib/master-data-lookups";
+import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
@@ -219,16 +220,14 @@ export default function ResidenciesPage() {
           params.set("activeOnly", "true");
         }
 
-        const response = await fetch(`/api/residencies?${params.toString()}`);
-        const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<ResidencyItem>>;
+        const data = await fetchJsonWithRetry<PaginatedResponse<ResidencyItem>>(
+          `/api/residencies?${params.toString()}`,
+          "Unable to load residencies."
+        );
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load residencies."));
-        }
-
-        setItems(payload.data.items);
-        setTotalPages(Math.max(payload.data.totalPages, 1));
-        setTotalItems(payload.data.totalItems);
+        setItems(data.items);
+        setTotalPages(Math.max(data.totalPages, 1));
+        setTotalItems(data.totalItems);
       } catch (error) {
         setItems([]);
         setTotalPages(1);

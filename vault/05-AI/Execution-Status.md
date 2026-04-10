@@ -152,6 +152,8 @@ Not yet complete:
 18. Remaining browse and reporting reads now retry transient preview failures on blocks, units, individuals, contribution heads, contribution rates, and transactions report.
 19. Contribution-head filter setup on contribution rates and transactions report now uses the lightweight lookup path instead of the heavier paginated browse API.
 20. Unknown `500`-class API failures are now logged server-side to improve preview diagnosis.
+21. Ownership and residency timeline pages now retry their main paginated reads, which had remained fail-fast after earlier lookup-only hardening.
+22. The authenticated dashboard shell now prewarms common lookup caches so unit, individual, contribution-head, and resident-eligible selectors can open faster on the first page visit after sign-in.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -209,7 +211,8 @@ Not yet complete:
 2. Standardize shared table, filter, and form patterns across the new operator pages.
 3. Push the latest second-pass cross-link changes and verify the new deep-link flows on preview.
 4. Continue non-blocking performance tuning where preview latency remains materially above localhost, with unit dropdown latency still the clearest remaining gap.
-5. Verify that the latest preview candidate removes the remaining transient first-load failures previously seen on contribution heads, contribution rates, and transactions report.
+5. Verify that the latest preview candidate removes the remaining transient first-load failures previously seen on ownership and residency after logout-login.
+6. Re-check whether report refresh times now represent pure query latency rather than avoidable filter-setup delay.
 
 ## Activities Yet To Be Performed
 
