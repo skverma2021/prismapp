@@ -29,9 +29,9 @@ Owner: Engineering
 4. Localhost still remains faster at approximately `2-3s`, but preview behavior is now materially improved from the earlier `21s` observation.
 
 ## New Candidate Awaiting Verification
-1. Branch `preview/ownership-continuity` now has a newer preview candidate that adds a shared session-scoped client cache for unit, individual, contribution-head, and resident-eligible-unit lookups.
-2. Within the same authenticated browser session, repeated opens of contribution, ownership, and residency forms should now avoid refetching the same protected lookup datasets.
-3. The next authenticated preview check should specifically compare first-open versus second-open dropdown readiness and note whether the refresh-clears-error pattern is reduced on the affected forms.
+1. Branch `preview/ownership-continuity` now has a newer preview candidate that keeps the shared session-scoped client cache for contribution, ownership, and residency lookups, and also adds automatic retry for the remaining authenticated browse-page reads on Blocks, Units, Individuals, and gender/block supporting loads.
+2. This candidate also adds server-side logging for unknown `500`-class API failures so future preview errors become visible in Vercel logs instead of only surfacing to the UI as `Unexpected server error`.
+3. The next authenticated preview check should explicitly retry the earlier failing paths on Blocks, Units, Individuals, Ownership, and Residency and confirm whether the refresh-clears-error pattern is materially reduced.
 4. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
 
 ## Remaining Gap Versus Localhost

@@ -9,6 +9,7 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 
 type ApiEnvelope<T> =
@@ -98,16 +99,14 @@ export default function BlocksPage() {
           params.set("q", appliedQuery.trim());
         }
 
-        const response = await fetch(`/api/blocks?${params.toString()}`);
-        const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<BlockItem>>;
+        const data = await fetchJsonWithRetry<PaginatedResponse<BlockItem>>(
+          `/api/blocks?${params.toString()}`,
+          "Unable to load blocks."
+        );
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load blocks."));
-        }
-
-        setItems(payload.data.items);
-        setTotalPages(Math.max(payload.data.totalPages, 1));
-        setTotalItems(payload.data.totalItems);
+        setItems(data.items);
+        setTotalPages(Math.max(data.totalPages, 1));
+        setTotalItems(data.totalItems);
       } catch (error) {
         setItems([]);
         setTotalPages(1);

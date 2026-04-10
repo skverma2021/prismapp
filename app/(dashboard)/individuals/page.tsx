@@ -9,6 +9,7 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 
 type ApiEnvelope<T> =
@@ -155,15 +156,15 @@ export default function IndividualsPage() {
 
   useEffect(() => {
     async function loadGenderTypes() {
+      setLoadError("");
+
       try {
-        const response = await fetch("/api/gender-types");
-        const payload = (await response.json()) as ApiEnvelope<GenderType[]>;
+        const data = await fetchJsonWithRetry<GenderType[]>(
+          "/api/gender-types",
+          "Unable to load gender types."
+        );
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load gender types."));
-        }
-
-        setGenderTypes(payload.data);
+        setGenderTypes(data);
       } catch (error) {
         setGenderTypes([]);
         setLoadError(error instanceof Error ? error.message : "Unable to load gender types.");
@@ -194,16 +195,14 @@ export default function IndividualsPage() {
           params.set("genderId", appliedGenderFilter);
         }
 
-        const response = await fetch(`/api/individuals?${params.toString()}`);
-        const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<IndividualItem>>;
+        const data = await fetchJsonWithRetry<PaginatedResponse<IndividualItem>>(
+          `/api/individuals?${params.toString()}`,
+          "Unable to load individuals."
+        );
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load individuals."));
-        }
-
-        setItems(payload.data.items);
-        setTotalPages(Math.max(payload.data.totalPages, 1));
-        setTotalItems(payload.data.totalItems);
+        setItems(data.items);
+        setTotalPages(Math.max(data.totalPages, 1));
+        setTotalItems(data.totalItems);
       } catch (error) {
         setItems([]);
         setTotalPages(1);

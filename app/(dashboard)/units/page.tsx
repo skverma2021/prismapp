@@ -9,6 +9,7 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import { formatUnitLabel } from "@/src/lib/unit-format";
 
@@ -117,16 +118,15 @@ export default function UnitsPage() {
   useEffect(() => {
     async function loadBlocks() {
       setBlocksLoading(true);
+      setLoadError("");
 
       try {
-        const response = await fetch("/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc");
-        const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<BlockOption>>;
+        const data = await fetchJsonWithRetry<PaginatedResponse<BlockOption>>(
+          "/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc",
+          "Unable to load blocks."
+        );
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load blocks."));
-        }
-
-        setBlocks(payload.data.items);
+        setBlocks(data.items);
       } catch (error) {
         setBlocks([]);
         setLoadError(error instanceof Error ? error.message : "Unable to load blocks.");
@@ -159,16 +159,14 @@ export default function UnitsPage() {
           params.set("blockId", appliedBlockFilter);
         }
 
-        const response = await fetch(`/api/units?${params.toString()}`);
-        const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<UnitItem>>;
+        const data = await fetchJsonWithRetry<PaginatedResponse<UnitItem>>(
+          `/api/units?${params.toString()}`,
+          "Unable to load units."
+        );
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load units."));
-        }
-
-        setItems(payload.data.items);
-        setTotalPages(Math.max(payload.data.totalPages, 1));
-        setTotalItems(payload.data.totalItems);
+        setItems(data.items);
+        setTotalPages(Math.max(data.totalPages, 1));
+        setTotalItems(data.totalItems);
       } catch (error) {
         setItems([]);
         setTotalPages(1);
