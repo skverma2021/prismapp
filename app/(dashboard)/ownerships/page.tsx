@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
@@ -104,6 +104,16 @@ export default function OwnershipsPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
+  const initialUnitFilter = searchParams.get("unitId") ?? "";
+  const initialIndividualFilter = searchParams.get("indId") ?? "";
+  const initialActiveOnly = searchParams.get("activeOnly") === "true";
+  const initialSortBy =
+    searchParams.get("sortBy") === "toDt"
+      ? "toDt"
+      : searchParams.get("sortBy") === "createdAt"
+        ? "createdAt"
+        : "fromDt";
+  const initialSortDir = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
 
   const [units, setUnits] = useState<UnitOption[]>([]);
   const [individuals, setIndividuals] = useState<IndividualOption[]>([]);
@@ -117,22 +127,20 @@ export default function OwnershipsPage() {
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
-  const [unitFilter, setUnitFilter] = useState("");
-  const [appliedUnitFilter, setAppliedUnitFilter] = useState("");
-  const [individualFilter, setIndividualFilter] = useState("");
-  const [appliedIndividualFilter, setAppliedIndividualFilter] = useState("");
-  const [activeOnly, setActiveOnly] = useState(false);
-  const [appliedActiveOnly, setAppliedActiveOnly] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>("fromDt");
-  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("fromDt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("desc");
+  const [unitFilter, setUnitFilter] = useState(initialUnitFilter);
+  const [appliedUnitFilter, setAppliedUnitFilter] = useState(initialUnitFilter);
+  const [individualFilter, setIndividualFilter] = useState(initialIndividualFilter);
+  const [appliedIndividualFilter, setAppliedIndividualFilter] = useState(initialIndividualFilter);
+  const [activeOnly, setActiveOnly] = useState(initialActiveOnly);
+  const [appliedActiveOnly, setAppliedActiveOnly] = useState(initialActiveOnly);
+  const [sortBy, setSortBy] = useState<SortOption>(initialSortBy);
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>(initialSortBy);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(initialSortDir);
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">(initialSortDir);
   const [transferState, setTransferState] = useState({ unitId: "", indId: "", fromDt: "" });
   const [transferLoading, setTransferLoading] = useState(false);
   const unitMap = useMemo(() => new Map(units.map((item) => [item.id, item])), [units]);
   const individualMap = useMemo(() => new Map(individuals.map((item) => [item.id, item])), [individuals]);
-  const deferredUnits = useDeferredValue(units);
-  const deferredIndividuals = useDeferredValue(individuals);
 
   useEffect(() => {
     const nextUnitFilter = searchParams.get("unitId") ?? "";
@@ -373,13 +381,13 @@ export default function OwnershipsPage() {
               <p className="text-sm font-semibold text-slate-900">Transfer Active Ownership</p>
               <p className="mt-1 text-sm text-slate-600">Use the dedicated transfer flow when one active owner should hand over a unit to another individual.</p>
               <div className="mt-4 grid gap-3">
-                <select value={transferState.unitId} onChange={(event) => startTransition(() => setTransferState((prev) => ({ ...prev, unitId: event.target.value })))} disabled={!canMutate || unitsLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                <select value={transferState.unitId} onChange={(event) => setTransferState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                   <option value="">{unitsLoading ? "Loading units..." : "Select unit"}</option>
-                  {deferredUnits.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
+                  {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
                 </select>
-                <select value={transferState.indId} onChange={(event) => startTransition(() => setTransferState((prev) => ({ ...prev, indId: event.target.value })))} disabled={!canMutate || individualsLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                <select value={transferState.indId} onChange={(event) => setTransferState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || individualsLoading || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                   <option value="">{individualsLoading ? "Loading individuals..." : "Transfer to individual"}</option>
-                  {deferredIndividuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
+                  {individuals.map((individual) => <option key={individual.id} value={individual.id}>{formatIndividualName(individual)}</option>)}
                 </select>
                 <input type="date" value={transferState.fromDt} onChange={(event) => setTransferState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || transferLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
                 <button type="button" disabled={!canMutate || transferLoading || !transferState.unitId || !transferState.indId || !transferState.fromDt} onClick={() => { void transferOwnership(); }} className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">{transferLoading ? "Transferring..." : "Transfer Ownership"}</button>

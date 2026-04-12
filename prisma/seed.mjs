@@ -18,6 +18,16 @@ function addDays(value, days) {
   return new Date(value.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
+function hasMatchingOwnershipRow(rows, builderId, fromDt, toDt) {
+  return rows.some(
+    (row) =>
+      row.indId === builderId &&
+      row.fromDt.getTime() === fromDt.getTime() &&
+      ((row.toDt === null && toDt === null) ||
+        (row.toDt !== null && toDt !== null && row.toDt.getTime() === toDt.getTime()))
+  );
+}
+
 async function seedGenderTypes() {
   const entries = [
     { id: 0, description: "Male" },
@@ -138,14 +148,16 @@ async function seedOwnershipBootstrap() {
 
   for (const unit of units) {
     if (unit.owners.length === 0) {
-      await prisma.unitOwner.create({
-        data: {
-          unitId: unit.id,
-          indId: builder.id,
-          fromDt: unit.inceptionDt,
-          toDt: null,
-        },
-      });
+      if (!hasMatchingOwnershipRow(unit.owners, builder.id, unit.inceptionDt, null)) {
+        await prisma.unitOwner.create({
+          data: {
+            unitId: unit.id,
+            indId: builder.id,
+            fromDt: unit.inceptionDt,
+            toDt: null,
+          },
+        });
+      }
       continue;
     }
 
@@ -162,14 +174,25 @@ async function seedOwnershipBootstrap() {
 
     for (const owner of unit.owners) {
       if (owner.fromDt.getTime() > expectedFrom.getTime()) {
-        await prisma.unitOwner.create({
-          data: {
-            unitId: unit.id,
+        const gapToDt = addDays(owner.fromDt, -1);
+
+        if (!hasMatchingOwnershipRow(unit.owners, builder.id, expectedFrom, gapToDt)) {
+          await prisma.unitOwner.create({
+            data: {
+              unitId: unit.id,
+              indId: builder.id,
+              fromDt: expectedFrom,
+              toDt: gapToDt,
+            },
+          });
+
+          unit.owners.push({
+            id: `bootstrap-${unit.id}-${expectedFrom.toISOString()}`,
             indId: builder.id,
             fromDt: expectedFrom,
-            toDt: addDays(owner.fromDt, -1),
-          },
-        });
+            toDt: gapToDt,
+          });
+        }
       }
 
       if (owner.toDt === null) {
@@ -181,14 +204,16 @@ async function seedOwnershipBootstrap() {
     }
 
     if (expectedFrom) {
-      await prisma.unitOwner.create({
-        data: {
-          unitId: unit.id,
-          indId: builder.id,
-          fromDt: expectedFrom,
-          toDt: null,
-        },
-      });
+      if (!hasMatchingOwnershipRow(unit.owners, builder.id, expectedFrom, null)) {
+        await prisma.unitOwner.create({
+          data: {
+            unitId: unit.id,
+            indId: builder.id,
+            fromDt: expectedFrom,
+            toDt: null,
+          },
+        });
+      }
     }
   }
 }

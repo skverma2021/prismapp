@@ -115,6 +115,16 @@ export default function ContributionRatesPage() {
   const canMutate = session.role !== "READ_ONLY";
   const currentYear = new Date().getUTCFullYear();
   const initialHeadFilter = searchParams.get("contributionHeadId") ?? searchParams.get("headId") ?? "";
+  const initialActiveOnFilter = searchParams.get("activeOn") ?? "";
+  const initialSortBy =
+    searchParams.get("sortBy") === "toDt"
+      ? "toDt"
+      : searchParams.get("sortBy") === "amt"
+        ? "amt"
+        : searchParams.get("sortBy") === "createdAt"
+          ? "createdAt"
+          : "fromDt";
+  const initialSortDir = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
 
   const [items, setItems] = useState<ContributionRateItem[]>([]);
   const [heads, setHeads] = useState<ContributionHeadOption[]>([]);
@@ -123,13 +133,13 @@ export default function ContributionRatesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [headFilter, setHeadFilter] = useState(initialHeadFilter);
-  const [activeOnFilter, setActiveOnFilter] = useState("");
+  const [activeOnFilter, setActiveOnFilter] = useState(initialActiveOnFilter);
   const [appliedHeadFilter, setAppliedHeadFilter] = useState(initialHeadFilter);
-  const [appliedActiveOnFilter, setAppliedActiveOnFilter] = useState("");
-  const [sortBy, setSortBy] = useState<SortOption>("fromDt");
-  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("fromDt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("desc");
+  const [appliedActiveOnFilter, setAppliedActiveOnFilter] = useState(initialActiveOnFilter);
+  const [sortBy, setSortBy] = useState<SortOption>(initialSortBy);
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>(initialSortBy);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(initialSortDir);
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">(initialSortDir);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");

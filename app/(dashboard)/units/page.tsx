@@ -68,20 +68,29 @@ export default function UnitsPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
+  const initialQuery = searchParams.get("q") ?? "";
+  const initialBlockFilter = searchParams.get("blockId") ?? "";
+  const initialSortBy =
+    searchParams.get("sortBy") === "sqFt"
+      ? "sqFt"
+      : searchParams.get("sortBy") === "createdAt"
+        ? "createdAt"
+        : "description";
+  const initialSortDir = searchParams.get("sortDir") === "desc" ? "desc" : "asc";
 
   const [items, setItems] = useState<UnitItem[]>([]);
   const [blocks, setBlocks] = useState<BlockOption[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [query, setQuery] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
-  const [blockFilter, setBlockFilter] = useState("");
-  const [appliedBlockFilter, setAppliedBlockFilter] = useState("");
-  const [sortBy, setSortBy] = useState<SortOption>("description");
-  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>("description");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">("asc");
+  const [query, setQuery] = useState(initialQuery);
+  const [appliedQuery, setAppliedQuery] = useState(initialQuery);
+  const [blockFilter, setBlockFilter] = useState(initialBlockFilter);
+  const [appliedBlockFilter, setAppliedBlockFilter] = useState(initialBlockFilter);
+  const [sortBy, setSortBy] = useState<SortOption>(initialSortBy);
+  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>(initialSortBy);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(initialSortDir);
+  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">(initialSortDir);
   const [loading, setLoading] = useState(true);
   const [blocksLoading, setBlocksLoading] = useState(true);
   const [loadError, setLoadError] = useState("");

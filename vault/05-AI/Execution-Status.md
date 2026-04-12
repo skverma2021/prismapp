@@ -154,6 +154,9 @@ Not yet complete:
 20. Unknown `500`-class API failures are now logged server-side to improve preview diagnosis.
 21. Ownership and residency timeline pages now retry their main paginated reads, which had remained fail-fast after earlier lookup-only hardening.
 22. The authenticated dashboard shell now prewarms common lookup caches so unit, individual, contribution-head, and resident-eligible selectors can open faster on the first page visit after sign-in.
+23. Target pages reached through contextual drill-through links now initialize from the incoming URL filter state immediately instead of briefly loading an unfiltered list first.
+24. Ownership transfer and residency creation selectors now update selected unit values synchronously again, fixing the recent regression where units appeared in the dropdown but did not stay selected.
+25. Builder bootstrap seed logic now avoids inserting duplicate builder ownership rows when the same gap or trailing segment is already present.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -213,6 +216,7 @@ Not yet complete:
 4. Continue non-blocking performance tuning where preview latency remains materially above localhost, with unit dropdown latency still the clearest remaining gap.
 5. Verify that the latest preview candidate removes the remaining transient first-load failures previously seen on ownership and residency after logout-login.
 6. Re-check whether report refresh times now represent pure query latency rather than avoidable filter-setup delay.
+7. Verify that cross-linked drill-throughs apply filtered rows immediately on preview and that ownership/residency unit selectors keep the chosen unit value.
 
 ## Activities Yet To Be Performed
 

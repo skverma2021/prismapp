@@ -91,6 +91,9 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 72. Unknown `500`-class API failures are now logged server-side so remaining preview-only `Unexpected server error` cases can be traced in Vercel logs.
 73. Ownership and residency timeline pages now retry their main paginated list reads instead of still relying on fail-fast first-load fetches.
 74. The authenticated dashboard shell now prewarms common unit, individual, contribution-head, and resident-eligible lookup caches to reduce first-open dropdown latency after sign-in.
+75. Linked master-data navigation now hydrates target-page filter state from the URL on first render so many-side pages no longer flash an unfiltered list before applying the incoming filter.
+76. Ownership transfer and residency creation unit selectors now use direct controlled updates again so the chosen unit reliably sticks when selected.
+77. Builder-inventory ownership bootstrap in the seed flow is now idempotent for matching gap-fill rows and trailing rows, preventing repeated seed runs from appending duplicate builder ownership entries.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
@@ -99,6 +102,7 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 4. Re-check ownership and residency after logout-login to confirm the remaining transient first-load errors are cleared.
 5. Continue focused tuning for the slower unit dropdown path on preview.
 6. Normalize sort-control placement and copy so operator pages feel consistent.
+7. Re-run a quick preview regression pass on block-to-unit drill-through and timeline unit selectors after the latest fixes land.
 
 ## Next
 
