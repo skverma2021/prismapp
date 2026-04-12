@@ -161,6 +161,7 @@ Not yet complete:
 27. Residency creation now rejects system identities and blocks residency start while the active owner is still builder inventory.
 28. Residency creation now uses a dedicated ownership-based eligible-unit lookup so builder-inventory units are excluded from the create dropdown before submission.
 29. Ownership transfer now removes redundant future builder-inventory rows before applying continuity checks, while still rejecting genuine future ownership plans.
+30. A dedicated maintenance script now exists to remove redundant builder-inventory ownership rows directly from the database when cleanup is preferred over runtime repair.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.

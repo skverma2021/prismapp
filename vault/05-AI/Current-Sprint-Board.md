@@ -98,6 +98,7 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 79. Residency creation now requires a non-system active owner on the residency start date and rejects system identities as residents.
 80. Residency creation now loads a dedicated eligible-unit list so the create form only offers units whose current active owner is a real individual.
 81. Ownership transfer now cleans up redundant future builder-inventory rows before enforcing continuity, so earlier bootstrap artifacts do not block a valid handover to a real owner.
+82. A dedicated maintenance script now detects and can delete redundant builder-inventory ownership rows in dry-run or apply mode.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.

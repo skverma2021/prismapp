@@ -36,8 +36,9 @@ Owner: Engineering
 5. A newer local rules update also blocks `sqFt` edits once per-sq-ft contributions exist for a unit and prevents residency creation while the active owner is still builder inventory.
 6. A newer local safeguard also adds a dedicated create-residency eligible-unit lookup so builder-inventory units are excluded from the residency-create dropdown instead of only being rejected during submission.
 7. A newer local repair also makes ownership transfer self-heal redundant future builder-inventory rows, which previously could block a valid transfer with `Ownership history cannot contain a future row after an active owner.`
-8. The next authenticated preview check should specifically verify block-to-unit drill-through, ownership transfer unit selection, residency create unit selection, duplicate-builder-row stabilization, unit-area lock after maintenance payments, residency rejection before real ownership transfer, create-residency dropdown exclusion of builder-inventory units, and successful transfer of units affected by earlier builder bootstrap artifacts.
-9. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
+8. A newer local maintenance utility also adds a dry-run and apply cleanup path for redundant builder-inventory ownership rows so the underlying data can be normalized instead of relying only on runtime repair.
+9. The next authenticated preview check should specifically verify block-to-unit drill-through, ownership transfer unit selection, residency create unit selection, duplicate-builder-row stabilization, unit-area lock after maintenance payments, residency rejection before real ownership transfer, create-residency dropdown exclusion of builder-inventory units, and successful transfer of units affected by earlier builder bootstrap artifacts.
+10. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
 
 ## Remaining Gap Versus Localhost
 1. Preview dropdown activation is still slower than localhost, which suggests residual preview environment latency rather than a blocking application regression.
