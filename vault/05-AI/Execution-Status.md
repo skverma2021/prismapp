@@ -157,6 +157,8 @@ Not yet complete:
 23. Target pages reached through contextual drill-through links now initialize from the incoming URL filter state immediately instead of briefly loading an unfiltered list first.
 24. Ownership transfer and residency creation selectors now update selected unit values synchronously again, fixing the recent regression where units appeared in the dropdown but did not stay selected.
 25. Builder bootstrap seed logic now avoids inserting duplicate builder ownership rows when the same gap or trailing segment is already present.
+26. Units now reject `sqFt` edits after any per-sq-ft contribution exists for that unit.
+27. Residency creation now rejects system identities and blocks residency start while the active owner is still builder inventory.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -217,6 +219,7 @@ Not yet complete:
 5. Verify that the latest preview candidate removes the remaining transient first-load failures previously seen on ownership and residency after logout-login.
 6. Re-check whether report refresh times now represent pure query latency rather than avoidable filter-setup delay.
 7. Verify that cross-linked drill-throughs apply filtered rows immediately on preview and that ownership/residency unit selectors keep the chosen unit value.
+8. Verify that unit area is immutable after per-sq-ft contributions and that residency cannot start until builder inventory has been replaced by a real owner.
 
 ## Activities Yet To Be Performed
 

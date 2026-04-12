@@ -14,6 +14,7 @@
 1. U1- Each Unit has an `inceptionDt` that marks when it enters builder inventory and ownership continuity begins.
 2. U2- Creating a Unit also creates its initial active ownership row for `BUILDER_INVENTORY` starting on `inceptionDt`.
 3. U3- `BUILDER_INVENTORY` is a system identity, not a resident and not a normal payer/operator selection option.
+4. U4- `Units.sqFt` is locked once any per-sq-ft contribution has been recorded for that unit.
 
 
 ## Residency Rules
@@ -21,6 +22,8 @@
 2. R2- An Individual may reside in the same Unit multiple times across different time periods.
 3. R3- A Unit can have at most one active resident at any given time.
 4. R4- A Unit may have zero or one active resident (i.e., can be vacant).
+5. R5- Residency cannot start while the active owner is `BUILDER_INVENTORY`; transfer ownership to a real individual first.
+6. R6- System identities cannot be selected as residents.
 
 ## Temporal Integrity Rules
 

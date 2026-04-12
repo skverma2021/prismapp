@@ -152,21 +152,48 @@ export async function createUnit(input: CreateUnitInput) {
 }
 
 export async function updateUnit(id: string, input: UpdateUnitInput) {
-  if (input.inceptionDt !== undefined) {
-    const [ownerCount, current] = await Promise.all([
-      db.unitOwner.count({ where: { unitId: id } }),
-      db.unit.findUnique({ where: { id }, select: { inceptionDt: true } }),
-    ]);
+  const current = await db.unit.findUnique({
+    where: { id },
+    select: {
+      inceptionDt: true,
+      sqFt: true,
+    },
+  });
 
-    if (!current) {
-      throw new HttpError(404, "NOT_FOUND", "Unit not found.");
-    }
+  if (!current) {
+    throw new HttpError(404, "NOT_FOUND", "Unit not found.");
+  }
+
+  if (input.inceptionDt !== undefined) {
+    const ownerCount = await db.unitOwner.count({ where: { unitId: id } });
 
     if (ownerCount > 0 && current.inceptionDt.getTime() !== input.inceptionDt.getTime()) {
       throw new HttpError(
         412,
         "PRECONDITION_FAILED",
         "Unit inception date is locked once ownership continuity exists for the unit."
+      );
+    }
+  }
+
+  if (input.sqFt !== undefined && current.sqFt !== input.sqFt) {
+    const perSqFtContributionExists = await db.contribution.findFirst({
+      where: {
+        unitId: id,
+        contributionHead: {
+          payUnit: 1,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (perSqFtContributionExists) {
+      throw new HttpError(
+        412,
+        "PRECONDITION_FAILED",
+        "Unit area cannot be changed after per-sq-ft contributions have been recorded for the unit."
       );
     }
   }

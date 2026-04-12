@@ -5,6 +5,7 @@ import type { CreateResidencyInput, UpdateResidencyInput } from "./residencies.s
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 500;
+const BUILDER_INVENTORY_TAG = "BUILDER_INVENTORY";
 
 function rangesOverlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date | null): boolean {
   const aEndTime = aEnd ? aEnd.getTime() : Number.POSITIVE_INFINITY;
@@ -20,7 +21,10 @@ async function ensureResidencyReferencesExist(
 ) {
   const [unit, individual] = await Promise.all([
     tx.unit.findUnique({ where: { id: unitId }, select: { id: true, inceptionDt: true } }),
-    tx.individual.findUnique({ where: { id: indId }, select: { id: true } }),
+    tx.individual.findUnique({
+      where: { id: indId },
+      select: { id: true, isSystemIdentity: true, systemTag: true },
+    }),
   ]);
 
   if (!unit) {
@@ -31,7 +35,51 @@ async function ensureResidencyReferencesExist(
     throw new HttpError(404, "NOT_FOUND", "Individual not found.");
   }
 
+  if (individual.isSystemIdentity) {
+    throw new HttpError(
+      412,
+      "PRECONDITION_FAILED",
+      `${individual.systemTag ?? "System"} identity cannot be selected through the normal residency workflow.`
+    );
+  }
+
   return unit;
+}
+
+async function ensureResidencyAllowedByOwnership(
+  tx: Pick<typeof db, "unitOwner">,
+  unitId: string,
+  fromDt: Date
+) {
+  const activeOwner = await tx.unitOwner.findFirst({
+    where: {
+      unitId,
+      fromDt: { lte: fromDt },
+      OR: [{ toDt: null }, { toDt: { gte: fromDt } }],
+    },
+    orderBy: [{ fromDt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      individual: {
+        select: {
+          isSystemIdentity: true,
+          systemTag: true,
+        },
+      },
+    },
+  });
+
+  if (!activeOwner) {
+    throw new HttpError(412, "PRECONDITION_FAILED", "A valid active owner is required before residency can be recorded.");
+  }
+
+  if (activeOwner.individual.isSystemIdentity || activeOwner.individual.systemTag === BUILDER_INVENTORY_TAG) {
+    throw new HttpError(
+      412,
+      "PRECONDITION_FAILED",
+      "Residency cannot be recorded while the unit is still in builder inventory. Transfer ownership to a real individual first."
+    );
+  }
 }
 
 function ensureNotBeforeUnitInception(unitInceptionDt: Date, fromDt: Date, label: string) {
@@ -170,6 +218,7 @@ export async function createResidency(input: CreateResidencyInput) {
     async (tx) => {
       const unit = await ensureResidencyReferencesExist(tx, input.unitId, input.indId);
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Residency start date");
+      await ensureResidencyAllowedByOwnership(tx, input.unitId, input.fromDt);
       await ensureNoResidencyOverlap(tx, input.unitId, input.fromDt, input.toDt ?? null);
 
       return tx.unitResident.create({

@@ -171,6 +171,8 @@ Maps a contribution to specific periods
 3. A Unit enters the system in builder inventory unless a historical import starts a natural owner exactly on `inceptionDt`.
 4. A Unit can have multiple residents over time.
 5. `toDt = NULL` indicates current ownership/residency.
+6. `Units.sqFt` must not change after any per-sq-ft contribution exists for that unit.
+7. Residency cannot be recorded while the active owner is `BUILDER_INVENTORY`, and system identities cannot be selected as residents.
 6. Contributions are immutable once recorded.
 7. Contribution rate is NOT derived dynamically — it must be captured at time of payment.
 8. ContributionDetails must fully distribute total contribution amount.

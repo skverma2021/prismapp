@@ -33,8 +33,9 @@ Owner: Engineering
 2. This candidate also prewarms common authenticated lookup caches from the dashboard shell so unit, individual, contribution-head, and resident-eligible selectors can populate sooner on the first page visit after sign-in.
 3. Earlier retry hardening for contribution heads, contribution rates, transactions report, and browse pages remains in place, and server-side logging for unknown `500`-class API failures remains enabled for Vercel diagnosis.
 4. A newer local fix set also restores immediate URL-filter hydration on drill-through target pages, fixes timeline unit selectors that had stopped holding the selected unit value, and makes builder-ownership seed bootstrap idempotent for repeated runs.
-5. The next authenticated preview check should specifically verify block-to-unit drill-through, ownership transfer unit selection, residency create unit selection, and whether duplicate builder ownership rows stop increasing after repeated seed/bootstrap usage.
-6. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
+5. A newer local rules update also blocks `sqFt` edits once per-sq-ft contributions exist for a unit and prevents residency creation while the active owner is still builder inventory.
+6. The next authenticated preview check should specifically verify block-to-unit drill-through, ownership transfer unit selection, residency create unit selection, duplicate-builder-row stabilization, unit-area lock after maintenance payments, and residency rejection before real ownership transfer.
+7. Public HTTP probes remain unsuitable for full verification because the preview domain currently returns `401` to unauthenticated requests.
 
 ## Remaining Gap Versus Localhost
 1. Preview dropdown activation is still slower than localhost, which suggests residual preview environment latency rather than a blocking application regression.
