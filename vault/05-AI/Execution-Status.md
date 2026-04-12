@@ -160,6 +160,7 @@ Not yet complete:
 26. Units now reject `sqFt` edits after any per-sq-ft contribution exists for that unit.
 27. Residency creation now rejects system identities and blocks residency start while the active owner is still builder inventory.
 28. Residency creation now uses a dedicated ownership-based eligible-unit lookup so builder-inventory units are excluded from the create dropdown before submission.
+29. Ownership transfer now removes redundant future builder-inventory rows before applying continuity checks, while still rejecting genuine future ownership plans.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -222,6 +223,7 @@ Not yet complete:
 7. Verify that cross-linked drill-throughs apply filtered rows immediately on preview and that ownership/residency unit selectors keep the chosen unit value.
 8. Verify that unit area is immutable after per-sq-ft contributions and that residency cannot start until builder inventory has been replaced by a real owner.
 9. Verify that the create-residency unit dropdown now excludes builder-inventory units entirely and that builder-inventory attempts no longer surface generic failures.
+10. Verify that builder-owned units with old bootstrap artifacts can still be transferred to a real owner without manual data cleanup.
 
 ## Activities Yet To Be Performed
 

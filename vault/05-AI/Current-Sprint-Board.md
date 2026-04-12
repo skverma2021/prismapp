@@ -97,6 +97,7 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 78. Unit area is now locked once any per-sq-ft contribution has been recorded for that unit.
 79. Residency creation now requires a non-system active owner on the residency start date and rejects system identities as residents.
 80. Residency creation now loads a dedicated eligible-unit list so the create form only offers units whose current active owner is a real individual.
+81. Ownership transfer now cleans up redundant future builder-inventory rows before enforcing continuity, so earlier bootstrap artifacts do not block a valid handover to a real owner.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
@@ -108,6 +109,7 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 7. Re-run a quick preview regression pass on block-to-unit drill-through and timeline unit selectors after the latest fixes land.
 8. Verify the new unit-area lock and builder-inventory residency guard on preview.
 9. Verify that the create-residency unit dropdown excludes builder-inventory units instead of letting the server reject them after selection.
+10. Verify that transferring a builder-owned unit with redundant future builder rows now succeeds instead of failing with the continuity error.
 
 ## Next
 

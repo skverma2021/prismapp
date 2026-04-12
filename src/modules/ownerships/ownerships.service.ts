@@ -9,6 +9,7 @@ import type {
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+const BUILDER_INVENTORY_TAG = "BUILDER_INVENTORY";
 
 function rangesOverlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date | null): boolean {
   const aEndTime = aEnd ? aEnd.getTime() : Number.POSITIVE_INFINITY;
@@ -321,6 +322,55 @@ export async function transferOwnership(input: TransferOwnershipInput) {
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership transfer date");
 
       const transferAnchor = input.fromDt;
+
+      const scheduledRows = await tx.unitOwner.findMany({
+        where: {
+          unitId: input.unitId,
+          fromDt: { gte: transferAnchor },
+        },
+        select: {
+          id: true,
+          fromDt: true,
+          indId: true,
+          individual: {
+            select: {
+              isSystemIdentity: true,
+              systemTag: true,
+            },
+          },
+        },
+        orderBy: [{ fromDt: "asc" }, { createdAt: "asc" }],
+      });
+
+      const futureNaturalOwners = scheduledRows.filter(
+        (row) => !row.individual.isSystemIdentity && row.fromDt.getTime() >= transferAnchor.getTime()
+      );
+
+      if (futureNaturalOwners.length > 0) {
+        throw new HttpError(
+          412,
+          "PRECONDITION_FAILED",
+          `A future ownership row already exists from ${futureNaturalOwners[0].fromDt.toISOString().slice(0, 10)}. Remove or adjust that planned owner before transferring again.`
+        );
+      }
+
+      const redundantBuilderRowIds = scheduledRows
+        .filter(
+          (row) =>
+            row.individual.isSystemIdentity ||
+            row.individual.systemTag === BUILDER_INVENTORY_TAG
+        )
+        .map((row) => row.id);
+
+      if (redundantBuilderRowIds.length > 0) {
+        await tx.unitOwner.deleteMany({
+          where: {
+            id: {
+              in: redundantBuilderRowIds,
+            },
+          },
+        });
+      }
 
       const current = await tx.unitOwner.findFirst({
         where: {
