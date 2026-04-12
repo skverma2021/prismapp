@@ -109,6 +109,10 @@ async function fetchLookupWithRetry<T>(url: string, fallbackMessage: string, max
   throw lastError ?? new Error(fallbackMessage);
 }
 
+export async function fetchLookupFreshWithRetry<T>(url: string, fallbackMessage: string) {
+  return fetchLookupWithRetry<T>(url, fallbackMessage);
+}
+
 async function loadCachedLookup<T>(key: string, url: string, fallbackMessage: string): Promise<T> {
   const cached = readCachedValue<T>(key);
   if (cached !== null) {
@@ -156,19 +160,34 @@ export function loadContributionHeadLookupsCached() {
 }
 
 export function loadResidentEligibleUnitIdsCached() {
-  return loadCachedLookup<string[]>(
-    "resident-eligible-unit-ids",
+  return fetchLookupFreshWithRetry<string[]>(
     "/api/residencies/eligible-unit-ids",
     "Unable to load resident-eligible units."
   );
 }
 
 export function loadResidencyCreatableUnitIdsCached() {
-  return loadCachedLookup<string[]>(
-    "residency-creatable-unit-ids",
+  return fetchLookupFreshWithRetry<string[]>(
     "/api/ownerships/residency-eligible-unit-ids",
     "Unable to load residency-eligible units."
   );
+}
+
+export function invalidateOwnershipDependentLookups() {
+  const keys = ["resident-eligible-unit-ids", "residency-creatable-unit-ids"];
+
+  for (const key of keys) {
+    lookupMemoryCache.delete(key);
+    inflightRequests.delete(key);
+
+    if (typeof window !== "undefined") {
+      try {
+        window.sessionStorage.removeItem(getCacheKey(key));
+      } catch {
+        // Best-effort cache only.
+      }
+    }
+  }
 }
 
 export async function prewarmCommonLookups() {

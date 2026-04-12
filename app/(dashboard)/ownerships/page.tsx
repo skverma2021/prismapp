@@ -9,7 +9,11 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
-import { loadIndividualLookupsCached, loadUnitLookupsCached } from "@/src/lib/master-data-lookups";
+import {
+  invalidateOwnershipDependentLookups,
+  loadIndividualLookupsCached,
+  loadUnitLookupsCached,
+} from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
@@ -271,6 +275,7 @@ export default function OwnershipsPage() {
         throw new Error(toErrorMessage(payload, "Unable to transfer ownership."));
       }
 
+      invalidateOwnershipDependentLookups();
       setTransferState({ unitId: "", indId: "", fromDt: "" });
       setSubmitSuccess("Ownership transferred.");
       setPage(1);
