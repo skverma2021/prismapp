@@ -60,6 +60,22 @@ function logServerError(error: unknown) {
   console.error("[api] Unknown error", error);
 }
 
+function isConnectivityFailure(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toUpperCase();
+
+  return (
+    message.includes("ECONNREFUSED") ||
+    message.includes("ECONNRESET") ||
+    message.includes("ETIMEDOUT") ||
+    message.includes("CONNECTION TERMINATED") ||
+    message.includes("CAN'T REACH DATABASE SERVER")
+  );
+}
+
 export function ok<T>(data: T, status = 200): Response {
   return Response.json({ ok: true, data }, { status });
 }
@@ -114,6 +130,15 @@ export function fromUnknownError(error: unknown): HttpError {
         prismaLikeError.meta
       );
     }
+  }
+
+  if (isConnectivityFailure(error)) {
+    logServerError(error);
+    return new HttpError(
+      503,
+      "SERVICE_UNAVAILABLE",
+      "The database is temporarily unavailable. Please retry the operation."
+    );
   }
 
   logServerError(error);

@@ -46,11 +46,26 @@ async function ensureResidencyReferencesExist(
   return unit;
 }
 
-async function ensureResidencyAllowedByOwnership(
-  tx: Pick<typeof db, "unitOwner" | "individual">,
-  unitId: string,
-  fromDt: Date
-) {
+async function ensureResidencyAllowedByOwnership(tx: Pick<typeof db, "unitOwner">, unitId: string, fromDt: Date) {
+  const activeNaturalOwner = await tx.unitOwner.findFirst({
+    where: {
+      unitId,
+      fromDt: { lte: fromDt },
+      OR: [{ toDt: null }, { toDt: { gte: fromDt } }],
+      individual: {
+        isSystemIdentity: false,
+      },
+    },
+    orderBy: [{ fromDt: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+    },
+  });
+
+  if (activeNaturalOwner) {
+    return;
+  }
+
   const activeOwner = await tx.unitOwner.findFirst({
     where: {
       unitId,
@@ -60,7 +75,12 @@ async function ensureResidencyAllowedByOwnership(
     orderBy: [{ fromDt: "desc" }, { createdAt: "desc" }],
     select: {
       id: true,
-      indId: true,
+      individual: {
+        select: {
+          isSystemIdentity: true,
+          systemTag: true,
+        },
+      },
     },
   });
 
@@ -68,19 +88,11 @@ async function ensureResidencyAllowedByOwnership(
     throw new HttpError(412, "PRECONDITION_FAILED", "A valid active owner is required before residency can be recorded.");
   }
 
-  const ownerIndividual = await tx.individual.findUnique({
-    where: { id: activeOwner.indId },
-    select: {
-      isSystemIdentity: true,
-      systemTag: true,
-    },
-  });
-
-  if (!ownerIndividual) {
+  if (!activeOwner.individual) {
     throw new HttpError(412, "PRECONDITION_FAILED", "A valid active owner is required before residency can be recorded.");
   }
 
-  if (ownerIndividual.isSystemIdentity || ownerIndividual.systemTag === BUILDER_INVENTORY_TAG) {
+  if (activeOwner.individual.isSystemIdentity || activeOwner.individual.systemTag === BUILDER_INVENTORY_TAG) {
     throw new HttpError(
       412,
       "PRECONDITION_FAILED",
