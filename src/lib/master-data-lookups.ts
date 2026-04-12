@@ -163,11 +163,20 @@ export function loadResidentEligibleUnitIdsCached() {
   );
 }
 
+export function loadResidencyCreatableUnitIdsCached() {
+  return loadCachedLookup<string[]>(
+    "residency-creatable-unit-ids",
+    "/api/ownerships/residency-eligible-unit-ids",
+    "Unable to load residency-eligible units."
+  );
+}
+
 export async function prewarmCommonLookups() {
   await Promise.allSettled([
     loadUnitLookupsCached(),
     loadIndividualLookupsCached(),
     loadContributionHeadLookupsCached(),
     loadResidentEligibleUnitIdsCached(),
+    loadResidencyCreatableUnitIdsCached(),
   ]);
 }

@@ -159,6 +159,7 @@ Not yet complete:
 25. Builder bootstrap seed logic now avoids inserting duplicate builder ownership rows when the same gap or trailing segment is already present.
 26. Units now reject `sqFt` edits after any per-sq-ft contribution exists for that unit.
 27. Residency creation now rejects system identities and blocks residency start while the active owner is still builder inventory.
+28. Residency creation now uses a dedicated ownership-based eligible-unit lookup so builder-inventory units are excluded from the create dropdown before submission.
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -220,6 +221,7 @@ Not yet complete:
 6. Re-check whether report refresh times now represent pure query latency rather than avoidable filter-setup delay.
 7. Verify that cross-linked drill-throughs apply filtered rows immediately on preview and that ownership/residency unit selectors keep the chosen unit value.
 8. Verify that unit area is immutable after per-sq-ft contributions and that residency cannot start until builder inventory has been replaced by a real owner.
+9. Verify that the create-residency unit dropdown now excludes builder-inventory units entirely and that builder-inventory attempts no longer surface generic failures.
 
 ## Activities Yet To Be Performed
 

@@ -237,6 +237,26 @@ export async function listOwnershipLookups() {
   };
 }
 
+export async function listResidencyEligibleUnitIds() {
+  const now = new Date();
+
+  const rows = await db.unitOwner.findMany({
+    where: {
+      fromDt: { lte: now },
+      OR: [{ toDt: null }, { toDt: { gte: now } }],
+      individual: {
+        isSystemIdentity: false,
+      },
+    },
+    select: {
+      unitId: true,
+    },
+    distinct: ["unitId"],
+  });
+
+  return rows.map((row) => row.unitId);
+}
+
 export async function getOwnershipById(id: string) {
   const ownership = await db.unitOwner.findUnique({
     where: { id },

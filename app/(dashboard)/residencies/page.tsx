@@ -9,7 +9,11 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
-import { loadIndividualLookupsCached, loadUnitLookupsCached } from "@/src/lib/master-data-lookups";
+import {
+  loadIndividualLookupsCached,
+  loadResidencyCreatableUnitIdsCached,
+  loadUnitLookupsCached,
+} from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
@@ -111,6 +115,7 @@ export default function ResidenciesPage() {
   const initialSortDir = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
 
   const [units, setUnits] = useState<UnitOption[]>([]);
+  const [creatableUnitIds, setCreatableUnitIds] = useState<string[]>([]);
   const [individuals, setIndividuals] = useState<IndividualOption[]>([]);
   const [items, setItems] = useState<ResidencyItem[]>([]);
   const [page, setPage] = useState(1);
@@ -118,6 +123,7 @@ export default function ResidenciesPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [unitsLoading, setUnitsLoading] = useState(true);
+  const [creatableUnitsLoading, setCreatableUnitsLoading] = useState(true);
   const [individualsLoading, setIndividualsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
@@ -140,6 +146,10 @@ export default function ResidenciesPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const unitMap = useMemo(() => new Map(units.map((item) => [item.id, item])), [units]);
   const individualMap = useMemo(() => new Map(individuals.map((item) => [item.id, item])), [individuals]);
+  const creatableUnits = useMemo(
+    () => units.filter((unit) => creatableUnitIds.includes(unit.id)),
+    [creatableUnitIds, units]
+  );
 
   useEffect(() => {
     const nextUnitFilter = searchParams.get("unitId") ?? "";
@@ -183,6 +193,24 @@ export default function ResidenciesPage() {
     }
 
     void loadUnits();
+  }, []);
+
+  useEffect(() => {
+    async function loadCreatableUnitIds() {
+      setCreatableUnitsLoading(true);
+
+      try {
+        const data = await loadResidencyCreatableUnitIdsCached();
+        setCreatableUnitIds(data);
+      } catch (error) {
+        setCreatableUnitIds([]);
+        setLoadError(error instanceof Error ? error.message : "Unable to load residency-eligible units.");
+      } finally {
+        setCreatableUnitsLoading(false);
+      }
+    }
+
+    void loadCreatableUnitIds();
   }, []);
 
   useEffect(() => {
@@ -412,10 +440,17 @@ export default function ResidenciesPage() {
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Create Residency</p>
             <p className="mt-1 text-sm text-slate-600">Residencies may be active or historical, but they cannot start before the unit inception date. Existing rows keep unit, resident, and start date locked while still allowing `toDt` to be updated.</p>
+            {!creatableUnitsLoading && creatableUnits.length === 0 ? (
+              <InlineNotice
+                className="mt-4"
+                tone="warning"
+                message="No units are currently eligible for residency creation. Transfer ownership from builder inventory to a real individual first."
+              />
+            ) : null}
             <div className="mt-4 grid gap-3">
-              <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
-                <option value="">{unitsLoading ? "Loading units..." : "Select unit"}</option>
-                {units.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
+              <select value={createState.unitId} onChange={(event) => setCreateState((prev) => ({ ...prev, unitId: event.target.value }))} disabled={!canMutate || unitsLoading || creatableUnitsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
+                <option value="">{unitsLoading || creatableUnitsLoading ? "Loading units..." : "Select unit"}</option>
+                {creatableUnits.map((unit) => <option key={unit.id} value={unit.id}>{formatUnitLabel(unit)}</option>)}
               </select>
               <select value={createState.indId} onChange={(event) => setCreateState((prev) => ({ ...prev, indId: event.target.value }))} disabled={!canMutate || individualsLoading || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100">
                 <option value="">{individualsLoading ? "Loading individuals..." : "Select individual"}</option>
@@ -423,7 +458,7 @@ export default function ResidenciesPage() {
               </select>
               <input type="date" value={createState.fromDt} onChange={(event) => setCreateState((prev) => ({ ...prev, fromDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
               <input type="date" value={createState.toDt} onChange={(event) => setCreateState((prev) => ({ ...prev, toDt: event.target.value }))} disabled={!canMutate || createLoading} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100" />
-              <button type="button" disabled={!canMutate || createLoading || !createState.unitId || !createState.indId || !createState.fromDt} onClick={() => { void createResidency(); }} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">{createLoading ? "Creating..." : "Create Residency"}</button>
+              <button type="button" disabled={!canMutate || createLoading || creatableUnitsLoading || !createState.unitId || !createState.indId || !createState.fromDt} onClick={() => { void createResidency(); }} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600">{createLoading ? "Creating..." : "Create Residency"}</button>
             </div>
           </div>
 

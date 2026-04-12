@@ -47,7 +47,7 @@ async function ensureResidencyReferencesExist(
 }
 
 async function ensureResidencyAllowedByOwnership(
-  tx: Pick<typeof db, "unitOwner">,
+  tx: Pick<typeof db, "unitOwner" | "individual">,
   unitId: string,
   fromDt: Date
 ) {
@@ -60,12 +60,7 @@ async function ensureResidencyAllowedByOwnership(
     orderBy: [{ fromDt: "desc" }, { createdAt: "desc" }],
     select: {
       id: true,
-      individual: {
-        select: {
-          isSystemIdentity: true,
-          systemTag: true,
-        },
-      },
+      indId: true,
     },
   });
 
@@ -73,7 +68,19 @@ async function ensureResidencyAllowedByOwnership(
     throw new HttpError(412, "PRECONDITION_FAILED", "A valid active owner is required before residency can be recorded.");
   }
 
-  if (activeOwner.individual.isSystemIdentity || activeOwner.individual.systemTag === BUILDER_INVENTORY_TAG) {
+  const ownerIndividual = await tx.individual.findUnique({
+    where: { id: activeOwner.indId },
+    select: {
+      isSystemIdentity: true,
+      systemTag: true,
+    },
+  });
+
+  if (!ownerIndividual) {
+    throw new HttpError(412, "PRECONDITION_FAILED", "A valid active owner is required before residency can be recorded.");
+  }
+
+  if (ownerIndividual.isSystemIdentity || ownerIndividual.systemTag === BUILDER_INVENTORY_TAG) {
     throw new HttpError(
       412,
       "PRECONDITION_FAILED",
