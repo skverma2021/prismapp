@@ -9,6 +9,7 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { invalidateIndividualLookups } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 
@@ -243,6 +244,7 @@ export default function IndividualsPage() {
         throw new Error(toErrorMessage(payload, "Unable to create individual."));
       }
 
+      invalidateIndividualLookups();
       setCreateState(emptyFormState);
       setSubmitSuccess(`Individual created: ${formatIndividualName(payload.data)}`);
       setPage(1);
@@ -279,6 +281,7 @@ export default function IndividualsPage() {
         throw new Error(toErrorMessage(payload, "Unable to update individual."));
       }
 
+      invalidateIndividualLookups();
       setEditingId(null);
       setEditingState(emptyFormState);
       setItems((prev) =>
@@ -314,6 +317,7 @@ export default function IndividualsPage() {
         throw new Error(toErrorMessage(payload, "Unable to delete individual."));
       }
 
+      invalidateIndividualLookups();
       const nextCount = items.length - 1;
       setSubmitSuccess("Individual deleted.");
 

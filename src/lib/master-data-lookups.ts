@@ -151,6 +151,23 @@ export function loadIndividualLookupsCached() {
   );
 }
 
+export function invalidateIndividualLookups() {
+  const key = "individuals";
+
+  lookupMemoryCache.delete(key);
+  inflightRequests.delete(key);
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.sessionStorage.removeItem(getCacheKey(key));
+  } catch {
+    // Best-effort cache only.
+  }
+}
+
 export function loadContributionHeadLookupsCached() {
   return loadCachedLookup<ContributionHeadLookupOption[]>(
     "contribution-heads",
