@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/src/lib/db";
 import { parseUserRole } from "@/src/lib/user-role";
 
-const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 export const authOptions: NextAuthOptions = {
   secret: authSecret,

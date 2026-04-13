@@ -26,6 +26,29 @@ function main() {
     "P2034 should produce the concurrency retry message."
   );
 
+  const transactionTimeoutFailure = fromUnknownError({
+    code: "P2028",
+    meta: { reason: "Transaction already closed" },
+  });
+
+  assert.equal(transactionTimeoutFailure.status, 503, "P2028 should map to HTTP 503.");
+  assert.equal(transactionTimeoutFailure.code, "SERVICE_UNAVAILABLE", "P2028 should map to SERVICE_UNAVAILABLE.");
+  assert.equal(
+    transactionTimeoutFailure.message,
+    "The database operation could not be completed right now. Please retry.",
+    "P2028 should produce the generic retryable database-operation message."
+  );
+
+  const closedConnectionFailure = fromUnknownError(new Error("socket hang up"));
+
+  assert.equal(closedConnectionFailure.status, 503, "Socket hang-up errors should map to HTTP 503.");
+  assert.equal(closedConnectionFailure.code, "SERVICE_UNAVAILABLE", "Socket hang-up errors should map to SERVICE_UNAVAILABLE.");
+  assert.equal(
+    closedConnectionFailure.message,
+    "The database operation could not be completed right now. Please retry.",
+    "Socket hang-up errors should produce the generic retryable database-operation message."
+  );
+
   console.log("API error mapping checks passed.");
 }
 

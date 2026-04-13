@@ -6,7 +6,7 @@ import type { AuthContext, UserRole } from "@/src/lib/user-role";
 export { parseUserRole } from "@/src/lib/user-role";
 export type { AuthContext, UserRole } from "@/src/lib/user-role";
 
-const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 function parseRequestCookies(request: Request) {
   const cookieHeader = request.headers.get("cookie");

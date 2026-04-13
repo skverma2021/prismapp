@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
+    "postinstall": "prisma generate",
     "lint": "eslint",
     "repair:builder-ownerships": "node scripts/repair-builder-ownerships.mjs",
     "test:api:error-mapping": "node --experimental-strip-types scripts/test-api-error-mapping.mjs",

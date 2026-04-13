@@ -76,6 +76,29 @@ function isConnectivityFailure(error: unknown): boolean {
   );
 }
 
+function isRetryableDatabaseFailure(error: unknown): boolean {
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const prismaLikeError = error as { code?: string };
+
+    if (["P1001", "P1002", "P1017", "P2024", "P2028"].includes(prismaLikeError.code ?? "")) {
+      return true;
+    }
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toUpperCase();
+
+  return (
+    message.includes("TRANSACTION ALREADY CLOSED") ||
+    message.includes("TRANSACTION TIMED OUT") ||
+    message.includes("SERVER HAS CLOSED THE CONNECTION") ||
+    message.includes("SOCKET HANG UP")
+  );
+}
+
 export function ok<T>(data: T, status = 200): Response {
   return Response.json({ ok: true, data }, { status });
 }
@@ -130,6 +153,15 @@ export function fromUnknownError(error: unknown): HttpError {
         prismaLikeError.meta
       );
     }
+  }
+
+  if (isRetryableDatabaseFailure(error)) {
+    logServerError(error);
+    return new HttpError(
+      503,
+      "SERVICE_UNAVAILABLE",
+      "The database operation could not be completed right now. Please retry."
+    );
   }
 
   if (isConnectivityFailure(error)) {
