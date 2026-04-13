@@ -16,6 +16,8 @@ During Option A adoption, evidence files should now be created here directly. Ex
 4. `Week-3-Shell-Smoke-Notes.md`
 5. `Preview-Deployment-Status.md`
 6. `Ownership-Continuity-Preview-UAT.md`
+7. `Ownership-Residency-Browser-Smoke-Checklist.md`
+8. `Ownership-Residency-Browser-Smoke-Results.md`
 
 ## Suggested Future Contents
 1. regression notes

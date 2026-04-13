@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "repair:builder-ownerships": "node scripts/repair-builder-ownerships.mjs",
+    "test:api:error-mapping": "node --experimental-strip-types scripts/test-api-error-mapping.mjs",
     "test:api:timelines": "node scripts/test-timelines-api.mjs",
     "test:api:contribution-rates": "node scripts/test-contribution-rates-api.mjs",
     "test:api:contributions": "node scripts/test-contributions-api.mjs",

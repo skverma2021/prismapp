@@ -8,6 +8,7 @@ Owner: Engineering
 Track core API regression commands and expected outcomes for hardening verification.
 
 ## Core API Suites
+1. `npm run test:api:error-mapping`
 1. `npm run test:api:timelines`
 2. `npm run test:api:contribution-rates`
 3. `npm run test:api:contributions`

@@ -23,5 +23,10 @@ This folder holds current delivery status, sprint planning, execution evidence, 
 1. `Evidence/` for regression notes, UAT results, release readiness, smoke checks, and deployment verification.
 2. `Archive/` for historical closeout notes and superseded execution artifacts.
 
+## Testing Document Placement
+1. Keep active testing strategy documents, regression matrices, and refactor/test planning notes at the top level of `05-AI` while they are still being worked.
+2. Keep executed results and proof artifacts in `Evidence/`.
+3. Do not add a separate `Testing/` folder unless active test-design documents grow enough to crowd out the rest of the operational working set.
+
 ## Cleanup Rule
 Keep only actively used planning and status documents at this top level. Move completed evidence into `Evidence/` and non-active historical notes into `Archive/`.
