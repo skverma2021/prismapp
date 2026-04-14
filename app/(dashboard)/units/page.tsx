@@ -9,6 +9,7 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { invalidateUnitLookups } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import { formatUnitLabel } from "@/src/lib/unit-format";
@@ -215,6 +216,7 @@ export default function UnitsPage() {
 
       setCreateState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
       setSubmitSuccess(`Unit created: ${payload.data.description}`);
+      invalidateUnitLookups();
       setPage(1);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Unable to create unit.");
@@ -264,6 +266,7 @@ export default function UnitsPage() {
         )
       );
       setSubmitSuccess(`Unit updated: ${payload.data.description}`);
+      invalidateUnitLookups();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Unable to update unit.");
     }
@@ -286,6 +289,7 @@ export default function UnitsPage() {
 
       const nextCount = items.length - 1;
       setSubmitSuccess("Unit deleted.");
+      invalidateUnitLookups();
 
       if (nextCount === 0 && page > 1) {
         setPage(page - 1);

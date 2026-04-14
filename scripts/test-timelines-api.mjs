@@ -622,6 +622,21 @@ async function run() {
 }
 
 async function main() {
+  const externalUrl = process.env.TARGET_URL;
+
+  if (externalUrl) {
+    BASE_URL = externalUrl.replace(/\/+$/, "");
+    console.log(`Running against external URL: ${BASE_URL}`);
+    await waitForAuthServerReady(BASE_URL);
+    try {
+      await run();
+      console.log("Timeline API integration checks passed.");
+    } finally {
+      await prisma.$disconnect();
+    }
+    return;
+  }
+
   const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
   BASE_URL = `http://127.0.0.1:${PORT}`;
   const server = exec(`${npmCommand} run dev -- -p ${PORT}`, {

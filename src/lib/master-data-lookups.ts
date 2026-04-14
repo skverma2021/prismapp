@@ -168,6 +168,23 @@ export function invalidateIndividualLookups() {
   }
 }
 
+export function invalidateUnitLookups() {
+  const key = "units";
+
+  lookupMemoryCache.delete(key);
+  inflightRequests.delete(key);
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.sessionStorage.removeItem(getCacheKey(key));
+  } catch {
+    // Best-effort cache only.
+  }
+}
+
 export function loadContributionHeadLookupsCached() {
   return loadCachedLookup<ContributionHeadLookupOption[]>(
     "contribution-heads",
