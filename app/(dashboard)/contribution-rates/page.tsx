@@ -13,23 +13,8 @@ import { useAuthSession } from "@/src/lib/auth-session";
 import { loadContributionHeadLookupsCached } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        message?: string;
-      };
-    };
-
-type PaginatedResponse<T> = {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-};
+import { toErrorMessage } from "@/src/types/api";
+import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
 
 type ContributionHeadOption = {
   id: number;
@@ -55,10 +40,6 @@ type RateEditState = {
 };
 
 type SortOption = "fromDt" | "toDt" | "amt" | "createdAt";
-
-function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
-  return payload.ok ? fallback : payload.error?.message ?? fallback;
-}
 
 function formatAmount(value: string | number) {
   const amount = typeof value === "number" ? value : Number(value);

@@ -1,23 +1,4 @@
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        code?: string;
-        message?: string;
-        retryable?: boolean;
-      };
-    };
-
-type PaginatedResponse<T> = {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-};
+import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
 
 const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
 

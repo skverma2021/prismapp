@@ -16,6 +16,7 @@ import {
   type UnitLookupOption,
 } from "@/src/lib/master-data-lookups";
 import { formatUnitLabel } from "@/src/lib/unit-format";
+import type { ApiEnvelope } from "@/src/types/api";
 
 type Head = {
   id: number;
@@ -69,17 +70,6 @@ type MonthLedgerResponse = {
     }>;
   }>;
 };
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        code?: string;
-        message?: string;
-        details?: unknown;
-      };
-    };
 
 const MONTHS = [
   "Jan",

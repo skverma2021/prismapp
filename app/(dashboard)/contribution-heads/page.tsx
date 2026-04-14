@@ -13,23 +13,8 @@ import { useAuthSession } from "@/src/lib/auth-session";
 import { invalidateContributionHeadLookups } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        message?: string;
-      };
-    };
-
-type PaginatedResponse<T> = {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-};
+import { toErrorMessage } from "@/src/types/api";
+import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
 
 type ContributionHeadItem = {
   id: number;
@@ -50,10 +35,6 @@ const payUnitOptions = [
   { value: "2", label: "2 - Per Resident" },
   { value: "3", label: "3 - Lump Sum" },
 ];
-
-function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
-  return payload.ok ? fallback : payload.error?.message ?? fallback;
-}
 
 function describePayUnit(payUnit: number) {
   if (payUnit === 1) {

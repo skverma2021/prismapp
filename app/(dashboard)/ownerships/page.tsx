@@ -18,24 +18,8 @@ import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 import type { IndividualLookupOption, UnitLookupOption } from "@/src/lib/master-data-lookups";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        code?: string;
-        message?: string;
-      };
-    };
-
-type PaginatedResponse<T> = {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-};
+import { toErrorMessage } from "@/src/types/api";
+import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
 
 type UnitOption = UnitLookupOption;
 
@@ -57,10 +41,6 @@ type OwnershipItem = {
 };
 
 type SortOption = "fromDt" | "toDt" | "createdAt";
-
-function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
-  return payload.ok ? fallback : payload.error?.message ?? fallback;
-}
 
 function formatIndividualName(individual: IndividualOption) {
   return [individual.fName, individual.mName ?? "", individual.sName].filter(Boolean).join(" ");

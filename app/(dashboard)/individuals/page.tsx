@@ -12,24 +12,8 @@ import { useAuthSession } from "@/src/lib/auth-session";
 import { invalidateIndividualLookups } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        code?: string;
-        message?: string;
-      };
-    };
-
-type PaginatedResponse<T> = {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-};
+import { toErrorMessage } from "@/src/types/api";
+import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
 
 type GenderType = {
   id: number;
@@ -73,10 +57,6 @@ const emptyFormState: IndividualFormState = {
 };
 
 type SortOption = "sName" | "fName" | "eMail" | "createdAt";
-
-function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
-  return payload.ok ? fallback : payload.error?.message ?? fallback;
-}
 
 function formatIndividualName(item: Pick<IndividualItem, "fName" | "mName" | "sName">) {
   return [item.fName, item.mName ?? "", item.sName].filter(Boolean).join(" ");

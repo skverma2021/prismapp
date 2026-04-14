@@ -12,16 +12,8 @@ import { useAuthSession } from "@/src/lib/auth-session";
 import { invalidateBlockDependentLookups } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        code?: string;
-        message?: string;
-      };
-    };
+import { toErrorMessage } from "@/src/types/api";
+import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
 
 type BlockItem = {
   id: string;
@@ -29,19 +21,7 @@ type BlockItem = {
   createdAt: string;
 };
 
-type PaginatedResponse<T> = {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-};
-
 type SortOption = "description" | "createdAt";
-
-function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
-  return payload.ok ? fallback : payload.error?.message ?? fallback;
-}
 
 export default function BlocksPage() {
   const { session } = useAuthSession();

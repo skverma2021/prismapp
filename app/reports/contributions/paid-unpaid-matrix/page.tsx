@@ -9,16 +9,8 @@ import { SessionContextNotice } from "@/src/components/shell/session-context-not
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
 import { pushQueryState } from "@/src/lib/url-query-state";
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        code?: string;
-        message?: string;
-      };
-    };
+import { toErrorMessage } from "@/src/types/api";
+import type { ApiEnvelope } from "@/src/types/api";
 
 type HeadOption = {
   id: number;
@@ -94,15 +86,6 @@ type PaginatedItemsResponse<T> = {
 type SearchParamsReader = {
   get(key: string): string | null;
 };
-
-function getErrorMessage(payload: unknown, fallback: string) {
-  if (!payload || typeof payload !== "object") {
-    return fallback;
-  }
-
-  const maybeError = (payload as { error?: { message?: string } }).error;
-  return maybeError?.message ?? fallback;
-}
 
 function parsePositiveInteger(value: string | null, fallback: number) {
   if (!value) {
@@ -193,11 +176,11 @@ export default function ContributionPaidUnpaidMatrixPage() {
         ];
 
         if (!headsRes.ok || !headsPayload.ok) {
-          throw new Error(getErrorMessage(headsPayload, "Unable to load contribution heads."));
+          throw new Error(toErrorMessage(headsPayload, "Unable to load contribution heads."));
         }
 
         if (!blocksRes.ok || !blocksPayload.ok) {
-          throw new Error(getErrorMessage(blocksPayload, "Unable to load blocks."));
+          throw new Error(toErrorMessage(blocksPayload, "Unable to load blocks."));
         }
 
         const headItems = headsPayload.data.items ?? [];
@@ -259,7 +242,7 @@ export default function ContributionPaidUnpaidMatrixPage() {
       const payload = (await response.json()) as ApiEnvelope<MatrixResponse>;
 
       if (!response.ok || !payload.ok) {
-        throw new Error(getErrorMessage(payload, "Unable to load paid/unpaid matrix."));
+        throw new Error(toErrorMessage(payload, "Unable to load paid/unpaid matrix."));
       }
 
       setReport(payload.data);
@@ -291,8 +274,8 @@ export default function ContributionPaidUnpaidMatrixPage() {
       const response = await fetch(`/api/reports/contributions/paid-unpaid-matrix.csv?${params.toString()}`);
 
       if (!response.ok) {
-        const payload = await response.json();
-        throw new Error(getErrorMessage(payload, "Unable to export CSV."));
+        const payload = (await response.json()) as ApiEnvelope<null>;
+        throw new Error(toErrorMessage(payload, "Unable to export CSV."));
       }
 
       const blob = await response.blob();

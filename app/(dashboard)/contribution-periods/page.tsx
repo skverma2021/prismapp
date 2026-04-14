@@ -10,23 +10,8 @@ import { SessionContextNotice } from "@/src/components/shell/session-context-not
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { StateSurface } from "@/src/components/ui/state-surface";
 import { pushQueryState } from "@/src/lib/url-query-state";
-
-type ApiEnvelope<T> =
-  | { ok: true; data: T }
-  | {
-      ok: false;
-      error?: {
-        message?: string;
-      };
-    };
-
-type PaginatedResponse<T> = {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalItems: number;
-  totalPages: number;
-};
+import { toErrorMessage } from "@/src/types/api";
+import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
 
 type ContributionPeriodItem = {
   id: string;
@@ -52,10 +37,6 @@ const monthLabels = [
   "November",
   "December",
 ];
-
-function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
-  return payload.ok ? fallback : payload.error?.message ?? fallback;
-}
 
 function formatPeriodLabel(item: ContributionPeriodItem) {
   return item.refMonth === 0 ? `Year ${item.refYear}` : `${monthLabels[item.refMonth]} ${item.refYear}`;

@@ -14,6 +14,8 @@ import {
 } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
+import { toErrorMessage } from "@/src/types/api";
+import type { ApiEnvelope } from "@/src/types/api";
 import { compareUnitsByBlockAndDescription, formatUnitLabel } from "@/src/lib/unit-format";
 
 type OptionItem = {
@@ -104,15 +106,6 @@ type PaginatedItemsResponse<T> = {
 type SearchParamsReader = {
   get(key: string): string | null;
 };
-
-function getErrorMessage(payload: unknown, fallback: string) {
-  if (!payload || typeof payload !== "object") {
-    return fallback;
-  }
-
-  const maybeError = (payload as { error?: { message?: string } }).error;
-  return maybeError?.message ?? fallback;
-}
 
 function parsePositiveInteger(value: string | null, fallback: number) {
   if (!value) {
@@ -352,8 +345,8 @@ export default function ContributionTransactionsReportPage() {
       const response = await fetch(`/api/reports/contributions/transactions.csv?${params.toString()}`);
 
       if (!response.ok) {
-        const payload = await response.json();
-        throw new Error(getErrorMessage(payload, "Unable to export CSV."));
+        const payload = (await response.json()) as ApiEnvelope<null>;
+        throw new Error(toErrorMessage(payload, "Unable to export CSV."));
       }
 
       const blob = await response.blob();
