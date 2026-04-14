@@ -9,6 +9,7 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { invalidateBlockDependentLookups } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 
@@ -139,6 +140,7 @@ export default function BlocksPage() {
         throw new Error(toErrorMessage(payload, "Unable to create block."));
       }
 
+      invalidateBlockDependentLookups();
       setCreateDescription("");
       setSubmitSuccess(`Block created: ${payload.data.description}`);
       setPage(1);
@@ -169,6 +171,7 @@ export default function BlocksPage() {
         throw new Error(toErrorMessage(payload, "Unable to update block."));
       }
 
+      invalidateBlockDependentLookups();
       setEditingId(null);
       setEditingDescription("");
       setItems((prev) => prev.map((item) => (item.id === id ? payload.data : item)));
@@ -193,6 +196,7 @@ export default function BlocksPage() {
         throw new Error(toErrorMessage(payload, "Unable to delete block."));
       }
 
+      invalidateBlockDependentLookups();
       const nextCount = items.length - 1;
       setSubmitSuccess("Block deleted.");
 

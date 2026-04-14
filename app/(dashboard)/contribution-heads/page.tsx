@@ -10,6 +10,7 @@ import { SessionContextNotice } from "@/src/components/shell/session-context-not
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { StateSurface } from "@/src/components/ui/state-surface";
 import { useAuthSession } from "@/src/lib/auth-session";
+import { invalidateContributionHeadLookups } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
 
@@ -197,6 +198,7 @@ export default function ContributionHeadsPage() {
         throw new Error(toErrorMessage(payload, "Unable to create contribution head."));
       }
 
+      invalidateContributionHeadLookups();
       setCreateState({ description: "", payUnit: "1", period: "MONTH" });
       setSubmitSuccess(`Contribution head created: ${payload.data.description}`);
       setPage(1);
@@ -230,6 +232,7 @@ export default function ContributionHeadsPage() {
         throw new Error(toErrorMessage(payload, "Unable to update contribution head."));
       }
 
+      invalidateContributionHeadLookups();
       setEditingId(null);
       setEditingState({ description: "", payUnit: "1", period: "MONTH" });
       setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...payload.data } : item)));
@@ -254,6 +257,7 @@ export default function ContributionHeadsPage() {
         throw new Error(toErrorMessage(payload, "Unable to delete contribution head."));
       }
 
+      invalidateContributionHeadLookups();
       const nextCount = items.length - 1;
       setSubmitSuccess("Contribution head deleted.");
 

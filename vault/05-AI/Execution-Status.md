@@ -163,6 +163,12 @@ Not yet complete:
 29. Ownership transfer now removes redundant future builder-inventory rows before applying continuity checks, while still rejecting genuine future ownership plans.
 30. A dedicated maintenance script now exists to remove redundant builder-inventory ownership rows directly from the database when cleanup is preferred over runtime repair.
 
+### Week 6 Hardening
+1. Lookup cache invalidation centralized through a shared `invalidateLookups()` core with a `LOOKUP_KEYS` registry, replacing per-key hand-rolled cleanup.
+2. Missing invalidation wired into blocks (create/update/delete), contribution heads (create/update/delete), and residencies (create/edit) mutation pages.
+3. New semantic invalidation wrappers added: `invalidateBlockDependentLookups`, `invalidateContributionHeadLookups`, `invalidateResidencyDependentLookups`.
+4. Operator smoke test confirmed new contribution head (Flying Club) propagated through rate creation, capture, and reports without stale-cache issues.
+
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
 2. Shared unit label formatting was added so operator-facing screens show `Block, Unit` labels.

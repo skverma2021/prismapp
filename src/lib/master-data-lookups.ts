@@ -23,6 +23,24 @@ export type ContributionHeadLookupOption = {
   period: "MONTH" | "YEAR";
 };
 
+// ---------------------------------------------------------------------------
+// Lookup key registry — every cached lookup has exactly one key here.
+// ---------------------------------------------------------------------------
+
+export const LOOKUP_KEYS = {
+  units: "units",
+  individuals: "individuals",
+  contributionHeads: "contribution-heads",
+  residentEligibleUnitIds: "resident-eligible-unit-ids",
+  residencyCreatableUnitIds: "residency-creatable-unit-ids",
+} as const;
+
+type LookupKey = (typeof LOOKUP_KEYS)[keyof typeof LOOKUP_KEYS];
+
+// ---------------------------------------------------------------------------
+// Cache internals
+// ---------------------------------------------------------------------------
+
 type CacheEntry<T> = {
   data: T;
   expiresAt: number;
@@ -84,6 +102,10 @@ function writeCachedValue<T>(key: string, data: T) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Fetch helpers
+// ---------------------------------------------------------------------------
+
 async function fetchLookupWithRetry<T>(url: string, fallbackMessage: string, maxAttempts = 2): Promise<T> {
   let lastError: Error | null = null;
 
@@ -137,57 +159,82 @@ async function loadCachedLookup<T>(key: string, url: string, fallbackMessage: st
   return request;
 }
 
+// ---------------------------------------------------------------------------
+// Centralized invalidation
+// ---------------------------------------------------------------------------
+
+export function invalidateLookups(...keys: LookupKey[]) {
+  for (const key of keys) {
+    lookupMemoryCache.delete(key);
+    inflightRequests.delete(key);
+
+    if (typeof window !== "undefined") {
+      try {
+        window.sessionStorage.removeItem(getCacheKey(key));
+      } catch {
+        // Best-effort cache only.
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Semantic invalidation wrappers — call these from mutation success paths.
+// ---------------------------------------------------------------------------
+
+/** After block create/edit/delete — units reference block descriptions. */
+export function invalidateBlockDependentLookups() {
+  invalidateLookups(LOOKUP_KEYS.units);
+}
+
+/** After unit create/edit/delete. */
+export function invalidateUnitLookups() {
+  invalidateLookups(LOOKUP_KEYS.units);
+}
+
+/** After individual create/edit/delete. */
+export function invalidateIndividualLookups() {
+  invalidateLookups(LOOKUP_KEYS.individuals);
+}
+
+/** After contribution head create/edit/delete. */
+export function invalidateContributionHeadLookups() {
+  invalidateLookups(LOOKUP_KEYS.contributionHeads);
+}
+
+/** After ownership transfer — affects residency-eligible unit lists. */
+export function invalidateOwnershipDependentLookups() {
+  invalidateLookups(LOOKUP_KEYS.residentEligibleUnitIds, LOOKUP_KEYS.residencyCreatableUnitIds);
+}
+
+/** After residency create/edit — affects resident-eligible unit lists. */
+export function invalidateResidencyDependentLookups() {
+  invalidateLookups(LOOKUP_KEYS.residentEligibleUnitIds);
+}
+
+// ---------------------------------------------------------------------------
+// Cached loaders
+// ---------------------------------------------------------------------------
+
 export function loadUnitLookupsCached() {
-  return loadCachedLookup<UnitLookupOption[]>("units", "/api/units/lookups", "Unable to load units.").then((data) =>
-    [...data].sort(compareUnitsByBlockAndDescription)
-  );
+  return loadCachedLookup<UnitLookupOption[]>(
+    LOOKUP_KEYS.units,
+    "/api/units/lookups",
+    "Unable to load units."
+  ).then((data) => [...data].sort(compareUnitsByBlockAndDescription));
 }
 
 export function loadIndividualLookupsCached() {
   return loadCachedLookup<IndividualLookupOption[]>(
-    "individuals",
+    LOOKUP_KEYS.individuals,
     "/api/individuals/lookups",
     "Unable to load individuals."
   );
 }
 
-export function invalidateIndividualLookups() {
-  const key = "individuals";
-
-  lookupMemoryCache.delete(key);
-  inflightRequests.delete(key);
-
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    window.sessionStorage.removeItem(getCacheKey(key));
-  } catch {
-    // Best-effort cache only.
-  }
-}
-
-export function invalidateUnitLookups() {
-  const key = "units";
-
-  lookupMemoryCache.delete(key);
-  inflightRequests.delete(key);
-
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    window.sessionStorage.removeItem(getCacheKey(key));
-  } catch {
-    // Best-effort cache only.
-  }
-}
-
 export function loadContributionHeadLookupsCached() {
   return loadCachedLookup<ContributionHeadLookupOption[]>(
-    "contribution-heads",
+    LOOKUP_KEYS.contributionHeads,
     "/api/contribution-heads/lookups",
     "Unable to load contribution heads."
   );
@@ -207,22 +254,9 @@ export function loadResidencyCreatableUnitIdsCached() {
   );
 }
 
-export function invalidateOwnershipDependentLookups() {
-  const keys = ["resident-eligible-unit-ids", "residency-creatable-unit-ids"];
-
-  for (const key of keys) {
-    lookupMemoryCache.delete(key);
-    inflightRequests.delete(key);
-
-    if (typeof window !== "undefined") {
-      try {
-        window.sessionStorage.removeItem(getCacheKey(key));
-      } catch {
-        // Best-effort cache only.
-      }
-    }
-  }
-}
+// ---------------------------------------------------------------------------
+// Prewarm
+// ---------------------------------------------------------------------------
 
 export async function prewarmCommonLookups() {
   await Promise.allSettled([

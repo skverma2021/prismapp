@@ -10,6 +10,7 @@ import { SessionContextNotice } from "@/src/components/shell/session-context-not
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
 import {
+  invalidateResidencyDependentLookups,
   loadIndividualLookupsCached,
   loadResidencyCreatableUnitIdsCached,
   loadUnitLookupsCached,
@@ -299,6 +300,7 @@ export default function ResidenciesPage() {
         throw new Error(toErrorMessage(payload, "Unable to create residency."));
       }
 
+      invalidateResidencyDependentLookups();
       setCreateState(emptyFormState);
       setReloadKey((value) => value + 1);
       setSubmitSuccess("Residency record created.");
@@ -341,6 +343,7 @@ export default function ResidenciesPage() {
         throw new Error(toErrorMessage(payload, "Unable to update residency."));
       }
 
+      invalidateResidencyDependentLookups();
       cancelEditingResidency();
       setReloadKey((value) => value + 1);
       setSubmitSuccess("Residency end date updated.");
