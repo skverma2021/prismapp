@@ -22,10 +22,18 @@ export class HttpError extends Error {
   }
 }
 
-function logServerError(error: unknown) {
+export function getRequestId(request: Request): string {
+  return request.headers.get("x-request-id") ?? "unknown";
+}
+
+function logServerError(error: unknown, requestId?: string) {
+  const rid = requestId ?? "unknown";
+
   if (error instanceof HttpError) {
     if (error.status >= 500) {
-      console.error("[api] HttpError", {
+      console.error("[api]", {
+        level: "error",
+        requestId: rid,
         status: error.status,
         code: error.code,
         message: error.message,
@@ -39,7 +47,9 @@ function logServerError(error: unknown) {
   if (typeof error === "object" && error !== null && "code" in error) {
     const prismaLikeError = error as { code?: string; meta?: unknown; message?: string; stack?: string };
 
-    console.error("[api] Unknown error", {
+    console.error("[api]", {
+      level: "error",
+      requestId: rid,
       code: prismaLikeError.code,
       message: prismaLikeError.message,
       meta: prismaLikeError.meta,
@@ -49,7 +59,9 @@ function logServerError(error: unknown) {
   }
 
   if (error instanceof Error) {
-    console.error("[api] Unknown error", {
+    console.error("[api]", {
+      level: "error",
+      requestId: rid,
       name: error.name,
       message: error.message,
       stack: error.stack,
@@ -57,7 +69,7 @@ function logServerError(error: unknown) {
     return;
   }
 
-  console.error("[api] Unknown error", error);
+  console.error("[api]", { level: "error", requestId: rid, error });
 }
 
 function isConnectivityFailure(error: unknown): boolean {
@@ -118,9 +130,9 @@ export function fail(error: HttpError): Response {
   );
 }
 
-export function fromUnknownError(error: unknown): HttpError {
+export function fromUnknownError(error: unknown, requestId?: string): HttpError {
   if (error instanceof HttpError) {
-    logServerError(error);
+    logServerError(error, requestId);
     return error;
   }
 
@@ -145,7 +157,7 @@ export function fromUnknownError(error: unknown): HttpError {
     }
 
     if (prismaLikeError.code === "P2034") {
-      logServerError(error);
+      logServerError(error, requestId);
       return new HttpError(
         503,
         "SERVICE_UNAVAILABLE",
@@ -156,7 +168,7 @@ export function fromUnknownError(error: unknown): HttpError {
   }
 
   if (isRetryableDatabaseFailure(error)) {
-    logServerError(error);
+    logServerError(error, requestId);
     return new HttpError(
       503,
       "SERVICE_UNAVAILABLE",
@@ -165,7 +177,7 @@ export function fromUnknownError(error: unknown): HttpError {
   }
 
   if (isConnectivityFailure(error)) {
-    logServerError(error);
+    logServerError(error, requestId);
     return new HttpError(
       503,
       "SERVICE_UNAVAILABLE",
@@ -173,7 +185,7 @@ export function fromUnknownError(error: unknown): HttpError {
     );
   }
 
-  logServerError(error);
+  logServerError(error, requestId);
 
   return new HttpError(500, "INTERNAL_ERROR", "Unexpected server error.");
 }

@@ -1,4 +1,4 @@
-import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
+import { fail, fromUnknownError, getRequestId, ok } from "@/src/lib/api-response";
 import { requireMutationRole } from "@/src/lib/authz";
 import { parseCreateContributionCorrectionInput } from "@/src/modules/contributions/contributions.schemas";
 import { createContributionCorrection } from "@/src/modules/contributions/contributions.service";
@@ -14,6 +14,6 @@ export async function POST(request: Request) {
     });
     return ok(data, 201);
   } catch (error) {
-    return fail(fromUnknownError(error));
+    return fail(fromUnknownError(error, getRequestId(request)));
   }
 }

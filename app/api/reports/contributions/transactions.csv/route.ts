@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { fail, fromUnknownError } from "@/src/lib/api-response";
+import { fail, fromUnknownError, getRequestId } from "@/src/lib/api-response";
 import { requireReadRole } from "@/src/lib/authz";
 import {
   getContributionTransactionsCsv,
@@ -20,6 +20,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    return fail(fromUnknownError(error));
+    return fail(fromUnknownError(error, getRequestId(request)));
   }
 }

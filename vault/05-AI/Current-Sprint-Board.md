@@ -10,11 +10,9 @@ Provide one short-horizon execution board for the active sprint window.
 This file should stay concise and operational. Historical detail belongs in evidence or archived notes.
 
 ## Current Focus
-Shell and auth baseline are in place. Current focus is expanding the master-data UI baseline while continuing to smooth remaining auth feedback gaps.
+Week 6 hardening is complete. All six hotspots (A–F) have been executed, tested, and deployed. Three bugs discovered during hardening were fixed (driver-adapter tx atomicity, render loop, cold-start retry gap). Transaction isolation was aligned to ReadCommitted across all service files.
 
-The active focused pre-production branch is ownership continuity: builder inventory bootstrap plus no-gap ownership enforcement.
-
-In the current branch, near-term operator UX work is browse-page sort consistency plus continued shared table/filter/form consolidation.
+Next priorities: remaining auth feedback polish, shared table/filter/form extraction, and maker-checker groundwork.
 
 ## Done
 1. Week 2 contribution scope completed and validated.
@@ -102,28 +100,41 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 83. Lookup cache invalidation is now centralized through a shared `invalidateLookups()` core with a `LOOKUP_KEYS` registry, replacing per-key hand-rolled cleanup.
 84. Blocks, contribution heads, and residencies mutation pages now invalidate affected lookup caches on create, update, and delete success.
 85. Operator smoke test confirmed a newly created contribution head (Flying Club, Rs 5000, monthly, per person) propagated immediately through rate creation, contribution capture, transactions report, and paid/unpaid matrix without stale-cache issues.
+86. Shared `ApiEnvelope<T>`, `PaginatedResponse<T>`, and `toErrorMessage()` types extracted to `src/types/api.ts`; 12 client-side files updated to remove inline duplicates.
+87. Contribution-periods API sort default aligned from `id asc` to `refYear desc` to match UI expectation.
+88. `@@index([contributionHeadId])` added to `Contribution` model for report queries filtering by head alone.
+89. `AuditLog` model added to Prisma schema with indexes; `writeAuditLog()` utility created; wired into contribution creation and correction flows.
+90. Audit writes placed outside business transaction due to `@prisma/adapter-pg` non-atomic interactive transaction limitation.
+91. React error boundaries added for global, dashboard, contributions, and reports route groups.
+92. Clean 404 page added at `app/not-found.tsx`.
+93. Request-ID middleware added for all `/api/*` routes with UUID generation and header propagation.
+94. `getRequestId()` export and structured JSON error logging added to `api-response.ts`.
+95. Request-ID logging wired into 6 financial and report route handlers.
+96. All 9 interactive transactions changed from `Serializable` to `ReadCommitted` across 5 service files.
+97. Fixed driver-adapter transaction atomicity bug: audit writes moved outside `$transaction` after `@prisma/adapter-pg` partial commit discovered.
+98. Fixed infinite render loop on transactions report caused by Next.js 16 `pushState` interception; URL comparison guard added to `url-query-state.ts`.
+99. Fixed cold-start retry gap: contribution-periods page switched from raw `fetch()` to `fetchJsonWithRetry`.
+100. Week 6 hardening evidence recorded in `Evidence/Week-6-Hardening-Complete.md`.
+101. Vercel production deployment `a2f00ae` live with all Week 6 changes.
 
 ## In Progress
 1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
 2. Standardize shared table/filter/form patterns for operator screens.
-3. Confirm the newly pushed preview deployment reduces transient first-load failures on contribution heads, contribution rates, and transactions report.
-4. Re-check ownership and residency after logout-login to confirm the remaining transient first-load errors are cleared.
-5. Continue focused tuning for the slower unit dropdown path on preview.
-6. Normalize sort-control placement and copy so operator pages feel consistent.
-7. Re-run a quick preview regression pass on block-to-unit drill-through and timeline unit selectors after the latest fixes land.
-8. Verify the new unit-area lock and builder-inventory residency guard on preview.
-9. Verify that the create-residency unit dropdown excludes builder-inventory units instead of letting the server reject them after selection.
-10. Verify that transferring a builder-owned unit with redundant future builder rows now succeeds instead of failing with the continuity error.
 
 ## Next
 
 ### Immediate Next Steps
 1. Finish remaining shell-level auth feedback polish.
-2. Standardize shared table/filter/form patterns for operator screens.
-3. Push the current branch and verify that first-load preview stability now holds on contribution heads, contribution rates, and transactions report.
-4. Re-check whether unit dropdown latency remains the main visible preview gap after the shell lookup prewarm.
-5. Decide whether contribution periods should remain purely reference-only or gain linked drill-through entry points beyond report navigation.
-6. Normalize sort-control placement and copy across the remaining browse pages.
+2. Extract shared table/filter/form component baseline for operator screens.
+3. Wire request-ID logging into remaining non-financial route handlers.
+4. Extend audit logging to ownership transfers and residency mutations if required.
+5. Prepare maker-checker extension hooks for correction workflows.
+6. Resolve PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
+
+### Stretch
+1. Decide whether contribution periods gain linked drill-through usage beyond report navigation.
+2. Auth Phase 2 planning (OAuth and account linking).
+3. Begin Safety or Security module design if V1 scope allows.
 
 ## Risks
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.
@@ -132,8 +143,8 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 4. Master-data UI consistency will drift if the shared table/filter/form patterns are not extracted soon.
 5. Timeline screens will become harder to evolve if lookup loading and mutation feedback patterns diverge between ownerships and residencies.
 6. Contribution-head deletion behavior depends on related rates and posted contributions, so operator-facing error copy must stay clear when FK restrictions fire.
-7. Production rollout should stay blocked until builder-based ownership continuity is modeled, backfilled, and regression-tested.
-8. Operator confidence will stay low if browse pages remain inconsistent about sorting even where APIs already support it.
+7. Audit log writes are best-effort (outside transaction); a transient failure could leave a contribution without supplementary audit context. The contribution row itself remains the primary audit trail.
+8. `@prisma/adapter-pg` interactive transaction limitation means any future multi-table writes must be designed with awareness that rollback is not guaranteed.
 
 ## References
 1. `Product-Delivery-Strategy.md`
@@ -142,3 +153,5 @@ In the current branch, near-term operator UX work is browse-page sort consistenc
 4. `Evidence/Week-3-Shell-Smoke-Notes.md`
 5. `Evidence/Preview-Deployment-Status.md`
 6. `Evidence/Ownership-Continuity-Preview-UAT.md`
+7. `Evidence/Week-6-Lookup-Cache-Hardening.md`
+8. `Evidence/Week-6-Hardening-Complete.md`

@@ -71,9 +71,13 @@ Completed:
 
 Not yet complete:
 1. Shared policy middleware is not implemented as a reusable feature foundation yet.
-2. Shared audit middleware is not fully implemented yet.
-3. Feature flags and extensibility hooks for future modules are not formalized yet.
-4. Auth alignment and audit foundations still need to be completed before future modules can be added cleanly.
+2. Feature flags and extensibility hooks for future modules are not formalized yet.
+3. Auth alignment still needs to be completed before future modules can be added cleanly.
+
+Newly complete:
+1. Audit logging for financial writes is now implemented (AuditLog model + writeAuditLog utility).
+2. Observability baseline is now in place (error boundaries, request-ID middleware, structured logging).
+3. Request tracing via `x-request-id` is now active on all API routes and wired into 6 financial/report handlers.
 
 ## Activities Done
 
@@ -164,10 +168,46 @@ Not yet complete:
 30. A dedicated maintenance script now exists to remove redundant builder-inventory ownership rows directly from the database when cleanup is preferred over runtime repair.
 
 ### Week 6 Hardening
+
+#### Hotspot A: Lookup Cache Registry
 1. Lookup cache invalidation centralized through a shared `invalidateLookups()` core with a `LOOKUP_KEYS` registry, replacing per-key hand-rolled cleanup.
 2. Missing invalidation wired into blocks (create/update/delete), contribution heads (create/update/delete), and residencies (create/edit) mutation pages.
 3. New semantic invalidation wrappers added: `invalidateBlockDependentLookups`, `invalidateContributionHeadLookups`, `invalidateResidencyDependentLookups`.
 4. Operator smoke test confirmed new contribution head (Flying Club) propagated through rate creation, capture, and reports without stale-cache issues.
+
+#### Hotspot B: Shared Error Envelope Audit
+5. Created shared `src/types/api.ts` with `ApiEnvelope<T>`, `PaginatedResponse<T>`, and `toErrorMessage()`.
+6. Updated 12 client-side files to use shared types, removing inline duplicates.
+
+#### Hotspot C: Pagination/Sort Consistency
+7. Audited all API endpoints for sort-default mismatches with UI pages.
+8. Fixed contribution-periods API default sort from `id asc` to `refYear desc` to match UI expectation.
+
+#### Hotspot D: Query Index Review
+9. Audited all 58 Prisma queries against schema indexes.
+10. Added `@@index([contributionHeadId])` to `Contribution` model for report queries filtering by head alone.
+
+#### Hotspot E: Audit Logging for Financial Writes
+11. Added `AuditLog` model with indexes on `(entityType, entityId)`, `actorUserId`, and `createdAt`.
+12. Created `src/lib/audit-log.ts` utility with `writeAuditLog()`.
+13. Wired audit logging into contribution creation and correction flows.
+14. Audit writes placed outside business transaction due to `@prisma/adapter-pg` non-atomic interactive transaction limitation. Failures logged but never propagate.
+15. Migration `20260415022708_audit_log` applied (audit_logs table + contributionHeadId index).
+
+#### Hotspot F: Observability Baseline
+16. Added React error boundaries: `global-error.tsx`, `(dashboard)/error.tsx`, `contributions/error.tsx`, `reports/error.tsx`.
+17. Added clean 404 page at `app/not-found.tsx`.
+18. Added `middleware.ts` with request-ID generation and propagation for all `/api/*` routes.
+19. Enhanced `src/lib/api-response.ts` with `getRequestId()`, structured JSON error logging, and optional `requestId` parameter.
+20. Wired request-ID logging into 6 financial/report route handlers.
+
+#### Bug Fixes During Hardening
+21. Fixed driver-adapter transaction atomicity issue: moved audit writes outside `$transaction` after discovering `@prisma/adapter-pg` does not guarantee interactive transaction atomicity.
+22. Fixed infinite render loop on transactions report page caused by Next.js 16 `pushState` interception. Added URL comparison guard in `url-query-state.ts`.
+23. Fixed cold-start retry gap: contribution-periods page switched from raw `fetch()` to `fetchJsonWithRetry`.
+
+#### Transaction Isolation Alignment
+24. Changed all 9 interactive transactions from `Serializable` to `ReadCommitted` across 5 service files (units, residencies, ownerships, contribution-rates, contributions).
 
 ### Post Week 2 UX and Reporting Corrections
 1. Deterministic block and unit seeding aligned to Nalanda, Vaishali, and Rajgir with 14 floors x 8 units each.
@@ -266,13 +306,15 @@ Validation status:
 2. Sort state is now applied explicitly through the existing API `sortBy` and `sortDir` contracts instead of relying only on fixed defaults.
 
 ### Hardening and Production Readiness
-1. Add audit logging for mutation flows.
-2. Add observability baseline.
-3. Add request tracing or structured request correlation.
-4. Review performance-sensitive report queries and indexes.
+1. ~~Add audit logging for mutation flows.~~ Done (Week 6 Hotspot E).
+2. ~~Add observability baseline.~~ Done (Week 6 Hotspot F).
+3. ~~Add request tracing or structured request correlation.~~ Done (Week 6 Hotspot F).
+4. ~~Review performance-sensitive report queries and indexes.~~ Done (Week 6 Hotspot D).
 5. Resolve current PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
 6. Prepare for maker-checker extension hooks in corrections.
 7. Promote from preview to a production-ready release only after ownership-continuity UAT is recorded.
+8. Wire request-ID logging into remaining non-financial route handlers.
+9. Extend audit logging to non-financial mutations (ownership transfers, residency changes) if required.
 
 ### Deferred Future Work
 1. Auth Phase 2: OAuth and account linking.
