@@ -147,7 +147,7 @@ export async function createUnit(input: CreateUnitInput) {
 
       return unit;
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }
 

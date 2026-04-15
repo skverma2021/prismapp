@@ -249,7 +249,7 @@ export async function createResidency(input: CreateResidencyInput) {
         },
       });
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }
 
@@ -287,7 +287,7 @@ export async function updateResidency(id: string, input: UpdateResidencyInput) {
         },
       });
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }
 

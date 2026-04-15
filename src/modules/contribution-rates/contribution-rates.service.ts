@@ -171,7 +171,7 @@ export async function createContributionRate(input: CreateContributionRateInput)
         },
       });
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }
 
@@ -214,6 +214,6 @@ export async function updateContributionRate(id: string, input: UpdateContributi
         },
       });
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }

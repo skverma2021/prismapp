@@ -38,8 +38,8 @@ export async function listContributionPeriods(searchParams: URLSearchParams) {
 
   const refYear = parseOptionalInt(searchParams.get("refYear"), "refYear");
   const refMonth = parseOptionalInt(searchParams.get("refMonth"), "refMonth");
-  const sortBy = searchParams.get("sortBy") ?? "id";
-  const sortDir: "asc" | "desc" = searchParams.get("sortDir") === "desc" ? "desc" : "asc";
+  const sortBy = searchParams.get("sortBy") ?? "refYear";
+  const sortDir: "asc" | "desc" = searchParams.get("sortDir") === "asc" ? "asc" : "desc";
 
   if (!["id", "refYear", "refMonth", "createdAt"].includes(sortBy)) {
     throw new HttpError(400, "VALIDATION_ERROR", "Invalid sortBy field.");

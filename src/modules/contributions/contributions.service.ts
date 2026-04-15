@@ -536,7 +536,7 @@ export async function createContribution(input: CreateContributionInput, actor: 
         },
       });
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }
 
@@ -626,6 +626,6 @@ export async function createContributionCorrection(
         },
       });
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }

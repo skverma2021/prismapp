@@ -291,7 +291,7 @@ export async function createOwnership(input: CreateOwnershipInput) {
         },
       });
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }
 
@@ -420,6 +420,6 @@ export async function transferOwnership(input: TransferOwnershipInput) {
 
       return created;
     },
-    { isolationLevel: "Serializable" }
+    { isolationLevel: "ReadCommitted" }
   );
 }
