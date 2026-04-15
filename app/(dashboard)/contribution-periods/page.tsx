@@ -9,9 +9,9 @@ import { PaginationControls } from "@/src/components/master-data/pagination-cont
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { StateSurface } from "@/src/components/ui/state-surface";
+import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
 import { pushQueryState } from "@/src/lib/url-query-state";
-import { toErrorMessage } from "@/src/types/api";
-import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
+import type { PaginatedResponse } from "@/src/types/api";
 
 type ContributionPeriodItem = {
   id: string;
@@ -105,16 +105,14 @@ export default function ContributionPeriodsPage() {
           params.set("refMonth", appliedMonthFilter.trim());
         }
 
-        const response = await fetch(`/api/contribution-periods?${params.toString()}`);
-        const payload = (await response.json()) as ApiEnvelope<PaginatedResponse<ContributionPeriodItem>>;
+        const data = await fetchJsonWithRetry<PaginatedResponse<ContributionPeriodItem>>(
+          `/api/contribution-periods?${params.toString()}`,
+          "Unable to load contribution periods."
+        );
 
-        if (!response.ok || !payload.ok) {
-          throw new Error(toErrorMessage(payload, "Unable to load contribution periods."));
-        }
-
-        setItems(payload.data.items);
-        setTotalPages(Math.max(payload.data.totalPages, 1));
-        setTotalItems(payload.data.totalItems);
+        setItems(data.items);
+        setTotalPages(Math.max(data.totalPages, 1));
+        setTotalItems(data.totalItems);
       } catch (error) {
         setItems([]);
         setTotalPages(1);

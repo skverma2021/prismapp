@@ -1,5 +1,6 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
+import { writeAuditLog } from "@/src/lib/audit-log";
 import type { UserRole } from "@/src/lib/user-role";
 import type {
   CreateContributionCorrectionInput,
@@ -444,7 +445,7 @@ export async function getContributionById(id: string) {
 }
 
 export async function createContribution(input: CreateContributionInput, actor: ContributionActor) {
-  return db.$transaction(
+  const result = await db.$transaction(
     async (tx) => {
       const head = await tx.contributionHead.findUnique({
         where: { id: input.contributionHeadId },
@@ -501,7 +502,7 @@ export async function createContribution(input: CreateContributionInput, actor: 
         throw new HttpError(412, "PRECONDITION_FAILED", "Derived contribution amount must be positive.");
       }
 
-      return tx.contribution.create({
+      const created = await tx.contribution.create({
         data: {
           unitId: input.unitId,
           contributionHeadId: input.contributionHeadId,
@@ -535,16 +536,34 @@ export async function createContribution(input: CreateContributionInput, actor: 
           },
         },
       });
+
+      return created;
     },
     { isolationLevel: "ReadCommitted" }
   );
+
+  await writeAuditLog(db, {
+    actorUserId: actor.actorUserId,
+    actorRole: actor.actorRole,
+    action: "CONTRIBUTION_CREATED",
+    entityType: "Contribution",
+    entityId: String(result.id),
+    payload: {
+      unitId: input.unitId,
+      contributionHeadId: input.contributionHeadId,
+      transactionId: input.transactionId,
+      periodCount: input.contributionPeriodIds.length,
+    },
+  });
+
+  return result;
 }
 
 export async function createContributionCorrection(
   input: CreateContributionCorrectionInput,
   actor: ContributionActor
 ) {
-  return db.$transaction(
+  const result = await db.$transaction(
     async (tx) => {
       const original = await tx.contribution.findUnique({
         where: { id: input.originalContributionId },
@@ -628,4 +647,19 @@ export async function createContributionCorrection(
     },
     { isolationLevel: "ReadCommitted" }
   );
+
+  await writeAuditLog(db, {
+    actorUserId: actor.actorUserId,
+    actorRole: actor.actorRole,
+    action: "CONTRIBUTION_CORRECTION_CREATED",
+    entityType: "Contribution",
+    entityId: String(result.id),
+    payload: {
+      originalContributionId: input.originalContributionId,
+      reasonCode: input.reasonCode,
+      transactionId: input.transactionId,
+    },
+  });
+
+  return result;
 }

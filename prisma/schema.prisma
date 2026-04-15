@@ -183,6 +183,7 @@ model Contribution {
   details           ContributionDetail[]
 
   @@index([unitId, contributionHeadId])
+  @@index([contributionHeadId])
   @@index([transactionDateTime])
   @@index([depositedBy])
   @@index([correctionOfContributionId])
@@ -207,4 +208,20 @@ model ContributionDetail {
   @@index([contributionPeriodId])
   @@index([contributionRateId])
   @@map("contribution_details")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String
+  actorRole   String
+  action      String
+  entityType  String
+  entityId    String
+  payload     Json?
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

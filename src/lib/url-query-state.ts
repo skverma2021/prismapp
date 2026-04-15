@@ -23,5 +23,14 @@ export function pushQueryState(pathname: string, values: Record<string, QueryVal
   }
 
   const nextQuery = params.toString();
-  window.history.pushState(null, "", nextQuery.length > 0 ? `${pathname}?${nextQuery}` : pathname);
+  const nextUrl = nextQuery.length > 0 ? `${pathname}?${nextQuery}` : pathname;
+
+  // Bail out if the URL is unchanged to prevent re-render loops.
+  // Next.js intercepts pushState and re-fires useSearchParams on every call.
+  const currentUrl = `${window.location.pathname}${window.location.search}`;
+  if (nextUrl === currentUrl) {
+    return;
+  }
+
+  window.history.pushState(null, "", nextUrl);
 }
