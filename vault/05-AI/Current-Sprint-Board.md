@@ -10,9 +10,9 @@ Provide one short-horizon execution board for the active sprint window.
 This file should stay concise and operational. Historical detail belongs in evidence or archived notes.
 
 ## Current Focus
-Week 6 hardening is complete. All six hotspots (A–F) have been executed, tested, and deployed. Three bugs discovered during hardening were fixed (driver-adapter tx atomicity, render loop, cold-start retry gap). Transaction isolation was aligned to ReadCommitted across all service files.
+Week 6 hardening and shared table/filter/form extraction are both complete. Post-extraction smoke testing surfaced two bugs (URL filter initialization, duplicate cancellation) — both fixed and evidenced. The proxy convention was renamed per Next.js 16.
 
-Next priorities: remaining auth feedback polish, shared table/filter/form extraction, and maker-checker groundwork.
+Next priorities: request-ID logging expansion, maker-checker groundwork, and remaining auth feedback polish.
 
 ## Done
 1. Week 2 contribution scope completed and validated.
@@ -116,20 +116,22 @@ Next priorities: remaining auth feedback polish, shared table/filter/form extrac
 99. Fixed cold-start retry gap: contribution-periods page switched from raw `fetch()` to `fetchJsonWithRetry`.
 100. Week 6 hardening evidence recorded in `Evidence/Week-6-Hardening-Complete.md`.
 101. Vercel production deployment `a2f00ae` live with all Week 6 changes.
+102. Shared table/filter/form extraction completed: `useBrowseState`, `useCrudActions`, `BrowseFilterBar`, `DataTable`, `NoticeStack` extracted; all 8 master-data browse pages refactored (~53% line reduction).
+103. Next.js 16 proxy convention rename: `middleware.ts` → `proxy.ts`, function `middleware` → `proxy`.
+104. Fixed `useBrowseState` URL filter initialization: filters and sort now hydrate from URL params on first render; stale-fetch race condition guarded with cleanup flag.
+105. Fixed duplicate contribution cancellation: `createContributionCorrection` now checks for existing correction via `findFirst` inside transaction, returns 409 CONFLICT if already corrected.
+106. Post-shared-extraction evidence recorded in `Evidence/Post-Shared-Extraction-Fixes.md`.
 
 ## In Progress
-1. Continue shell-level auth feedback refinements where session redirects surface outside home/public entry.
-2. Standardize shared table/filter/form patterns for operator screens.
 
 ## Next
 
 ### Immediate Next Steps
-1. Finish remaining shell-level auth feedback polish.
-2. Extract shared table/filter/form component baseline for operator screens.
-3. Wire request-ID logging into remaining non-financial route handlers.
-4. Extend audit logging to ownership transfers and residency mutations if required.
-5. Prepare maker-checker extension hooks for correction workflows.
-6. Resolve PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
+1. Wire request-ID logging into remaining non-financial route handlers.
+2. Extend audit logging to ownership transfers and residency mutations if required.
+3. Prepare maker-checker extension hooks for correction workflows.
+4. Resolve PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
+5. Fix `/api/units/lookups` performance: Prisma `include: { block: true }` on ~3,958 units generates a single `WHERE id IN (...)` with ~3,958 bind parameters for block resolution (3.1s application time). The lookup should return only `id`, `description`, `blockId` without the block relation include — the client already has block names from the blocks lookup cache.
 
 ### Stretch
 1. Decide whether contribution periods gain linked drill-through usage beyond report navigation.
@@ -140,8 +142,7 @@ Next priorities: remaining auth feedback polish, shared table/filter/form extrac
 1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.
 2. Auth feedback can still feel inconsistent if redirect reasons are not surfaced uniformly across all protected shell routes.
 3. Large seeded datasets can still surface performance issues in operator screens if client loading is not kept paginated and incremental.
-4. Master-data UI consistency will drift if the shared table/filter/form patterns are not extracted soon.
-5. Timeline screens will become harder to evolve if lookup loading and mutation feedback patterns diverge between ownerships and residencies.
+4. Timeline screens will become harder to evolve if lookup loading and mutation feedback patterns diverge between ownerships and residencies.
 6. Contribution-head deletion behavior depends on related rates and posted contributions, so operator-facing error copy must stay clear when FK restrictions fire.
 7. Audit log writes are best-effort (outside transaction); a transient failure could leave a contribution without supplementary audit context. The contribution row itself remains the primary audit trail.
 8. `@prisma/adapter-pg` interactive transaction limitation means any future multi-table writes must be designed with awareness that rollback is not guaranteed.

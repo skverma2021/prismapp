@@ -589,6 +589,20 @@ export async function createContributionCorrection(
         );
       }
 
+      // Prevent multiple corrections of the same original
+      const existingCorrection = await tx.contribution.findFirst({
+        where: { correctionOfContributionId: original.id },
+        select: { id: true },
+      });
+
+      if (existingCorrection) {
+        throw new HttpError(
+          409,
+          "CONFLICT",
+          `This contribution has already been corrected (correction id: ${existingCorrection.id}).`
+        );
+      }
+
       if (original.details.length === 0) {
         throw new HttpError(412, "PRECONDITION_FAILED", "Original contribution has no detail rows to reverse.");
       }

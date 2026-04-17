@@ -57,43 +57,43 @@ Deliver a production-ready modular society management app from zero baseline wit
 
 ## 4) Suggested Timeline
 
-## Week 1 (Current)
+### Week 1 (Current)
 - Contribution backend and capture UX baseline.
 - Month-ledger integration.
 - Seed and data baseline stabilization.
 - Contract and flow documentation.
 
-## Week 2
+### Week 2
 - Finish contribution correction UI.
 - Finish reports UI + CSV flows.
 - Contribution UAT and sign-off pack.
 - Hardening: retries, messaging, and edge-case handling.
 
-## Week 3
+### Week 3
 - App shell: home page + navigation + role-aware menus.
 - Layout and routing conventions for all modules.
 - Design baseline and reusable components.
 
-## Week 4
+### Week 4
 - Auth Phase 1: credentials login.
 - Session management, protected routes, sign-out.
 - Role assignment and guard enforcement.
 
-## Week 5
+### Week 5
 - Master data UI completion and cross-linking.
 - Search/filter/pagination consistency.
 - Basic audit metadata visibility in UI.
 
-## Week 6
+### Week 6
 - Auth Phase 2: OAuth and account linking.
 - Security hardening pass.
 - Maker-checker extension hooks for financial corrections.
 
-## Week 7
+### Week 7
 - Safety module MVP (checklists + incidents baseline).
 - Security module MVP (visitor/incident baseline).
 
-## Week 8
+### Week 8
 - Events module MVP.
 - AI read-only assistant MVP.
 - End-to-end regression and release preparation.

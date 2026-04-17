@@ -18,6 +18,9 @@ During Option A adoption, evidence files should now be created here directly. Ex
 6. `Ownership-Continuity-Preview-UAT.md`
 7. `Ownership-Residency-Browser-Smoke-Checklist.md`
 8. `Ownership-Residency-Browser-Smoke-Results.md`
+9. `Week-6-Hardening-Complete.md`
+10. `Week-6-Lookup-Cache-Hardening.md`
+11. `Post-Shared-Extraction-Fixes.md`
 
 ## Suggested Future Contents
 1. regression notes

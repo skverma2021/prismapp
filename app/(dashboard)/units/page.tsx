@@ -1,20 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
 
+import { BrowseFilterBar, BTN_DELETE, BTN_EDIT, BTN_SAVE, BTN_CANCEL, BTN_SUBMIT, INPUT_CLASS, INPUT_DISABLED_CLASS } from "@/src/components/master-data/browse-filter-bar";
 import { ContextLinkChips } from "@/src/components/master-data/context-link-chips";
+import { DataTable } from "@/src/components/master-data/data-table";
 import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
+import { NoticeStack } from "@/src/components/master-data/notice-stack";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
-import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { useAuthSession } from "@/src/lib/auth-session";
 import { invalidateUnitLookups } from "@/src/lib/master-data-lookups";
 import { fetchJsonWithRetry } from "@/src/lib/paginated-client";
-import { pushQueryState } from "@/src/lib/url-query-state";
 import { formatUnitLabel } from "@/src/lib/unit-format";
-import { toErrorMessage } from "@/src/types/api";
-import type { ApiEnvelope, PaginatedResponse } from "@/src/types/api";
+import { useBrowseState } from "@/src/hooks/use-browse-state";
+import type { BrowseState } from "@/src/hooks/use-browse-state";
+import { useCrudActions } from "@/src/hooks/use-crud-actions";
+import type { PaginatedResponse } from "@/src/types/api";
 
 type BlockOption = {
   id: string;
@@ -36,6 +38,12 @@ type UnitItem = {
 
 type SortOption = "description" | "sqFt" | "createdAt";
 
+const SORT_OPTIONS = [
+  { value: "description" as const, label: "Sort by unit" },
+  { value: "sqFt" as const, label: "Sort by sq ft" },
+  { value: "createdAt" as const, label: "Sort by created time" },
+];
+
 function resolveBlock(blocks: BlockOption[], blockId: string) {
   return blocks.find((block) => block.id === blockId);
 }
@@ -46,242 +54,115 @@ function toDateInputValue(value: string) {
 
 export default function UnitsPage() {
   const { session } = useAuthSession();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const canMutate = session.role !== "READ_ONLY";
-  const initialQuery = searchParams.get("q") ?? "";
-  const initialBlockFilter = searchParams.get("blockId") ?? "";
-  const initialSortBy =
-    searchParams.get("sortBy") === "sqFt"
-      ? "sqFt"
-      : searchParams.get("sortBy") === "createdAt"
-        ? "createdAt"
-        : "description";
-  const initialSortDir = searchParams.get("sortDir") === "desc" ? "desc" : "asc";
 
-  const [items, setItems] = useState<UnitItem[]>([]);
+  const browse = useBrowseState<UnitItem, SortOption>({
+    endpoint: "/api/units",
+    errorMessage: "Unable to load units.",
+    sortOptions: SORT_OPTIONS,
+    defaultSortBy: "description",
+    defaultSortDir: "asc",
+    filters: [{ key: "q" }, { key: "blockId" }],
+  });
+
+  const crud = useCrudActions({
+    setSubmitError: browse.setSubmitError,
+    setSubmitSuccess: browse.setSubmitSuccess,
+  });
+
+  // Blocks lookup (separate from browse data)
   const [blocks, setBlocks] = useState<BlockOption[]>([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [query, setQuery] = useState(initialQuery);
-  const [appliedQuery, setAppliedQuery] = useState(initialQuery);
-  const [blockFilter, setBlockFilter] = useState(initialBlockFilter);
-  const [appliedBlockFilter, setAppliedBlockFilter] = useState(initialBlockFilter);
-  const [sortBy, setSortBy] = useState<SortOption>(initialSortBy);
-  const [appliedSortBy, setAppliedSortBy] = useState<SortOption>(initialSortBy);
-  const [sortDir, setSortDir] = useState<"asc" | "desc">(initialSortDir);
-  const [appliedSortDir, setAppliedSortDir] = useState<"asc" | "desc">(initialSortDir);
-  const [loading, setLoading] = useState(true);
   const [blocksLoading, setBlocksLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-  const [submitError, setSubmitError] = useState("");
-  const [submitSuccess, setSubmitSuccess] = useState("");
-  const [createState, setCreateState] = useState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
-  const [createLoading, setCreateLoading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingState, setEditingState] = useState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
-  const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const nextQuery = searchParams.get("q") ?? "";
-    const nextBlockFilter = searchParams.get("blockId") ?? "";
-    const nextSortBy =
-      searchParams.get("sortBy") === "sqFt"
-        ? "sqFt"
-        : searchParams.get("sortBy") === "createdAt"
-          ? "createdAt"
-          : "description";
-    const nextSortDir = searchParams.get("sortDir") === "desc" ? "desc" : "asc";
-
-    setQuery(nextQuery);
-    setAppliedQuery(nextQuery);
-    setBlockFilter(nextBlockFilter);
-    setAppliedBlockFilter(nextBlockFilter);
-    setSortBy(nextSortBy);
-    setAppliedSortBy(nextSortBy);
-    setSortDir(nextSortDir);
-    setAppliedSortDir(nextSortDir);
-    setPage(1);
-  }, [searchParams]);
 
   useEffect(() => {
     async function loadBlocks() {
       setBlocksLoading(true);
-      setLoadError("");
-
       try {
         const data = await fetchJsonWithRetry<PaginatedResponse<BlockOption>>(
           "/api/blocks?page=1&pageSize=100&sortBy=description&sortDir=asc",
           "Unable to load blocks."
         );
-
         setBlocks(data.items);
-      } catch (error) {
+      } catch {
         setBlocks([]);
-        setLoadError(error instanceof Error ? error.message : "Unable to load blocks.");
       } finally {
         setBlocksLoading(false);
       }
     }
-
     void loadBlocks();
   }, []);
 
-  useEffect(() => {
-    async function loadUnits() {
-      setLoading(true);
-      setLoadError("");
+  const [createState, setCreateState] = useState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingState, setEditingState] = useState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
 
-      try {
-        const params = new URLSearchParams({
-          page: String(page),
-          pageSize: "20",
-          sortBy: appliedSortBy,
-          sortDir: appliedSortDir,
-        });
+  function handleCreate() {
+    void crud.create<UnitItem>({
+      endpoint: "/api/units",
+      body: {
+        description: createState.description.trim(),
+        blockId: createState.blockId,
+        sqFt: Number(createState.sqFt),
+        inceptionDt: createState.inceptionDt,
+      },
+      errorMessage: "Unable to create unit.",
+      onSuccess: (data) => {
+        setCreateState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
+        browse.setSubmitSuccess(`Unit created: ${data.description}`);
+        invalidateUnitLookups();
+        browse.setPage(1);
+      },
+    });
+  }
 
-        if (appliedQuery.trim()) {
-          params.set("q", appliedQuery.trim());
-        }
-
-        if (appliedBlockFilter) {
-          params.set("blockId", appliedBlockFilter);
-        }
-
-        const data = await fetchJsonWithRetry<PaginatedResponse<UnitItem>>(
-          `/api/units?${params.toString()}`,
-          "Unable to load units."
+  function handleUpdate(id: string) {
+    void crud.update<UnitItem>({
+      endpoint: `/api/units/${id}`,
+      body: {
+        description: editingState.description.trim(),
+        blockId: editingState.blockId,
+        sqFt: Number(editingState.sqFt),
+      },
+      errorMessage: "Unable to update unit.",
+      onSuccess: (data) => {
+        setEditingId(null);
+        setEditingState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
+        browse.setItems((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  ...data,
+                  block: resolveBlock(blocks, data.blockId)
+                    ? { id: data.blockId, description: resolveBlock(blocks, data.blockId)?.description ?? "" }
+                    : item.block,
+                }
+              : item
+          )
         );
-
-        setItems(data.items);
-        setTotalPages(Math.max(data.totalPages, 1));
-        setTotalItems(data.totalItems);
-      } catch (error) {
-        setItems([]);
-        setTotalPages(1);
-        setTotalItems(0);
-        setLoadError(error instanceof Error ? error.message : "Unable to load units.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void loadUnits();
-  }, [appliedBlockFilter, appliedQuery, appliedSortBy, appliedSortDir, page]);
-
-  async function createUnit() {
-    setCreateLoading(true);
-    setSubmitError("");
-    setSubmitSuccess("");
-
-    try {
-      const response = await fetch("/api/units", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          description: createState.description.trim(),
-          blockId: createState.blockId,
-          sqFt: Number(createState.sqFt),
-          inceptionDt: createState.inceptionDt,
-        }),
-      });
-
-      const payload = (await response.json()) as ApiEnvelope<UnitItem>;
-      if (!response.ok || !payload.ok) {
-        throw new Error(toErrorMessage(payload, "Unable to create unit."));
-      }
-
-      setCreateState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
-      setSubmitSuccess(`Unit created: ${payload.data.description}`);
-      invalidateUnitLookups();
-      setPage(1);
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Unable to create unit.");
-    } finally {
-      setCreateLoading(false);
-    }
+        browse.setSubmitSuccess(`Unit updated: ${data.description}`);
+        invalidateUnitLookups();
+      },
+    });
   }
 
-  async function updateUnit(id: string) {
-    setSubmitError("");
-    setSubmitSuccess("");
-
-    try {
-      const response = await fetch(`/api/units/${id}`, {
-        method: "PATCH",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          description: editingState.description.trim(),
-          blockId: editingState.blockId,
-          sqFt: Number(editingState.sqFt),
-        }),
-      });
-
-      const payload = (await response.json()) as ApiEnvelope<UnitItem>;
-      if (!response.ok || !payload.ok) {
-        throw new Error(toErrorMessage(payload, "Unable to update unit."));
-      }
-
-      setEditingId(null);
-      setEditingState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                ...payload.data,
-                block: resolveBlock(blocks, payload.data.blockId)
-                  ? {
-                      id: payload.data.blockId,
-                      description: resolveBlock(blocks, payload.data.blockId)?.description ?? "",
-                    }
-                  : item.block,
-              }
-            : item
-        )
-      );
-      setSubmitSuccess(`Unit updated: ${payload.data.description}`);
-      invalidateUnitLookups();
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Unable to update unit.");
-    }
-  }
-
-  async function deleteUnit(id: string) {
-    setDeleteLoadingId(id);
-    setSubmitError("");
-    setSubmitSuccess("");
-
-    try {
-      const response = await fetch(`/api/units/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const payload = (await response.json()) as ApiEnvelope<null>;
-        throw new Error(toErrorMessage(payload, "Unable to delete unit."));
-      }
-
-      const nextCount = items.length - 1;
-      setSubmitSuccess("Unit deleted.");
-      invalidateUnitLookups();
-
-      if (nextCount === 0 && page > 1) {
-        setPage(page - 1);
-      } else {
-        setItems((prev) => prev.filter((item) => item.id !== id));
-        setTotalItems((prev) => Math.max(prev - 1, 0));
-      }
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Unable to delete unit.");
-    } finally {
-      setDeleteLoadingId(null);
-    }
+  function handleDelete(id: string) {
+    void crud.remove({
+      id,
+      endpoint: `/api/units/${id}`,
+      errorMessage: "Unable to delete unit.",
+      onSuccess: () => {
+        browse.setSubmitSuccess("Unit deleted.");
+        invalidateUnitLookups();
+        const nextCount = browse.items.length - 1;
+        if (nextCount === 0 && browse.page > 1) {
+          browse.setPage(browse.page - 1);
+        } else {
+          browse.setItems((prev) => prev.filter((item) => item.id !== id));
+          browse.setTotalItems((prev) => Math.max(prev - 1, 0));
+        }
+      },
+    });
   }
 
   return (
@@ -299,91 +180,28 @@ export default function UnitsPage() {
               Manage flat inventory, block placement, and sq ft values used by ownership, residency, and contribution calculations.
             </p>
           </div>
-          <div className="grid gap-2 sm:min-w-[320px]">
+          <BrowseFilterBar browse={browse as BrowseState<unknown, SortOption>} sortOptions={SORT_OPTIONS} minWidth="sm:min-w-[320px]">
             <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              value={browse.query}
+              onChange={(e) => browse.setQuery(e.target.value)}
               placeholder="Search unit description"
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              className={INPUT_CLASS}
             />
-            <div className="grid gap-2 sm:grid-cols-2">
-              <select
-                value={blockFilter}
-                onChange={(event) => setBlockFilter(event.target.value)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                disabled={blocksLoading}
-              >
-                <option value="">All blocks</option>
-                {blocks.map((block) => (
-                  <option key={block.id} value={block.id}>
-                    {block.description}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={sortBy}
-                onChange={(event) => setSortBy(event.target.value as SortOption)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="description">Sort by unit</option>
-                <option value="sqFt">Sort by sq ft</option>
-                <option value="createdAt">Sort by created time</option>
-              </select>
-            </div>
             <select
-              value={sortDir}
-              onChange={(event) => setSortDir(event.target.value as "asc" | "desc")}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              value={browse.filters["blockId"] ?? ""}
+              onChange={(e) => browse.setFilter("blockId", e.target.value)}
+              className={INPUT_CLASS}
+              disabled={blocksLoading}
             >
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
+              <option value="">All blocks</option>
+              {blocks.map((block) => (
+                <option key={block.id} value={block.id}>{block.description}</option>
+              ))}
             </select>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const nextQuery = query.trim();
-                  setPage(1);
-                  setAppliedQuery(nextQuery);
-                  setAppliedBlockFilter(blockFilter);
-                  setAppliedSortBy(sortBy);
-                  setAppliedSortDir(sortDir);
-                  pushQueryState(pathname, {
-                    ...(nextQuery ? { q: nextQuery } : {}),
-                    ...(blockFilter ? { blockId: blockFilter } : {}),
-                    sortBy,
-                    sortDir,
-                  });
-                }}
-                className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
-              >
-                Apply Filters
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery("");
-                  setBlockFilter("");
-                  setAppliedQuery("");
-                  setAppliedBlockFilter("");
-                  setSortBy("description");
-                  setAppliedSortBy("description");
-                  setSortDir("asc");
-                  setAppliedSortDir("asc");
-                  setPage(1);
-                  pushQueryState(pathname, {});
-                }}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700"
-              >
-                Reset Filters
-              </button>
-            </div>
-          </div>
+          </BrowseFilterBar>
         </div>
 
-        {submitError ? <InlineNotice className="mt-4" tone="danger" message={submitError} /> : null}
-        {submitSuccess ? <InlineNotice className="mt-4" tone="success" message={submitSuccess} /> : null}
-        {loadError ? <InlineNotice className="mt-4" tone="danger" message={loadError} /> : null}
+        <NoticeStack submitError={browse.submitError} submitSuccess={browse.submitSuccess} loadError={browse.loadError} />
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -392,237 +210,196 @@ export default function UnitsPage() {
             <div className="mt-4 grid gap-3">
               <select
                 value={createState.blockId}
-                onChange={(event) => setCreateState((prev) => ({ ...prev, blockId: event.target.value }))}
-                disabled={!canMutate || blocksLoading || createLoading}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                onChange={(e) => setCreateState((prev) => ({ ...prev, blockId: e.target.value }))}
+                disabled={!canMutate || blocksLoading || crud.createLoading}
+                className={INPUT_DISABLED_CLASS}
               >
                 <option value="">Select block</option>
                 {blocks.map((block) => (
-                  <option key={block.id} value={block.id}>
-                    {block.description}
-                  </option>
+                  <option key={block.id} value={block.id}>{block.description}</option>
                 ))}
               </select>
               <input
                 value={createState.description}
-                onChange={(event) => setCreateState((prev) => ({ ...prev, description: event.target.value }))}
+                onChange={(e) => setCreateState((prev) => ({ ...prev, description: e.target.value }))}
                 placeholder="e.g. 101"
-                disabled={!canMutate || createLoading}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                disabled={!canMutate || crud.createLoading}
+                className={INPUT_DISABLED_CLASS}
               />
               <input
                 type="number"
                 min={1}
                 value={createState.sqFt}
-                onChange={(event) => setCreateState((prev) => ({ ...prev, sqFt: event.target.value }))}
+                onChange={(e) => setCreateState((prev) => ({ ...prev, sqFt: e.target.value }))}
                 placeholder="Sq ft"
-                disabled={!canMutate || createLoading}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                disabled={!canMutate || crud.createLoading}
+                className={INPUT_DISABLED_CLASS}
               />
               <input
                 type="date"
                 value={createState.inceptionDt}
-                onChange={(event) => setCreateState((prev) => ({ ...prev, inceptionDt: event.target.value }))}
-                disabled={!canMutate || createLoading}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-slate-100"
+                onChange={(e) => setCreateState((prev) => ({ ...prev, inceptionDt: e.target.value }))}
+                disabled={!canMutate || crud.createLoading}
+                className={INPUT_DISABLED_CLASS}
               />
               <button
                 type="button"
                 disabled={
                   !canMutate ||
-                  createLoading ||
+                  crud.createLoading ||
                   createState.description.trim().length === 0 ||
                   createState.blockId.length === 0 ||
                   Number(createState.sqFt) <= 0 ||
                   createState.inceptionDt.length === 0
                 }
-                onClick={() => {
-                  void createUnit();
-                }}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+                onClick={handleCreate}
+                className={BTN_SUBMIT}
               >
-                {createLoading ? "Creating..." : "Create Unit"}
+                {crud.createLoading ? "Creating..." : "Create Unit"}
               </button>
             </div>
           </div>
 
           <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
-            <PaginationControls page={page} totalPages={totalPages} totalItems={totalItems} onPageChange={setPage} />
+            <PaginationControls page={browse.page} totalPages={browse.totalPages} totalItems={browse.totalItems} onPageChange={browse.setPage} />
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="min-w-full text-sm">
-                <thead className="bg-slate-100 text-slate-700">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Block</th>
-                    <th className="px-3 py-2 text-left">Unit</th>
-                    <th className="px-3 py-2 text-left">Sq Ft</th>
-                    <th className="px-3 py-2 text-left">Inception</th>
-                    <th className="px-3 py-2 text-left">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td className="px-3 py-4 text-slate-600" colSpan={5}>
-                        Loading units...
-                      </td>
-                    </tr>
-                  ) : items.length === 0 ? (
-                    <tr>
-                      <td className="px-3 py-4 text-slate-600" colSpan={5}>
-                        No units found for the current filter.
-                      </td>
-                    </tr>
-                  ) : (
-                    items.map((item) => (
-                      <tr key={item.id} className="border-t border-slate-100 align-top text-slate-700">
-                        <td className="px-3 py-3">
-                          {editingId === item.id ? (
-                            <select
-                              value={editingState.blockId}
-                              onChange={(event) => setEditingState((prev) => ({ ...prev, blockId: event.target.value }))}
-                              className="w-full min-w-36 rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-                            >
-                              <option value="">Select block</option>
-                              {blocks.map((block) => (
-                                <option key={block.id} value={block.id}>
-                                  {block.description}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            item.block?.description ?? "-"
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          {editingId === item.id ? (
-                            <input
-                              value={editingState.description}
-                              onChange={(event) => setEditingState((prev) => ({ ...prev, description: event.target.value }))}
-                              className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-                            />
-                          ) : (
-                            formatUnitLabel(item)
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          {editingId === item.id ? (
-                            <input
-                              type="number"
-                              min={1}
-                              value={editingState.sqFt}
-                              onChange={(event) => setEditingState((prev) => ({ ...prev, sqFt: event.target.value }))}
-                              className="w-28 rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-                            />
-                          ) : (
-                            item.sqFt
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          {editingId === item.id ? (
-                            <input
-                              type="date"
-                              value={editingState.inceptionDt}
-                              onChange={(event) => setEditingState((prev) => ({ ...prev, inceptionDt: event.target.value }))}
-                              disabled
-                              className="w-36 rounded border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500"
-                            />
-                          ) : (
-                            toDateInputValue(item.inceptionDt)
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          <div className="flex flex-wrap gap-2">
-                            {editingId === item.id ? (
-                              <>
-                                <button
-                                  type="button"
-                                  disabled={
-                                    editingState.description.trim().length === 0 ||
-                                    editingState.blockId.length === 0 ||
-                                    Number(editingState.sqFt) <= 0 ||
-                                    editingState.inceptionDt.length === 0
-                                  }
-                                  onClick={() => {
-                                    void updateUnit(item.id);
-                                  }}
-                                  className="rounded border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingId(null);
-                                    setEditingState({ description: "", blockId: "", sqFt: "", inceptionDt: "" });
-                                  }}
-                                  className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button
-                                  type="button"
-                                  disabled={!canMutate}
-                                  onClick={() => {
-                                    setEditingId(item.id);
-                                    setEditingState({
-                                      description: item.description,
-                                      blockId: item.blockId,
-                                      sqFt: String(item.sqFt),
-                                      inceptionDt: toDateInputValue(item.inceptionDt),
-                                    });
-                                  }}
-                                  className="rounded border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={!canMutate || deleteLoadingId === item.id}
-                                  onClick={() => {
-                                    void deleteUnit(item.id);
-                                  }}
-                                  className="rounded border border-rose-300 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  {deleteLoadingId === item.id ? "Deleting..." : "Delete"}
-                                </button>
-                                <ContextLinkChips
-                                  label="Go To"
-                                  items={[
-                                    {
-                                      href: { pathname: "/ownerships", query: { unitId: item.id, activeOnly: "true" } },
-                                      label: "Ownerships",
-                                    },
-                                    {
-                                      href: { pathname: "/residencies", query: { unitId: item.id, activeOnly: "true" } },
-                                      label: "Residencies",
-                                    },
-                                    {
-                                      href: { pathname: "/contributions", query: { unitId: item.id } },
-                                      label: "Contribution Capture",
-                                    },
-                                    {
-                                      href: {
-                                        pathname: "/reports/contributions/transactions",
-                                        query: { refYear: String(new Date().getUTCFullYear()), unitId: item.id },
-                                      },
-                                      label: "Transactions",
-                                    },
-                                  ]}
-                                />
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <DataTable<UnitItem>
+              columns={[
+                {
+                  header: "Block",
+                  render: (item) =>
+                    editingId === item.id ? (
+                      <select
+                        value={editingState.blockId}
+                        onChange={(e) => setEditingState((prev) => ({ ...prev, blockId: e.target.value }))}
+                        className="w-full min-w-36 rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">Select block</option>
+                        {blocks.map((block) => (
+                          <option key={block.id} value={block.id}>{block.description}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      item.block?.description ?? "-"
+                    ),
+                },
+                {
+                  header: "Unit",
+                  render: (item) =>
+                    editingId === item.id ? (
+                      <input
+                        value={editingState.description}
+                        onChange={(e) => setEditingState((prev) => ({ ...prev, description: e.target.value }))}
+                        className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    ) : (
+                      formatUnitLabel(item)
+                    ),
+                },
+                {
+                  header: "Sq Ft",
+                  render: (item) =>
+                    editingId === item.id ? (
+                      <input
+                        type="number"
+                        min={1}
+                        value={editingState.sqFt}
+                        onChange={(e) => setEditingState((prev) => ({ ...prev, sqFt: e.target.value }))}
+                        className="w-28 rounded border border-slate-300 bg-white px-3 py-2 text-sm"
+                      />
+                    ) : (
+                      item.sqFt
+                    ),
+                },
+                {
+                  header: "Inception",
+                  render: (item) =>
+                    editingId === item.id ? (
+                      <input
+                        type="date"
+                        value={editingState.inceptionDt}
+                        onChange={(e) => setEditingState((prev) => ({ ...prev, inceptionDt: e.target.value }))}
+                        disabled
+                        className="w-36 rounded border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500"
+                      />
+                    ) : (
+                      toDateInputValue(item.inceptionDt)
+                    ),
+                },
+                {
+                  header: "Actions",
+                  render: (item) => (
+                    <div className="flex flex-wrap gap-2">
+                      {editingId === item.id ? (
+                        <>
+                          <button
+                            type="button"
+                            disabled={
+                              editingState.description.trim().length === 0 ||
+                              editingState.blockId.length === 0 ||
+                              Number(editingState.sqFt) <= 0 ||
+                              editingState.inceptionDt.length === 0
+                            }
+                            onClick={() => handleUpdate(item.id)}
+                            className={BTN_SAVE}
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setEditingId(null); setEditingState({ description: "", blockId: "", sqFt: "", inceptionDt: "" }); }}
+                            className={BTN_CANCEL}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            disabled={!canMutate}
+                            onClick={() => {
+                              setEditingId(item.id);
+                              setEditingState({
+                                description: item.description,
+                                blockId: item.blockId,
+                                sqFt: String(item.sqFt),
+                                inceptionDt: toDateInputValue(item.inceptionDt),
+                              });
+                            }}
+                            className={BTN_EDIT}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!canMutate || crud.deleteLoadingId === item.id}
+                            onClick={() => handleDelete(item.id)}
+                            className={BTN_DELETE}
+                          >
+                            {crud.deleteLoadingId === item.id ? "Deleting..." : "Delete"}
+                          </button>
+                          <ContextLinkChips
+                            label="Go To"
+                            items={[
+                              { href: { pathname: "/ownerships", query: { unitId: item.id, activeOnly: "true" } }, label: "Ownerships" },
+                              { href: { pathname: "/residencies", query: { unitId: item.id, activeOnly: "true" } }, label: "Residencies" },
+                              { href: { pathname: "/contributions", query: { unitId: item.id } }, label: "Contribution Capture" },
+                              { href: { pathname: "/reports/contributions/transactions", query: { refYear: String(new Date().getUTCFullYear()), unitId: item.id } }, label: "Transactions" },
+                            ]}
+                          />
+                        </>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+              items={browse.items}
+              loading={browse.loading}
+              loadingMessage="Loading units..."
+              emptyMessage="No units found for the current filter."
+              rowKey={(item) => item.id}
+            />
           </div>
         </div>
       </section>
