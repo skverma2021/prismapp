@@ -132,6 +132,7 @@ Next priorities: request-ID logging expansion, maker-checker groundwork, and rem
 3. Prepare maker-checker extension hooks for correction workflows.
 4. Resolve PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
 5. Fix `/api/units/lookups` performance: Prisma `include: { block: true }` on ~3,958 units generates a single `WHERE id IN (...)` with ~3,958 bind parameters for block resolution (3.1s application time). The lookup should return only `id`, `description`, `blockId` without the block relation include — the client already has block names from the blocks lookup cache.
+6. Decide rate-period coverage policy: current rule resolves rate at `transactionDateTime` (per Domain-Rules.md). This allows contributions for periods that predate the earliest rate for a head (e.g., Jan 2026 contribution captured in Apr 2026 using a rate effective from Feb 2026). Options: (a) keep as-is — operator knows the rate; (b) add operator warning when rate `fromDt` postdates the earliest selected period; (c) add hard guard rejecting such cases. See UAT finding: Contribution 150, head "Car Pool - Morabadi Morning Walk", rate from 1 Feb 2026 applied to Jan 2026 period.
 
 ### Stretch
 1. Decide whether contribution periods gain linked drill-through usage beyond report navigation.

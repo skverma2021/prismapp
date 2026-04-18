@@ -1,4 +1,4 @@
-import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
+import { fail, fromUnknownError, getRequestId, ok } from "@/src/lib/api-response";
 import { requireReadRole } from "@/src/lib/authz";
 import { getContributionPeriodById } from "@/src/modules/contribution-periods/contribution-periods.service";
 
@@ -9,6 +9,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const data = await getContributionPeriodById(id);
     return ok(data);
   } catch (error) {
-    return fail(fromUnknownError(error));
+    return fail(fromUnknownError(error, getRequestId(_request)));
   }
 }

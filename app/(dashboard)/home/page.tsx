@@ -76,7 +76,7 @@ const entryCards: EntryCard[] = [
   {
     kicker: "Operations",
     title: "Contribution Capture",
-    description: "Record contributions and corrections with the existing Week-2 posting flow.",
+    description: "Record contributions and corrections with the current posting flow.",
     href: "/contributions",
     roles: ["SOCIETY_ADMIN", "MANAGER"],
   },
@@ -145,7 +145,7 @@ export default function DashboardHomePage() {
         <div className="space-y-4">
           <StateSurface
             title="Current role"
-            message={`${session.role} can ${session.role === "READ_ONLY" ? "view reports only" : "access contribution capture and reports"} in the Week-3 shell.`}
+            message={`${session.role} can ${session.role === "READ_ONLY" ? "view reports only" : "access contribution capture and reports"}.`}
           />
           <StateSurface
             tone="warning"

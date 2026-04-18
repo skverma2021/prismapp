@@ -1,4 +1,4 @@
-import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
+import { fail, fromUnknownError, getRequestId, ok } from "@/src/lib/api-response";
 import { requireReadRole } from "@/src/lib/authz";
 import { listContributionHeadLookups } from "@/src/modules/contribution-heads/contribution-heads.service";
 
@@ -8,6 +8,6 @@ export async function GET(request: Request) {
     const data = await listContributionHeadLookups();
     return ok(data);
   } catch (error) {
-    return fail(fromUnknownError(error));
+    return fail(fromUnknownError(error, getRequestId(request)));
   }
 }

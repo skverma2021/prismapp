@@ -29,17 +29,27 @@ export function AppSessionProvider({ children, session }: { children: React.Reac
   return <SessionProvider session={session}>{children}</SessionProvider>;
 }
 
-export function useAuthSession() {
+export function useSafeAuthSession() {
   const { data, status } = useSession();
   const session = toAppSession(data);
-
-  if (!session) {
-    throw new Error(`useAuthSession requires an authenticated session. Current status: ${status}.`);
-  }
 
   return {
     session,
     sessionMode: "auth" as const,
     status,
+  };
+}
+
+export function useAuthSession() {
+  const result = useSafeAuthSession();
+
+  if (!result.session) {
+    throw new Error(`useAuthSession requires an authenticated session. Current status: ${result.status}.`);
+  }
+
+  return {
+    session: result.session,
+    sessionMode: result.sessionMode,
+    status: result.status,
   };
 }

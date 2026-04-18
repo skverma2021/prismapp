@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { fail, fromUnknownError, ok } from "@/src/lib/api-response";
+import { fail, fromUnknownError, getRequestId, ok } from "@/src/lib/api-response";
 import { requireMutationRole, requireReadRole } from "@/src/lib/authz";
 import { createOwnership, listOwnerships } from "@/src/modules/ownerships/ownerships.service";
 import { parseCreateOwnershipInput } from "@/src/modules/ownerships/ownerships.schemas";
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const data = await listOwnerships(request.nextUrl.searchParams);
     return ok(data);
   } catch (error) {
-    return fail(fromUnknownError(error));
+    return fail(fromUnknownError(error, getRequestId(request)));
   }
 }
 
@@ -22,6 +22,6 @@ export async function POST(request: Request) {
     const data = await createOwnership(input);
     return ok(data, 201);
   } catch (error) {
-    return fail(fromUnknownError(error));
+    return fail(fromUnknownError(error, getRequestId(request)));
   }
 }

@@ -6,19 +6,41 @@ import { useEffect } from "react";
 
 import { SignOutButton } from "@/src/components/auth/sign-out-button";
 import { PageHeader } from "@/src/components/shell/page-header";
-import { useAuthSession } from "@/src/lib/auth-session";
+import { useSafeAuthSession } from "@/src/lib/auth-session";
 import { prewarmCommonLookups } from "@/src/lib/master-data-lookups";
 import { getBreadcrumbs, getRouteMeta, getVisibleNavItems, isNavItemActive } from "@/src/lib/navigation";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { session, sessionMode } = useAuthSession();
-  const items = getVisibleNavItems(session.role);
-  const meta = getRouteMeta(pathname);
+  const { session, sessionMode } = useSafeAuthSession();
 
   useEffect(() => {
-    void prewarmCommonLookups();
-  }, [session.userId]);
+    if (session) {
+      void prewarmCommonLookups();
+    }
+  }, [session?.userId]);
+
+  if (!session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-sm">
+          <h2 className="text-lg font-semibold text-amber-700">Session expired</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Your session is no longer active. Please sign in again to continue.
+          </p>
+          <Link
+            href="/?auth=required"
+            className="mt-5 inline-block rounded-full bg-(--accent) px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--accent-strong)]"
+          >
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const items = getVisibleNavItems(session.role);
+  const meta = getRouteMeta(pathname);
 
   return (
     <div className="min-h-screen px-4 py-4 sm:px-6 sm:py-6">
@@ -26,9 +48,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <aside className="rounded-[1.75rem] border border-(--border) bg-(--surface)/95 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
           <div className="rounded-[1.25rem] bg-slate-900 px-4 py-4 text-white">
             <p className="text-xs uppercase tracking-[0.28em] text-teal-200">PrismApp</p>
-            <h2 className="mt-2 text-xl font-semibold">Week-3 Shell</h2>
+            <h2 className="mt-2 text-xl font-semibold">Dashboard</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Shared navigation and authenticated role-aware session state for Week-4 access control.
+              Society operations workspace with role-aware navigation and session management.
             </p>
           </div>
 

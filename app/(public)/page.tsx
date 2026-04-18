@@ -47,7 +47,7 @@ export default async function PublicLandingPage({
         <PageHeader
           eyebrow="Public Entry"
           title="PrismApp"
-          description="Society operations workspace with contributions and reporting complete through Week 2, now entering Week-4 authentication with credentials login and protected navigation."
+          description="Society operations workspace with master-data management, contribution capture, reporting, and role-aware access control."
         />
 
         <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
