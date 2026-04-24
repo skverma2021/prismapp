@@ -1,5 +1,7 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
+import { writeAuditLog } from "@/src/lib/audit-log";
+import type { AuthContext } from "@/src/lib/user-role";
 import type { CreateContributionRateInput, UpdateContributionRateInput } from "./contribution-rates.schemas";
 
 const DEFAULT_PAGE = 1;
@@ -144,8 +146,8 @@ export async function getContributionRateById(id: string) {
   return rate;
 }
 
-export async function createContributionRate(input: CreateContributionRateInput) {
-  return db.$transaction(
+export async function createContributionRate(input: CreateContributionRateInput, actor: AuthContext) {
+  const result = await db.$transaction(
     async (tx) => {
       const head = await tx.contributionHead.findUnique({
         where: { id: input.contributionHeadId },
@@ -173,12 +175,14 @@ export async function createContributionRate(input: CreateContributionRateInput)
     },
     { isolationLevel: "ReadCommitted" }
   );
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_RATE_CREATED", entityType: "ContributionRate", entityId: String(result.id), payload: { contributionHeadId: input.contributionHeadId, amt: Number(input.amt) } });
+  return result;
 }
 
-export async function updateContributionRate(id: string, input: UpdateContributionRateInput) {
+export async function updateContributionRate(id: string, input: UpdateContributionRateInput, actor: AuthContext) {
   const parsedId = parseContributionRateId(id);
 
-  return db.$transaction(
+  const result = await db.$transaction(
     async (tx) => {
       const current = await tx.contributionRate.findUnique({
         where: { id: parsedId },
@@ -216,4 +220,6 @@ export async function updateContributionRate(id: string, input: UpdateContributi
     },
     { isolationLevel: "ReadCommitted" }
   );
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_RATE_UPDATED", entityType: "ContributionRate", entityId: id });
+  return result;
 }

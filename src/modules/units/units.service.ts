@@ -1,5 +1,7 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
+import { writeAuditLog } from "@/src/lib/audit-log";
+import type { AuthContext } from "@/src/lib/user-role";
 import type { CreateUnitInput, UpdateUnitInput } from "./units.schemas";
 
 const DEFAULT_PAGE = 1;
@@ -127,8 +129,8 @@ export async function getUnitById(id: string) {
   return unit;
 }
 
-export async function createUnit(input: CreateUnitInput) {
-  return db.$transaction(
+export async function createUnit(input: CreateUnitInput, actor: AuthContext) {
+  const result = await db.$transaction(
     async (tx) => {
       const builder = await ensureBuilderInventoryIdentity(tx);
       const unit = await tx.unit.create({
@@ -149,9 +151,11 @@ export async function createUnit(input: CreateUnitInput) {
     },
     { isolationLevel: "ReadCommitted" }
   );
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "UNIT_CREATED", entityType: "Unit", entityId: result.id, payload: { blockId: input.blockId, description: input.description, sqFt: input.sqFt } });
+  return result;
 }
 
-export async function updateUnit(id: string, input: UpdateUnitInput) {
+export async function updateUnit(id: string, input: UpdateUnitInput, actor: AuthContext) {
   const current = await db.unit.findUnique({
     where: { id },
     select: {
@@ -198,13 +202,15 @@ export async function updateUnit(id: string, input: UpdateUnitInput) {
     }
   }
 
-  return db.unit.update({
+  const result = await db.unit.update({
     where: { id },
     data: input,
   });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "UNIT_UPDATED", entityType: "Unit", entityId: id, payload: { ...(input.description !== undefined ? { description: input.description } : {}), ...(input.sqFt !== undefined ? { sqFt: input.sqFt } : {}) } });
+  return result;
 }
 
-export async function deleteUnit(id: string) {
+export async function deleteUnit(id: string, actor: AuthContext) {
   await db.$transaction(async (tx) => {
     const unit = await tx.unit.findUnique({ where: { id }, select: { id: true } });
 
@@ -245,4 +251,5 @@ export async function deleteUnit(id: string) {
 
     await tx.unit.delete({ where: { id } });
   });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "UNIT_DELETED", entityType: "Unit", entityId: id });
 }

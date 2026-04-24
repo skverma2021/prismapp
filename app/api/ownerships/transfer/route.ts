@@ -5,10 +5,10 @@ import { transferOwnership } from "@/src/modules/ownerships/ownerships.service";
 
 export async function POST(request: Request) {
   try {
-    await requireMutationRole(request);
+    const actor = await requireMutationRole(request);
     const payload = await request.json();
     const input = parseTransferOwnershipInput(payload);
-    const data = await transferOwnership(input);
+    const data = await transferOwnership(input, actor);
     return ok(data, 201);
   } catch (error) {
     return fail(fromUnknownError(error, getRequestId(request)));

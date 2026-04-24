@@ -1,5 +1,7 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
+import { writeAuditLog } from "@/src/lib/audit-log";
+import type { AuthContext } from "@/src/lib/user-role";
 import type {
   CreateContributionHeadInput,
   UpdateContributionHeadInput,
@@ -147,23 +149,21 @@ export async function getContributionHeadById(id: string) {
   return head;
 }
 
-export async function createContributionHead(input: CreateContributionHeadInput) {
-  return db.contributionHead.create({
-    data: input,
-  });
+export async function createContributionHead(input: CreateContributionHeadInput, actor: AuthContext) {
+  const result = await db.contributionHead.create({ data: input });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_HEAD_CREATED", entityType: "ContributionHead", entityId: String(result.id), payload: { description: input.description, period: input.period, payUnit: input.payUnit } });
+  return result;
 }
 
-export async function updateContributionHead(id: string, input: UpdateContributionHeadInput) {
+export async function updateContributionHead(id: string, input: UpdateContributionHeadInput, actor: AuthContext) {
   const parsedId = parseContributionHeadId(id);
-
-  return db.contributionHead.update({
-    where: { id: parsedId },
-    data: input,
-  });
+  const result = await db.contributionHead.update({ where: { id: parsedId }, data: input });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_HEAD_UPDATED", entityType: "ContributionHead", entityId: id });
+  return result;
 }
 
-export async function deleteContributionHead(id: string) {
+export async function deleteContributionHead(id: string, actor: AuthContext) {
   const parsedId = parseContributionHeadId(id);
-
   await db.contributionHead.delete({ where: { id: parsedId } });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_HEAD_DELETED", entityType: "ContributionHead", entityId: id });
 }

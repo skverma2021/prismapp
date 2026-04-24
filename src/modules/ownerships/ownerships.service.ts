@@ -1,5 +1,7 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
+import { writeAuditLog } from "@/src/lib/audit-log";
+import type { AuthContext } from "@/src/lib/user-role";
 import type {
   CreateOwnershipInput,
   TransferOwnershipInput,
@@ -271,8 +273,8 @@ export async function getOwnershipById(id: string) {
   return ownership;
 }
 
-export async function createOwnership(input: CreateOwnershipInput) {
-  return db.$transaction(
+export async function createOwnership(input: CreateOwnershipInput, actor: AuthContext) {
+  const result = await db.$transaction(
     async (tx) => {
       const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership start date");
@@ -293,6 +295,8 @@ export async function createOwnership(input: CreateOwnershipInput) {
     },
     { isolationLevel: "ReadCommitted" }
   );
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "OWNERSHIP_CREATED", entityType: "UnitOwner", entityId: result.id, payload: { unitId: input.unitId, indId: input.indId } });
+  return result;
 }
 
 export async function updateOwnership(id: string, input: UpdateOwnershipInput) {
@@ -315,8 +319,8 @@ export async function deleteOwnership(id: string) {
   throw new HttpError(412, "PRECONDITION_FAILED", "Ownership history is immutable and cannot be deleted.");
 }
 
-export async function transferOwnership(input: TransferOwnershipInput) {
-  return db.$transaction(
+export async function transferOwnership(input: TransferOwnershipInput, actor: AuthContext) {
+  const result = await db.$transaction(
     async (tx) => {
       const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership transfer date");
@@ -422,4 +426,6 @@ export async function transferOwnership(input: TransferOwnershipInput) {
     },
     { isolationLevel: "ReadCommitted" }
   );
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "OWNERSHIP_TRANSFERRED", entityType: "UnitOwner", entityId: result.id, payload: { unitId: input.unitId, indId: input.indId } });
+  return result;
 }

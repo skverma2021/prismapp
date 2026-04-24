@@ -16,10 +16,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    await requireMutationRole(request);
+    const actor = await requireMutationRole(request);
     const payload = await request.json();
     const input = parseCreateResidencyInput(payload);
-    const data = await createResidency(input);
+    const data = await createResidency(input, actor);
     return ok(data, 201);
   } catch (error) {
     return fail(fromUnknownError(error, getRequestId(request)));

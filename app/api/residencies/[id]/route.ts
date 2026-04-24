@@ -20,11 +20,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireMutationRole(request);
+    const actor = await requireMutationRole(request);
     const { id } = await params;
     const payload = await request.json();
     const input = parseUpdateResidencyInput(payload);
-    const data = await updateResidency(id, input);
+    const data = await updateResidency(id, input, actor);
     return ok(data);
   } catch (error) {
     return fail(fromUnknownError(error, getRequestId(request)));

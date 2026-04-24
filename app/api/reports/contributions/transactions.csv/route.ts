@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireReadRole(request);
     const params = parseTransactionsReportParams(request.nextUrl.searchParams);
-    const csv = await getContributionTransactionsCsv(params, auth.userId);
+    const csv = await getContributionTransactionsCsv(params, auth);
 
     return new Response(csv, {
       status: 200,

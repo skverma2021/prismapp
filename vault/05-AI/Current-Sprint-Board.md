@@ -1,7 +1,7 @@
 # Current Sprint Board
 
 Status: In Progress
-Date: 2026-04-09
+Date: 2026-04-24
 Owner: Engineering
 
 ## Purpose
@@ -12,7 +12,7 @@ This file should stay concise and operational. Historical detail belongs in evid
 ## Current Focus
 Week 6 hardening and shared table/filter/form extraction are both complete. Post-extraction smoke testing surfaced two bugs (URL filter initialization, duplicate cancellation) — both fixed and evidenced. The proxy convention was renamed per Next.js 16.
 
-Next priorities: request-ID logging expansion, maker-checker groundwork, and remaining auth feedback polish.
+Next priorities: request-ID logging expansion, audit logging expansion, PII masking, and remaining auth feedback polish — all now complete.
 
 ## Done
 1. Week 2 contribution scope completed and validated.
@@ -121,14 +121,18 @@ Next priorities: request-ID logging expansion, maker-checker groundwork, and rem
 104. Fixed `useBrowseState` URL filter initialization: filters and sort now hydrate from URL params on first render; stale-fetch race condition guarded with cleanup flag.
 105. Fixed duplicate contribution cancellation: `createContributionCorrection` now checks for existing correction via `findFirst` inside transaction, returns 409 CONFLICT if already corrected.
 106. Post-shared-extraction evidence recorded in `Evidence/Post-Shared-Extraction-Fixes.md`.
+107. Request-ID logging wired into all 33 route handlers (was 6); all catch blocks now propagate `requestId` in error responses.
+108. Full audit logging wired into all mutating service operations: blocks (BLOCK_CREATED/UPDATED/DELETED), units (UNIT_CREATED/UPDATED/DELETED), individuals (INDIVIDUAL_CREATED/UPDATED/DELETED), contribution heads (CONTRIBUTION_HEAD_CREATED/UPDATED/DELETED), contribution rates (CONTRIBUTION_RATE_CREATED/UPDATED), ownerships (OWNERSHIP_CREATED/TRANSFERRED), residencies (RESIDENCY_CREATED/UPDATED). All previously discarded `requireMutationRole` return values now captured as `actor` and passed through to service layer.
+109. CSV export metadata enriched: both transaction and paid/unpaid matrix CSVs now include `reportTitle`, `generatedAt`, `generatedBy`, `generatedByRole`, per-filter lines (`filter.<key>,<value>`), and `rowCount`. Transactions CSV export cap raised from 100 rows to unbounded.
+110. PII masking implemented: `src/lib/pii-mask.ts` created with `maskEmail`, `maskMobile`, and `maskIndividualPii<T>`. READ_ONLY role receives masked email/mobile on all individual API reads (`listIndividuals`, `getIndividualById`). SOCIETY_ADMIN and MANAGER roles receive unmasked values.
 
 ## In Progress
 
 ## Next
 
 ### Immediate Next Steps
-1. Wire request-ID logging into remaining non-financial route handlers.
-2. Extend audit logging to ownership transfers and residency mutations if required.
+1. Wire request-ID logging into remaining non-financial route handlers. ✅ Done — all 33 handlers wired.
+2. Extend audit logging to all master-data mutations. ✅ Done — blocks, units, individuals, contribution heads, rates, ownerships, residencies all wired.
 3. Prepare maker-checker extension hooks for correction workflows.
 4. Resolve PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
 5. Fix `/api/units/lookups` performance: Prisma `include: { block: true }` on ~3,958 units generates a single `WHERE id IN (...)` with ~3,958 bind parameters for block resolution (3.1s application time). The lookup should return only `id`, `description`, `blockId` without the block relation include — the client already has block names from the blocks lookup cache.

@@ -1,5 +1,6 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
+import type { AuthContext } from "@/src/lib/user-role";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
@@ -358,32 +359,32 @@ export async function getContributionTransactionsReport(params: TransactionsRepo
 
 export async function getContributionTransactionsCsv(
   params: TransactionsReportParams,
-  actorUserId: string
+  actor: AuthContext
 ): Promise<string> {
   const data = await getContributionTransactionsReport({
     ...params,
     page: 1,
-    pageSize: MAX_PAGE_SIZE,
+    pageSize: Number.MAX_SAFE_INTEGER,
     sortBy: "transactionDateTime",
     sortDir: "desc",
   });
 
   const generatedAt = new Date().toISOString();
-  const filterEcho = {
-    refYear: params.refYear,
-    refMonth: params.refMonth ?? null,
-    headId: params.headId ?? null,
-    unitId: params.unitId ?? null,
-    blockId: params.blockId ?? null,
-    depositedBy: params.depositedBy ?? null,
-    transactionDateFrom: params.transactionDateFrom?.toISOString() ?? null,
-    transactionDateTo: params.transactionDateTo?.toISOString() ?? null,
-  };
 
   const lines: string[] = [];
+  lines.push(`reportTitle,${formatCsvValue("Contribution Transactions")}`);
   lines.push(`generatedAt,${formatCsvValue(generatedAt)}`);
-  lines.push(`generatedBy,${formatCsvValue(actorUserId)}`);
-  lines.push(`filters,${formatCsvValue(JSON.stringify(filterEcho))}`);
+  lines.push(`generatedBy,${formatCsvValue(actor.userId)}`);
+  lines.push(`generatedByRole,${formatCsvValue(actor.role)}`);
+  lines.push(`filter.refYear,${formatCsvValue(params.refYear)}`);
+  if (params.refMonth !== undefined) lines.push(`filter.refMonth,${formatCsvValue(params.refMonth)}`);
+  if (params.headId !== undefined) lines.push(`filter.headId,${formatCsvValue(params.headId)}`);
+  if (params.unitId !== undefined) lines.push(`filter.unitId,${formatCsvValue(params.unitId)}`);
+  if (params.blockId !== undefined) lines.push(`filter.blockId,${formatCsvValue(params.blockId)}`);
+  if (params.depositedBy !== undefined) lines.push(`filter.depositedBy,${formatCsvValue(params.depositedBy)}`);
+  if (params.transactionDateFrom) lines.push(`filter.transactionDateFrom,${formatCsvValue(params.transactionDateFrom.toISOString().slice(0, 10))}`);
+  if (params.transactionDateTo) lines.push(`filter.transactionDateTo,${formatCsvValue(params.transactionDateTo.toISOString().slice(0, 10))}`);
+  lines.push(`rowCount,${formatCsvValue(data.items.length)}`);
   lines.push("");
 
   const header = [
@@ -724,21 +725,20 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
 
 export async function getPaidUnpaidMatrixCsv(
   params: MatrixReportParams,
-  actorUserId: string
+  actor: AuthContext
 ): Promise<string> {
   const data = await getPaidUnpaidMatrixReport(params);
   const generatedAt = new Date().toISOString();
 
-  const filterEcho = {
-    refYear: params.refYear,
-    headId: params.headId,
-    blockId: params.blockId ?? null,
-  };
-
   const lines: string[] = [];
+  lines.push(`reportTitle,${formatCsvValue("Contribution Paid/Unpaid Matrix")}`);
   lines.push(`generatedAt,${formatCsvValue(generatedAt)}`);
-  lines.push(`generatedBy,${formatCsvValue(actorUserId)}`);
-  lines.push(`filters,${formatCsvValue(JSON.stringify(filterEcho))}`);
+  lines.push(`generatedBy,${formatCsvValue(actor.userId)}`);
+  lines.push(`generatedByRole,${formatCsvValue(actor.role)}`);
+  lines.push(`filter.refYear,${formatCsvValue(params.refYear)}`);
+  lines.push(`filter.headId,${formatCsvValue(params.headId)}`);
+  if (params.blockId) lines.push(`filter.blockId,${formatCsvValue(params.blockId)}`);
+  lines.push(`rowCount,${formatCsvValue(data.totals.totalUnits)}`);
   lines.push("");
 
   const periodHeaders =

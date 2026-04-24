@@ -16,11 +16,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireMutationRole(request);
+    const actor = await requireMutationRole(request);
     const payload = await request.json();
     const input = parseUpdateContributionRateInput(payload);
     const { id } = await params;
-    const data = await updateContributionRate(id, input);
+    const data = await updateContributionRate(id, input, actor);
     return ok(data);
   } catch (error) {
     return fail(fromUnknownError(error, getRequestId(request)));

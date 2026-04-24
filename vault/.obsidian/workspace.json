@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "03-API/Error-Model.md",
+                "file": "06-Tracks/Track-A-TODO.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Error-Model"
+              "title": "Track-A-TODO"
             }
           }
         ]
@@ -185,12 +185,12 @@
   },
   "active": "3e71d88191ac3799",
   "lastOpenFiles": [
+    "03-API/Error-Model.md",
     "05-AI/Sprint-1-Checklist.md",
     "00-Core/Template-Usage-Guide.md",
     "00-Core/ADR-001-Data-Immutability-and-Corrections.md",
     "00-Core/Roles-and-Permissions.md",
     "03-API/Pagination-and-Filtering.md",
-    "03-API/Error-Model.md",
     "03-API/API-Spec.md"
   ]
 }

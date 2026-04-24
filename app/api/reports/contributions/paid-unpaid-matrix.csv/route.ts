@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireReadRole(request);
     const params = parseMatrixReportParams(request.nextUrl.searchParams);
-    const csv = await getPaidUnpaidMatrixCsv(params, auth.userId);
+    const csv = await getPaidUnpaidMatrixCsv(params, auth);
 
     return new Response(csv, {
       status: 200,

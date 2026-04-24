@@ -1,7 +1,7 @@
 # PrismApp Execution Status
 
 Status: In Progress
-Date: 2026-04-09
+Date: 2026-04-24
 Owner: Engineering
 
 ## Purpose
@@ -77,7 +77,10 @@ Not yet complete:
 Newly complete:
 1. Audit logging for financial writes is now implemented (AuditLog model + writeAuditLog utility).
 2. Observability baseline is now in place (error boundaries, request-ID middleware, structured logging).
-3. Request tracing via `x-request-id` is now active on all API routes and wired into 6 financial/report handlers.
+3. Request tracing via `x-request-id` is now active on all API routes and wired into all 33 route handlers.
+4. Full audit logging is now wired into all mutating service operations across blocks, units, individuals, contribution heads, contribution rates, ownerships, residencies, contributions, and corrections.
+5. CSV export headers now include report title, actor role, individual filter rows, and row count metadata.
+6. PII masking is now active for READ_ONLY role: email and mobile are masked in all individual read responses.
 
 ## Activities Done
 
@@ -146,7 +149,7 @@ Newly complete:
 8. Contribution rates screen implemented with head and active-date filters plus controlled retirement of current rates.
 9. Master-data shell navigation and route metadata were added for blocks, units, individuals, ownerships, residencies, contribution periods, contribution heads, and contribution rates.
 10. Dashboard home cards now link to ownership, residency, and contribution master-data workflows.
-11. Read-only individuals view now masks email and mobile in the UI.
+11. Read-only individuals view now masks email and mobile in the UI and API layer.
 12. Gender types now have a dedicated read endpoint for the individuals form.
 13. Units and individuals now expose lightweight lookup endpoints so timeline dropdowns do not wait on paged browse APIs.
 14. Browse pages now sync applied filter state into the URL so filtered screens are bookmarkable and shareable.

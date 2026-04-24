@@ -1,5 +1,7 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
+import { writeAuditLog } from "@/src/lib/audit-log";
+import type { AuthContext } from "@/src/lib/user-role";
 import type { CreateBlockInput, UpdateBlockInput } from "./blocks.schemas";
 
 const DEFAULT_PAGE = 1;
@@ -65,17 +67,19 @@ export async function getBlockById(id: string) {
   return block;
 }
 
-export async function createBlock(input: CreateBlockInput) {
-  return db.block.create({ data: input });
+export async function createBlock(input: CreateBlockInput, actor: AuthContext) {
+  const result = await db.block.create({ data: input });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "BLOCK_CREATED", entityType: "Block", entityId: result.id, payload: { description: input.description } });
+  return result;
 }
 
-export async function updateBlock(id: string, input: UpdateBlockInput) {
-  return db.block.update({
-    where: { id },
-    data: input,
-  });
+export async function updateBlock(id: string, input: UpdateBlockInput, actor: AuthContext) {
+  const result = await db.block.update({ where: { id }, data: input });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "BLOCK_UPDATED", entityType: "Block", entityId: id, payload: { ...(input.description !== undefined ? { description: input.description } : {}) } });
+  return result;
 }
 
-export async function deleteBlock(id: string) {
+export async function deleteBlock(id: string, actor: AuthContext) {
   await db.block.delete({ where: { id } });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "BLOCK_DELETED", entityType: "Block", entityId: id });
 }

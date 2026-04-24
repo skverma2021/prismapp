@@ -1,5 +1,8 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
+import { writeAuditLog } from "@/src/lib/audit-log";
+import { maskIndividualPii } from "@/src/lib/pii-mask";
+import type { AuthContext, UserRole } from "@/src/lib/user-role";
 import type { CreateIndividualInput, UpdateIndividualInput } from "./individuals.schemas";
 
 const DEFAULT_PAGE = 1;
@@ -7,7 +10,7 @@ const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 const SYSTEM_IDENTITY_TAG_BUILDER = "BUILDER_INVENTORY";
 
-export async function listIndividuals(searchParams: URLSearchParams) {
+export async function listIndividuals(searchParams: URLSearchParams, role: UserRole) {
   const page = parseQueryInt(searchParams.get("page"), DEFAULT_PAGE);
   const pageSize = parseQueryInt(searchParams.get("pageSize"), DEFAULT_PAGE_SIZE);
 
@@ -76,7 +79,7 @@ export async function listIndividuals(searchParams: URLSearchParams) {
   const totalPages = Math.ceil(totalItems / pageSize);
 
   return {
-    items,
+    items: items.map((item) => maskIndividualPii(item, role)),
     page,
     pageSize,
     totalItems,
@@ -101,7 +104,7 @@ export async function listIndividualLookups() {
   });
 }
 
-export async function getIndividualById(id: string) {
+export async function getIndividualById(id: string, role: UserRole) {
   const individual = await db.individual.findUnique({
     where: { id },
     include: { genderType: true },
@@ -111,16 +114,16 @@ export async function getIndividualById(id: string) {
     throw new HttpError(404, "NOT_FOUND", "Individual not found.");
   }
 
-  return individual;
+  return maskIndividualPii(individual, role);
 }
 
-export async function createIndividual(input: CreateIndividualInput) {
-  return db.individual.create({
-    data: input,
-  });
+export async function createIndividual(input: CreateIndividualInput, actor: AuthContext) {
+  const result = await db.individual.create({ data: input });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "INDIVIDUAL_CREATED", entityType: "Individual", entityId: result.id, payload: { fName: input.fName, sName: input.sName } });
+  return result;
 }
 
-export async function updateIndividual(id: string, input: UpdateIndividualInput) {
+export async function updateIndividual(id: string, input: UpdateIndividualInput, actor: AuthContext) {
   const current = await db.individual.findUnique({
     where: { id },
     select: { id: true, isSystemIdentity: true, systemTag: true },
@@ -138,13 +141,12 @@ export async function updateIndividual(id: string, input: UpdateIndividualInput)
     );
   }
 
-  return db.individual.update({
-    where: { id },
-    data: input,
-  });
+  const result = await db.individual.update({ where: { id }, data: input });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "INDIVIDUAL_UPDATED", entityType: "Individual", entityId: id });
+  return result;
 }
 
-export async function deleteIndividual(id: string) {
+export async function deleteIndividual(id: string, actor: AuthContext) {
   const current = await db.individual.findUnique({
     where: { id },
     select: { id: true, isSystemIdentity: true, systemTag: true },
@@ -163,4 +165,5 @@ export async function deleteIndividual(id: string) {
   }
 
   await db.individual.delete({ where: { id } });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "INDIVIDUAL_DELETED", entityType: "Individual", entityId: id });
 }
