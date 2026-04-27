@@ -258,6 +258,8 @@ export async function createResidency(input: CreateResidencyInput, actor: AuthCo
 }
 
 export async function updateResidency(id: string, input: UpdateResidencyInput, actor: AuthContext) {
+  const before = await db.unitResident.findUnique({ where: { id }, select: { toDt: true } });
+
   const result = await db.$transaction(
     async (tx) => {
       const current = await tx.unitResident.findUnique({
@@ -291,7 +293,7 @@ export async function updateResidency(id: string, input: UpdateResidencyInput, a
     },
     { isolationLevel: "ReadCommitted" }
   );
-  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "RESIDENCY_UPDATED", entityType: "UnitResident", entityId: id });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "RESIDENCY_UPDATED", entityType: "UnitResident", entityId: id, payload: { before: { toDt: before?.toDt }, after: { toDt: result.toDt } } });
   return result;
 }
 

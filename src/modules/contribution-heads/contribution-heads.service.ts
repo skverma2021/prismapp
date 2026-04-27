@@ -157,8 +157,9 @@ export async function createContributionHead(input: CreateContributionHeadInput,
 
 export async function updateContributionHead(id: string, input: UpdateContributionHeadInput, actor: AuthContext) {
   const parsedId = parseContributionHeadId(id);
+  const before = await db.contributionHead.findUnique({ where: { id: parsedId }, select: { description: true } });
   const result = await db.contributionHead.update({ where: { id: parsedId }, data: input });
-  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_HEAD_UPDATED", entityType: "ContributionHead", entityId: id });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_HEAD_UPDATED", entityType: "ContributionHead", entityId: id, payload: { before: { description: before?.description }, after: { description: result.description } } });
   return result;
 }
 

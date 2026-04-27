@@ -74,8 +74,9 @@ export async function createBlock(input: CreateBlockInput, actor: AuthContext) {
 }
 
 export async function updateBlock(id: string, input: UpdateBlockInput, actor: AuthContext) {
+  const before = await db.block.findUnique({ where: { id }, select: { description: true } });
   const result = await db.block.update({ where: { id }, data: input });
-  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "BLOCK_UPDATED", entityType: "Block", entityId: id, payload: { ...(input.description !== undefined ? { description: input.description } : {}) } });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "BLOCK_UPDATED", entityType: "Block", entityId: id, payload: { before: { description: before?.description }, after: { description: result.description } } });
   return result;
 }
 

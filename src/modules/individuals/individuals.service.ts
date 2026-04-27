@@ -126,7 +126,7 @@ export async function createIndividual(input: CreateIndividualInput, actor: Auth
 export async function updateIndividual(id: string, input: UpdateIndividualInput, actor: AuthContext) {
   const current = await db.individual.findUnique({
     where: { id },
-    select: { id: true, isSystemIdentity: true, systemTag: true },
+    select: { id: true, isSystemIdentity: true, systemTag: true, fName: true, mName: true, sName: true, eMail: true, mobile: true, genderId: true },
   });
 
   if (!current) {
@@ -142,7 +142,7 @@ export async function updateIndividual(id: string, input: UpdateIndividualInput,
   }
 
   const result = await db.individual.update({ where: { id }, data: input });
-  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "INDIVIDUAL_UPDATED", entityType: "Individual", entityId: id });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "INDIVIDUAL_UPDATED", entityType: "Individual", entityId: id, payload: { before: { fName: current.fName, mName: current.mName, sName: current.sName, eMail: current.eMail, mobile: current.mobile, genderId: current.genderId }, after: { fName: result.fName, mName: result.mName, sName: result.sName, eMail: result.eMail, mobile: result.mobile, genderId: result.genderId } } });
   return result;
 }
 

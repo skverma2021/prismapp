@@ -182,6 +182,11 @@ export async function createContributionRate(input: CreateContributionRateInput,
 export async function updateContributionRate(id: string, input: UpdateContributionRateInput, actor: AuthContext) {
   const parsedId = parseContributionRateId(id);
 
+  const before = await db.contributionRate.findUnique({
+    where: { id: parsedId },
+    select: { reference: true, toDt: true },
+  });
+
   const result = await db.$transaction(
     async (tx) => {
       const current = await tx.contributionRate.findUnique({
@@ -220,6 +225,6 @@ export async function updateContributionRate(id: string, input: UpdateContributi
     },
     { isolationLevel: "ReadCommitted" }
   );
-  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_RATE_UPDATED", entityType: "ContributionRate", entityId: id });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_RATE_UPDATED", entityType: "ContributionRate", entityId: id, payload: { before: { reference: before?.reference, toDt: before?.toDt }, after: { reference: result.reference, toDt: result.toDt } } });
   return result;
 }

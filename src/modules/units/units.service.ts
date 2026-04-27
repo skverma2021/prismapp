@@ -159,6 +159,7 @@ export async function updateUnit(id: string, input: UpdateUnitInput, actor: Auth
   const current = await db.unit.findUnique({
     where: { id },
     select: {
+      description: true,
       inceptionDt: true,
       sqFt: true,
     },
@@ -206,7 +207,7 @@ export async function updateUnit(id: string, input: UpdateUnitInput, actor: Auth
     where: { id },
     data: input,
   });
-  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "UNIT_UPDATED", entityType: "Unit", entityId: id, payload: { ...(input.description !== undefined ? { description: input.description } : {}), ...(input.sqFt !== undefined ? { sqFt: input.sqFt } : {}) } });
+  await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "UNIT_UPDATED", entityType: "Unit", entityId: id, payload: { before: { description: current.description, sqFt: current.sqFt }, after: { description: result.description, sqFt: result.sqFt } } });
   return result;
 }
 

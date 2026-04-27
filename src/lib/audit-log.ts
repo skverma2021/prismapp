@@ -6,7 +6,7 @@ type AuditEntry = {
   action: string;
   entityType: string;
   entityId: string;
-  payload?: Record<string, string | number | boolean>;
+  payload?: Prisma.InputJsonValue;
 };
 
 /**
