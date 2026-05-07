@@ -6,9 +6,12 @@ To start with, the module for managing contributions by residents/owners has bee
 
 ## Backlog Modules (Post V1)
 
-1. **Safety** — Checklists, incident reporting, and compliance tracking for common areas and building systems.
-2. **Security** — Visitor management, security incident logging, and access control workflows.
-3. **Events and Common-Space Bookings** — Event scheduling, common hall and amenity reservations, and calendar management.
+The following modules are planned in priority order. CMM is the next module to be developed after the Contribution Module achieves production-grade status.
+
+1. **CMM (Complaint Management Module)** — Complaint lifecycle management, ticketing with auto ID, priority and SLA tracking, routing and escalation, and resident-facing status updates. See [`vault/CMM/cmm-vision.md`](../CMM/cmm-vision.md).
+2. **Safety** — Checklists, incident reporting, and compliance tracking for common areas and building systems.
+3. **Security** — Visitor management, security incident logging, and access control workflows.
+4. **Events and Common-Space Bookings** — Event scheduling, common hall and amenity reservations, and calendar management.
 
 These modules will reuse the shared policy, audit, and role infrastructure established during V1 hardening. Domain rules and API contracts should be added to `vault/01-Domain/` and `vault/03-API/` when implementation begins.
 

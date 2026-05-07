@@ -1,7 +1,7 @@
 # PrismApp Product Delivery Strategy
 
-Status: Draft for execution
-Date: 2026-03-30
+Status: Active — Contribution Module Hardening
+Date: 2026-05-07
 Owner: Product + Engineering
 
 ## 1) Objective
@@ -55,48 +55,46 @@ Deliver a production-ready modular society management app from zero baseline wit
 - Start with read-only assistant for FAQ and report explanations.
 - Phase into user-action suggestions after audit and guardrails mature.
 
-## 4) Suggested Timeline
+## 4) Delivery Status (as of 2026-05-07)
 
-### Week 1 (Current)
-- Contribution backend and capture UX baseline.
-- Month-ledger integration.
-- Seed and data baseline stabilization.
-- Contract and flow documentation.
+> The original Week 1–8 timeline is retired. Phases below map to `AGENTS.md` §6 and `Track-A-TODO.md`.
 
-### Week 2
-- Finish contribution correction UI.
-- Finish reports UI + CSV flows.
-- Contribution UAT and sign-off pack.
-- Hardening: retries, messaging, and edge-case handling.
+### Phase 0 — Foundation ✅ Complete
+- Prisma schema, PostgreSQL, migrations, seed data (Nalanda / Vaishali / Rajgir blocks, ~3,958 units).
+- Zod validation utilities, shared error envelope (`ApiEnvelope<T>`), pagination helpers.
+- Vercel preview + production deployments established.
 
-### Week 3
-- App shell: home page + navigation + role-aware menus.
-- Layout and routing conventions for all modules.
-- Design baseline and reusable components.
+### Phase 1 — Core Master Data ✅ Complete
+- CRUD for Blocks, Units, Individuals, Ownerships, Residencies.
+- Temporal overlap prevention for ownership and residency.
+- Auth Phase 1: credentials login, JWT session, role guards (`SOCIETY_ADMIN` / `MANAGER` / `READ_ONLY`).
+- Home page, dashboard shell, navigation, shared UI components.
 
-### Week 4
-- Auth Phase 1: credentials login.
-- Session management, protected routes, sign-out.
-- Role assignment and guard enforcement.
+### Phase 2 — Contributions ✅ Complete (Hardening in Progress)
+- Contribution heads, rates, periods, payment capture.
+- Duplicate prevention per unit + head + period.
+- Financial immutability; correction flow with compensating transactions.
+- Month-ledger UX, paid/unpaid matrix, CSV export.
+- Reports: contribution reports with filters, pagination, and totals.
+- Maker-checker extension hooks: schema fields, `MAKER_CHECKER_ENABLED` flag, migration. Approval UI deferred to hardening trigger.
 
-### Week 5
-- Master data UI completion and cross-linking.
-- Search/filter/pagination consistency.
-- Basic audit metadata visibility in UI.
+### Phase 3 — Hardening 🔄 In Progress
+Key remaining items (from `vault/06-Tracks/Track-A-TODO.md`):
+1. **5.6** — Fix `/api/units/lookups` performance (3.1s regression — `include: { block: true }` on 3,958 rows).
+2. **1.9** — Rate-period coverage policy: decide and document or guard.
+3. **7.4 / 7.3 / 7.5** — Testing infrastructure: Vitest unit tests, seed-independent regression scripts, CI pipeline.
+4. **2.7 / 8.9** — Security: OWASP Top 10 gap review, rate limiting on `/api/auth/*`.
+5. **4.6 / 3.6** — Observability: Sentry integration, audit log admin view.
+6. **8.5** — Resolve `DATABASE_URL` SSL warning semantics.
+7. **2.6** — Auth Phase 2: OAuth providers (Google/Microsoft). Deferred; still not started.
 
-### Week 6
-- Auth Phase 2: OAuth and account linking.
-- Security hardening pass.
-- Maker-checker extension hooks for financial corrections.
+**Hardening definition of done:** All Phase 3 checklist gates in `AGENTS.md` §9 pass.
 
-### Week 7
-- Safety module MVP (checklists + incidents baseline).
-- Security module MVP (visitor/incident baseline).
-
-### Week 8
-- Events module MVP.
-- AI read-only assistant MVP.
-- End-to-end regression and release preparation.
+### Phase 4 — CMM ⬜ Planned
+Starts only after Phase 3 production-grade gate.
+- Domain: fully specced — `vault/CMM/cmm-vision.md`, `vault/01-Domain/Domain-Rules.md` §CM rules, `vault/01-Domain/ERD.md`, `vault/01-Domain/Entities.md`.
+- Sprint 0: Prisma schema (CMM entities), seed data (categories + priorities), API skeleton.
+- Ref: `AGENTS.md` §10 Scope Control.
 
 ## 5) Authentication Strategy (Two-Phase)
 

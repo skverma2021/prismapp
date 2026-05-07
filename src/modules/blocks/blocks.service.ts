@@ -58,6 +58,13 @@ export async function listBlocks(searchParams: URLSearchParams) {
   };
 }
 
+export async function listBlockLookups() {
+  return db.block.findMany({
+    select: { id: true, description: true },
+    orderBy: { description: "asc" },
+  });
+}
+
 export async function getBlockById(id: string) {
   const block = await db.block.findUnique({ where: { id } });
   if (!block) {

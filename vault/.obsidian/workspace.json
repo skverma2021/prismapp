@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 261.5
   },
   "right": {
     "id": "12856a372520cbf7",
@@ -183,8 +183,14 @@
       "bases:Create new base": false
     }
   },
-  "active": "3e71d88191ac3799",
+  "active": "a6be21a88e8213ec",
   "lastOpenFiles": [
+    "05-AI/Current-Sprint-Board.md",
+    "01-Domain/Domain-Rules.md",
+    "CMM/cmm-vision.md",
+    "00-Core/System-Overview.md",
+    "01-Domain/Entities.md",
+    "06-Tracks/Track-A-TODO.md",
     "03-API/Error-Model.md",
     "05-AI/Sprint-1-Checklist.md",
     "00-Core/Template-Usage-Guide.md",

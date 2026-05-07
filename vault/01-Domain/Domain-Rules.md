@@ -91,3 +91,37 @@
 ## Individual Rules
 1. An Individual may be an owner, resident,  both, or just a person who makes payment against a contribution head.
 2. Email and mobile must be unique per individual.
+
+---
+
+## Complaint Rules (CMM)
+
+### Complaint Lifecycle
+1. CM1 — Complaint status follows a defined lifecycle: `Open → Assigned → In Progress → Resolved → Closed`. `Reopened` is a return path from `Resolved` back to `Open`.
+2. CM2 — Only forward transitions are permitted except for `Reopened`, which is triggered by the complainant within the reopen window.
+3. CM3 — A complaint can be reopened only within 48 hours of its `resolvedAt` timestamp.
+4. CM4 — Once a complaint is `Closed` and the reopen window has elapsed, no further status transitions are permitted.
+5. CM5 — Every status transition must be captured in the audit log with actor identity and timestamp.
+
+### Complaint Identity
+6. CM6 — Each complaint is assigned a system-generated ticket ID (e.g., `MSH-2026-00127`) on creation. The ticket ID is immutable after assignment.
+7. CM7 — Ticket IDs must be unique across the system.
+
+### Complaint Categories and Priorities
+8. CM8 — Every complaint must be assigned a category from the predefined `ComplaintCategories` table.
+9. CM9 — Every complaint must be assigned a priority from the predefined `ComplaintPriorities` table.
+10. CM10 — Priority determines the SLA target resolution time stored in `ComplaintPriorities.slaHours`. SLA tracking is recorded but automated escalation is deferred to a later phase.
+
+### Anonymous Complaints
+11. CM11 — A complaint may be logged as anonymous (`isAnonymous = true`).
+12. CM12 — For anonymous complaints, `reportedById` must be stored server-side but must not be returned in resident-facing API responses.
+13. CM13 — Users with Manager or Admin role may view `reportedById` for all complaints regardless of the anonymity flag.
+
+### Complaint Notes
+14. CM14 — Notes on a complaint may carry visibility `Internal` (Admin/Manager only) or `Resident` (visible to all roles).
+15. CM15 — Only Admin or Manager users may create `Internal` notes.
+16. CM16 — Notes are append-only. No update or delete of posted note records is permitted.
+
+### Complaint Immutability
+17. CM17 — Complaint core fields (`ticketId`, `unitId`, `reportedById`, `isAnonymous`, `createdAt`) are immutable after creation.
+18. CM18 — Mutable fields during the active lifecycle: `status`, `assignedToId`, `resolvedAt`, `closedAt`, `reopenDeadline`, `updatedAt`.

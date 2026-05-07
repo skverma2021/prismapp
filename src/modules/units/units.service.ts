@@ -107,11 +107,6 @@ export async function listUnitLookups() {
       id: true,
       description: true,
       blockId: true,
-      block: {
-        select: {
-          description: true,
-        },
-      },
     },
   });
 }

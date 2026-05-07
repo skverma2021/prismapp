@@ -31,7 +31,7 @@ Stack target:
 When specs conflict, use this order:
 1. [`vault/01-Domain/Domain-Rules.md`](vault/01-Domain/Domain-Rules.md)
 2. [`vault/01-Domain/ERD.md`](vault/01-Domain/ERD.md)
-3. [`vault/01-Domain/Entities.md.md`](vault/01-Domain/Entities.md.md)
+3. [`vault/01-Domain/Entities.md`](vault/01-Domain/Entities.md)
 4. [`vault/03-API/API-Spec.md`](vault/03-API/API-Spec.md)
 5. [`vault/00-Core/System-Overview.md`](vault/00-Core/System-Overview.md)
 
@@ -41,7 +41,7 @@ If unresolved ambiguity remains, write an ADR note in [`vault/00-Core/`](vault/0
 The vault is a strong domain baseline, but not sufficient by itself for full delivery.
 
 What is already good:
-- Core entities are defined in [`vault/01-Domain/Entities.md.md`](vault/01-Domain/Entities.md.md) and [`vault/01-Domain/ERD.md`](vault/01-Domain/ERD.md).
+- Core entities are defined in [`vault/01-Domain/Entities.md`](vault/01-Domain/Entities.md) and [`vault/01-Domain/ERD.md`](vault/01-Domain/ERD.md).
 - Temporal ownership and residency rules are defined in [`vault/01-Domain/Domain-Rules.md`](vault/01-Domain/Domain-Rules.md).
 - Contribution rules and immutability expectations are clear in [`vault/01-Domain/Domain-Rules.md`](vault/01-Domain/Domain-Rules.md).
 - Basic API direction exists in [`vault/03-API/API-Spec.md`](vault/03-API/API-Spec.md).
@@ -100,7 +100,7 @@ Definition of done:
 4. Residency timeline management with overlap prevention.
 
 References:
-- [`vault/01-Domain/Entities.md.md`](vault/01-Domain/Entities.md.md)
+- [`vault/01-Domain/Entities.md`](vault/01-Domain/Entities.md)
 - [`vault/01-Domain/Domain-Rules.md`](vault/01-Domain/Domain-Rules.md)
 - [`vault/00-Core/Roles-and-Permissions.md`](vault/00-Core/Roles-and-Permissions.md)
 
@@ -155,7 +155,7 @@ For every task:
 Key references:
 - [`vault/01-Domain/Domain-Rules.md`](vault/01-Domain/Domain-Rules.md)
 - [`vault/01-Domain/ERD.md`](vault/01-Domain/ERD.md)
-- [`vault/01-Domain/Entities.md.md`](vault/01-Domain/Entities.md.md)
+- [`vault/01-Domain/Entities.md`](vault/01-Domain/Entities.md)
 - [`vault/03-API/API-Spec.md`](vault/03-API/API-Spec.md)
 - [`vault/03-API/Error-Model.md`](vault/03-API/Error-Model.md)
 - [`vault/03-API/Pagination-and-Filtering.md`](vault/03-API/Pagination-and-Filtering.md)
@@ -179,17 +179,26 @@ Minimum checks before considering a task complete:
 5. Manual smoke test of modified user flow
 
 ## 10) Scope Control
-In current implementation cycles, reject or defer:
-- Event workflows
-- Security incident workflows
-- Safety checklist workflows
-- Complex notification engines
 
-Capture these as backlog items in `vault/` without polluting V1 architecture.
+### Next Module: CMM (Complaint Management Module)
+CMM is the highest-priority backlog module and will be taken up after the Contribution Module achieves production-grade status. The vision document is at [`vault/CMM/cmm-vision.md`](vault/CMM/cmm-vision.md).
+
+Do not implement CMM features during Contribution Module hardening cycles. CMM work begins only after Phase 3 (Hardening) quality gates are met.
+
+### Still Deferred (Post-CMM Backlog)
+In current implementation cycles, reject or defer:
+- Safety checklist workflows
+- Security incident workflows
+- Event and common-space booking workflows
+- Complex notification engines (WhatsApp/SMS bot intake — CMM V3+)
+- OTP-based physical closure (CMM V3+)
+
+Capture these as backlog items in `vault/` without polluting current architecture.
 
 Suggested backlog anchors:
 - [`vault/00-Core/System-Overview.md`](vault/00-Core/System-Overview.md)
 - [`vault/00-Core/Glossary.md`](vault/00-Core/Glossary.md)
+- [`vault/CMM/cmm-vision.md`](vault/CMM/cmm-vision.md)
 
 ## 11) Follow-Up Specs in Vault (Now Available)
 Use these documents as active references:

@@ -60,7 +60,7 @@ Items that make the system auditable and safe for financial records.
 | 3.4 | Audit logging on all master-data mutations | ✅ | Blocks, units, individuals, contribution heads, rates, ownerships, residencies all wired |
 | 3.5 | In-place edit/delete of posted contributions blocked | ✅ | Domain rule enforced server-side |
 | 3.6 | Audit log reader / admin view | ⬜ | No UI to query `AuditLog`. Useful for SOCIETY_ADMIN but not yet built. |
-| 3.7 | Maker-checker for correction approval | ⬜ | Deferred. V1 is single-step. Extension points identified in ADR-001. |
+| 3.7 | Maker-checker extension hooks for correction approval | 🔄 | Schema fields (`correctionStatus`, `correctionApprovedById/At`, `correctionRejectedById/At/Reason`) added. Migration `20260507100000_correction_status_hooks` backfills existing rows to `POSTED`. `MAKER_CHECKER_ENABLED` flag + `CORRECTION_STATUS` constant in service. Approval UI and `approveCorrection()` / `rejectCorrection()` service functions remain to be built when triggered by ADR-001 thresholds. |
 
 ---
 
@@ -92,7 +92,7 @@ Items that affect operator experience at realistic data volumes.
 | 5.3 | Paid/unpaid matrix batching (no per-unit query loops) | ✅ | Batch refactored during Week 2 hardening |
 | 5.4 | Lookup cache with centralized invalidation registry | ✅ | `LOOKUP_KEYS` registry + `invalidateLookups()` in place |
 | 5.5 | Dashboard shell prewarms common lookups on sign-in | ✅ | Reduces first dropdown open latency |
-| 5.6 | `/api/units/lookups` returns `blockId` without `include: { block: true }` | ⬜ | Known regression: 3.1s on ~3,958 units. Fix: return only `id, description, blockId`. Sprint board item 5. |
+| 5.6 | `/api/units/lookups` returns `blockId` without `include: { block: true }` | ✅ | Fixed: `listUnitLookups()` now returns only `{id, description, blockId}` (no join). `loadUnitLookupsCached()` fetches blocks separately via `/api/blocks/lookups` (3 rows, cached) and enriches units client-side. `getRequestId` regression in `api-response.ts` also fixed as part of this pass. |
 | 5.7 | Pagination enforced on all list endpoints | ✅ | `pageSize` capped at 100 across all browse APIs |
 | 5.8 | Contribution transactions CSV export unbounded (no 100-row cap) | ✅ | Fixed in CSV metadata enrichment |
 
@@ -170,14 +170,14 @@ Items that keep V1 architecture extensible without rework.
 |-------|------|-------------|-------------|
 | 1. Domain Correctness | 8 | 0 | 1 |
 | 2. Security and Authorization | 7 | 0 | 3 |
-| 3. Audit and Immutability | 5 | 0 | 2 |
+| 3. Audit and Immutability | 5 | 1 | 1 |
 | 4. Observability and Error Handling | 6 | 0 | 2 |
-| 5. Performance | 7 | 0 | 1 |
+| 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 4 | 0 | 4 |
 | 7. Testing | 2 | 0 | 4 |
 | 8. Deployment and Operations | 4 | 0 | 5 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **46** | **0** | **26** |
+| **Total** | **47** | **1** | **24** |
 
 ### Highest-Value Open Items (Ordered)
 
@@ -191,3 +191,4 @@ Items that keep V1 architecture extensible without rework.
 8. **8.9** — Add rate limiting on auth endpoints before public launch
 9. **3.6** — Build an audit log admin view for SOCIETY_ADMIN
 10. **7.5** — Set up CI pipeline (lint + build + seed + test on push)
+11. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)

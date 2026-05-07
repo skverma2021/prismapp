@@ -22,23 +22,16 @@ export class HttpError extends Error {
   }
 }
 
-export function getRequestId(request: Request): string {
-  return request.headers.get("x-request-id") ?? "unknown";
-}
-
 function logServerError(error: unknown, requestId?: string) {
-  const rid = requestId ?? "unknown";
-
   if (error instanceof HttpError) {
     if (error.status >= 500) {
-      console.error("[api]", {
+      console.error(JSON.stringify({
         level: "error",
-        requestId: rid,
+        requestId,
         status: error.status,
         code: error.code,
         message: error.message,
-        details: error.details,
-      });
+      }));
     }
 
     return;
@@ -47,29 +40,27 @@ function logServerError(error: unknown, requestId?: string) {
   if (typeof error === "object" && error !== null && "code" in error) {
     const prismaLikeError = error as { code?: string; meta?: unknown; message?: string; stack?: string };
 
-    console.error("[api]", {
+    console.error(JSON.stringify({
       level: "error",
-      requestId: rid,
+      requestId,
       code: prismaLikeError.code,
       message: prismaLikeError.message,
       meta: prismaLikeError.meta,
-      stack: prismaLikeError.stack,
-    });
+    }));
     return;
   }
 
   if (error instanceof Error) {
-    console.error("[api]", {
+    console.error(JSON.stringify({
       level: "error",
-      requestId: rid,
+      requestId,
       name: error.name,
       message: error.message,
-      stack: error.stack,
-    });
+    }));
     return;
   }
 
-  console.error("[api]", { level: "error", requestId: rid, error });
+  console.error(JSON.stringify({ level: "error", requestId, error: String(error) }));
 }
 
 function isConnectivityFailure(error: unknown): boolean {
@@ -188,6 +179,10 @@ export function fromUnknownError(error: unknown, requestId?: string): HttpError 
   logServerError(error, requestId);
 
   return new HttpError(500, "INTERNAL_ERROR", "Unexpected server error.");
+}
+
+export function getRequestId(request: Request): string | undefined {
+  return request.headers.get("x-request-id") ?? undefined;
 }
 
 export function requireString(value: unknown, field: string): string {

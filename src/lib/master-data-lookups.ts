@@ -27,7 +27,13 @@ export type ContributionHeadLookupOption = {
 // Lookup key registry — every cached lookup has exactly one key here.
 // ---------------------------------------------------------------------------
 
+export type BlockLookupOption = {
+  id: string;
+  description: string;
+};
+
 export const LOOKUP_KEYS = {
+  blocks: "blocks",
   units: "units",
   individuals: "individuals",
   contributionHeads: "contribution-heads",
@@ -182,9 +188,9 @@ export function invalidateLookups(...keys: LookupKey[]) {
 // Semantic invalidation wrappers — call these from mutation success paths.
 // ---------------------------------------------------------------------------
 
-/** After block create/edit/delete — units reference block descriptions. */
+/** After block create/edit/delete — units reference block descriptions; blocks have their own cache key. */
 export function invalidateBlockDependentLookups() {
-  invalidateLookups(LOOKUP_KEYS.units);
+  invalidateLookups(LOOKUP_KEYS.blocks, LOOKUP_KEYS.units);
 }
 
 /** After unit create/edit/delete. */
@@ -216,12 +222,33 @@ export function invalidateResidencyDependentLookups() {
 // Cached loaders
 // ---------------------------------------------------------------------------
 
+export function loadBlockLookupsCached() {
+  return loadCachedLookup<BlockLookupOption[]>(
+    LOOKUP_KEYS.blocks,
+    "/api/blocks/lookups",
+    "Unable to load blocks."
+  );
+}
+
+// Units from /api/units/lookups carry only {id, description, blockId}. Block names
+// are resolved here via the separately-cached blocks lookup to avoid a 3,958-row
+// relational join on every call (Track-A 5.6).
 export function loadUnitLookupsCached() {
-  return loadCachedLookup<UnitLookupOption[]>(
-    LOOKUP_KEYS.units,
-    "/api/units/lookups",
-    "Unable to load units."
-  ).then((data) => [...data].sort(compareUnitsByBlockAndDescription));
+  return Promise.all([
+    loadCachedLookup<Array<{ id: string; description: string; blockId: string }>>(
+      LOOKUP_KEYS.units,
+      "/api/units/lookups",
+      "Unable to load units."
+    ),
+    loadBlockLookupsCached(),
+  ]).then(([units, blocks]) => {
+    const blockNames = new Map(blocks.map((b) => [b.id, b.description]));
+    const enriched: UnitLookupOption[] = units.map((u) => ({
+      ...u,
+      block: blockNames.has(u.blockId) ? { description: blockNames.get(u.blockId)! } : undefined,
+    }));
+    return enriched.sort(compareUnitsByBlockAndDescription);
+  });
 }
 
 export function loadIndividualLookupsCached() {

@@ -239,6 +239,101 @@ Breakdown of a Contribution across periods.
 
 ---
 
+# 🛠️ COMPLAINT MANAGEMENT (CMM)
+
+## ComplaintCategories
+
+Predefined complaint types. Used for routing and aggregate analytics.
+
+### Sample Data
+
+| id | description        |
+|----|--------------------|
+| 1  | Plumbing           |
+| 2  | Electrical         |
+| 3  | Civil              |
+| 4  | Lift               |
+| 5  | Security           |
+| 6  | Housekeeping       |
+| 7  | Parking            |
+| 8  | Noise              |
+| 9  | Common Area Misuse |
+| 10 | Billing Dispute    |
+
+---
+
+## ComplaintPriorities
+
+Priority levels with associated SLA targets.
+
+### Sample Data
+
+| id | label | slaHours | description             |
+|----|-------|----------|-------------------------|
+| 1  | P1    | 4        | No water / power outage |
+| 2  | P2    | 24       | Lift breakdown          |
+| 3  | P3    | 72       | Gardening, cosmetic     |
+
+---
+
+## Complaints
+
+The core complaint ticket entity.
+
+### Key Points
+- One `Complaint` = one logged issue against a unit or common area.
+- `ticketId` is system-assigned and immutable after creation.
+- Status follows the lifecycle: `Open → Assigned → In Progress → Resolved → Closed`. `Reopened` returns the ticket to `Open` within the reopen window.
+- When `isAnonymous = true`, `reportedById` is stored but not exposed in resident-facing views.
+- Core fields (`ticketId`, `unitId`, `reportedById`, `isAnonymous`, `createdAt`) are immutable after creation.
+- `reopenDeadline` = `resolvedAt + 48 hours`; cleared when the ticket reaches `Closed`.
+
+### Fields
+
+| Field           | Type                              | Notes                                         |
+|-----------------|-----------------------------------|-----------------------------------------------|
+| id              | string (UUID)                     | Primary Key                                   |
+| ticketId        | string                            | Unique, system-generated (e.g., MSH-2026-00127) |
+| unitId          | string (FK → Units.id)            | Complaint location                            |
+| reportedById    | string (FK → Individuals.id)      | Complainant                                   |
+| categoryId      | integer (FK → ComplaintCategories.id) |                                           |
+| priorityId      | integer (FK → ComplaintPriorities.id) |                                           |
+| title           | string                            | Short summary                                 |
+| description     | string                            | Full detail                                   |
+| isAnonymous     | boolean                           | If true, reporter not shown to residents      |
+| status          | enum                              | Open, Assigned, InProgress, Resolved, Closed, Reopened |
+| assignedToId    | string (FK → Individuals.id, nullable) | MC member or staff handling the complaint |
+| resolvedAt      | datetime (nullable)               | Set when status → Resolved                    |
+| closedAt        | datetime (nullable)               | Set when status → Closed                      |
+| reopenDeadline  | datetime (nullable)               | resolvedAt + 48 hours; cleared on Closed      |
+| createdAt       | datetime                          |                                               |
+| updatedAt       | datetime                          |                                               |
+
+---
+
+## ComplaintNotes
+
+Notes attached to a complaint with visibility control.
+
+### Key Rules
+- Notes are **append-only**. No updates or deletes are permitted.
+- `Internal` notes are visible to Admin and Manager roles only.
+- `Resident` notes are visible to all roles.
+- Only Admin or Manager users may create `Internal` notes.
+
+### Fields
+
+| Field       | Type                             | Notes                  |
+|-------------|----------------------------------|------------------------|
+| id          | string (UUID)                    | Primary Key            |
+| complaintId | string (FK → Complaints.id)      |                        |
+| authorId    | string (FK → Individuals.id)     | Note author            |
+| content     | string                           | Note text              |
+| visibility  | enum                             | Internal, Resident     |
+| createdAt   | datetime                         |                        |
+
+---
+
 # 🧠 HOW AI SHOULD INTERPRET THIS
 
 - Use ERD.md for structure

@@ -11,6 +11,19 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 
+// MAKER_CHECKER_ENABLED: flip to true to activate two-person approval.
+// When false (current default), corrections post immediately as POSTED.
+// When true, corrections start as PENDING and require a checker to approve
+// via approveCorrection() before they count in reports.
+const MAKER_CHECKER_ENABLED = false;
+
+export const CORRECTION_STATUS = {
+  POSTED: "POSTED",
+  PENDING: "PENDING",
+  REJECTED: "REJECTED",
+} as const;
+export type CorrectionStatus = (typeof CORRECTION_STATUS)[keyof typeof CORRECTION_STATUS];
+
 type ContributionActor = {
   actorUserId: string;
   actorRole: UserRole;
@@ -589,17 +602,23 @@ export async function createContributionCorrection(
         );
       }
 
-      // Prevent multiple corrections of the same original
+      // Prevent multiple active corrections of the same original.
+      // REJECTED corrections do not block a fresh attempt — they are treated as if
+      // they were never posted. PENDING and POSTED both block re-correction.
       const existingCorrection = await tx.contribution.findFirst({
-        where: { correctionOfContributionId: original.id },
-        select: { id: true },
+        where: {
+          correctionOfContributionId: original.id,
+          correctionStatus: { not: CORRECTION_STATUS.REJECTED },
+        },
+        select: { id: true, correctionStatus: true },
       });
 
       if (existingCorrection) {
+        const statusLabel = existingCorrection.correctionStatus ?? CORRECTION_STATUS.POSTED;
         throw new HttpError(
           409,
           "CONFLICT",
-          `This contribution has already been corrected (correction id: ${existingCorrection.id}).`
+          `This contribution has already been corrected (correction id: ${existingCorrection.id}, status: ${statusLabel}).`
         );
       }
 
@@ -635,6 +654,7 @@ export async function createContributionCorrection(
           correctionOfContributionId: original.id,
           correctionReasonCode: input.reasonCode,
           correctionReasonText: input.reasonText,
+          correctionStatus: MAKER_CHECKER_ENABLED ? CORRECTION_STATUS.PENDING : CORRECTION_STATUS.POSTED,
           details: {
             create: original.details.map((detail) => ({
               contributionPeriodId: detail.contributionPeriodId,

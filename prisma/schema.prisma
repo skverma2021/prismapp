@@ -158,6 +158,10 @@ model ContributionPeriod {
   @@map("contribution_periods")
 }
 
+/// correctionStatus is only set on rows that are themselves corrections (correctionOfContributionId IS NOT NULL).
+/// POSTED = live and counted in reports (default for all existing corrections and new single-step corrections).
+/// PENDING = submitted but awaiting a second approver (maker-checker, future activation).
+/// REJECTED = declined by checker; not counted in reports; original is free to be corrected again.
 model Contribution {
   id                         Int      @id @default(autoincrement())
   unitId                     String
@@ -173,6 +177,12 @@ model Contribution {
   correctionOfContributionId Int?
   correctionReasonCode       String?
   correctionReasonText       String?
+  correctionStatus           String?  // POSTED | PENDING | REJECTED — null on non-correction rows
+  correctionApprovedById     String?  // actorUserId of the checker who approved
+  correctionApprovedAt       DateTime?
+  correctionRejectedById     String?  // actorUserId of the checker who rejected
+  correctionRejectedAt       DateTime?
+  correctionRejectionReason  String?
   createdAt                  DateTime @default(now())
 
   unit              Unit              @relation(fields: [unitId], references: [id], onDelete: Restrict)

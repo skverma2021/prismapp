@@ -1,7 +1,7 @@
 # PrismApp Execution Status
 
 Status: In Progress
-Date: 2026-04-24
+Date: 2026-05-07
 Owner: Engineering
 
 ## Purpose
@@ -30,7 +30,8 @@ Completed:
 
 Residual follow-up:
 1. Continue UI cleanup and shell-level consolidation of repeated page-level state surfaces.
-2. Maker-checker correction workflow remains deferred to later hardening.
+2. Maker-checker correction workflow: extension hooks (schema fields + `MAKER_CHECKER_ENABLED` flag) added in `20260507100000_correction_status_hooks`. Approval UI and service functions remain for activation when ADR-001 thresholds are met.
+3. CMM (Complaint Management Module) has been formally added to the backlog as the next-priority module. Vision, domain rules, entity definitions, and ERD entries are now in vault.
 
 ### Objective 2: Establish platform shell: home page, navigation, authentication, and master data CRUD baseline
 Status: Substantially complete for shell/auth baseline and first-pass master-data UI across core and contribution domains
@@ -81,6 +82,8 @@ Newly complete:
 4. Full audit logging is now wired into all mutating service operations across blocks, units, individuals, contribution heads, contribution rates, ownerships, residencies, contributions, and corrections.
 5. CSV export headers now include report title, actor role, individual filter rows, and row count metadata.
 6. PII masking is now active for READ_ONLY role: email and mobile are masked in all individual read responses.
+7. Maker-checker extension hooks added: `correctionStatus`, approval, and rejection fields added to `Contribution` model; migration `20260507100000_correction_status_hooks` applied; existing corrections backfilled to `POSTED`; `MAKER_CHECKER_ENABLED` flag and `CORRECTION_STATUS` constant added to service; duplicate-correction guard updated to allow re-correction after `REJECTED` entries.
+8. CMM planning complete: `vault/CMM/cmm-vision.md` reformatted as a proper vault spec; complaint rules added to `Domain-Rules.md`; `ComplaintCategories`, `ComplaintPriorities`, `Complaints`, and `ComplaintNotes` entities added to `Entities.md` and `ERD.md`; `System-Overview.md` and `Glossary.md` updated; `AGENTS.md` scope control section updated to distinguish CMM (next module) from still-deferred modules.
 
 ## Activities Done
 

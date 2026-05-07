@@ -151,6 +151,66 @@ Maps a contribution to specific periods
 
 ---
 
+---
+
+## 🛠️ COMPLAINT MANAGEMENT MODEL (CMM)
+
+### ComplaintCategories
+
+| Field       | Type    | Notes                       |
+|-------------|---------|-----------------------------|
+| id          | integer | Primary Key                 |
+| description | string  | e.g., Plumbing, Electrical  |
+
+---
+
+### ComplaintPriorities
+
+| Field       | Type    | Notes                           |
+|-------------|---------|----------------------------------|
+| id          | integer | Primary Key                      |
+| label       | string  | P1, P2, P3                       |
+| slaHours    | integer | Target resolution time in hours  |
+| description | string  | Example scenario                 |
+
+---
+
+### Complaints
+
+| Field          | Type                                   | Notes                                          |
+|----------------|----------------------------------------|------------------------------------------------|
+| id             | string (UUID)                          | Primary Key                                    |
+| ticketId       | string                                 | Unique, system-generated                       |
+| unitId         | string (FK → Units.id)                 | Complaint location                             |
+| reportedById   | string (FK → Individuals.id)           | Complainant                                    |
+| categoryId     | integer (FK → ComplaintCategories.id)  |                                                |
+| priorityId     | integer (FK → ComplaintPriorities.id)  |                                                |
+| title          | string                                 |                                                |
+| description    | string                                 |                                                |
+| isAnonymous    | boolean                                | If true, reportedById hidden from residents    |
+| status         | enum                                   | Open, Assigned, InProgress, Resolved, Closed, Reopened |
+| assignedToId   | string (FK → Individuals.id, nullable) | MC member or staff                             |
+| resolvedAt     | datetime (nullable)                    | Set when status → Resolved                     |
+| closedAt       | datetime (nullable)                    | Set when status → Closed                       |
+| reopenDeadline | datetime (nullable)                    | resolvedAt + 48 hours; cleared on Closed       |
+| createdAt      | datetime                               |                                                |
+| updatedAt      | datetime                               |                                                |
+
+---
+
+### ComplaintNotes
+
+| Field       | Type                            | Notes                   |
+|-------------|---------------------------------|-------------------------|
+| id          | string (UUID)                   | Primary Key             |
+| complaintId | string (FK → Complaints.id)     |                         |
+| authorId    | string (FK → Individuals.id)    | Note author             |
+| content     | string                          |                         |
+| visibility  | enum                            | Internal, Resident      |
+| createdAt   | datetime                        |                         |
+
+---
+
 ## 🔗 RELATIONSHIPS (SUMMARY)
 
 - Block → Units (1:N)
@@ -161,6 +221,13 @@ Maps a contribution to specific periods
 - ContributionHeads → ContributionRates (1:N)
 - Individuals ↔ Units via UnitOwners (temporal)
 - Individuals ↔ Units via UnitResidents (temporal)
+- ComplaintCategories → Complaints (1:N)
+- ComplaintPriorities → Complaints (1:N)
+- Unit → Complaints (1:N)
+- Individual → Complaints as reporter (1:N)
+- Individual → Complaints as assignee (1:N, nullable)
+- Complaint → ComplaintNotes (1:N)
+- Individual → ComplaintNotes as author (1:N)
 
 ---
 
@@ -178,6 +245,11 @@ Maps a contribution to specific periods
 8. ContributionDetails must fully distribute total contribution amount.
 9. A Contribution must map to at least one ContributionPeriod.
 10. depositedBy must always be a valid Individual (no anonymous payments).
+11. A Complaint must have a category and a priority.
+12. Complaint `ticketId` is system-assigned and immutable after creation.
+13. Complaint status lifecycle: `Open → Assigned → In Progress → Resolved → Closed`; `Reopened` returns to `Open` within 48 hours of `resolvedAt`.
+14. Anonymous complaints store `reportedById` but must not expose it in resident-facing API responses.
+15. `ComplaintNotes` are append-only; `Internal` visibility restricts access to Admin/Manager roles.
 
 ---
 
