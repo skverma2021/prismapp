@@ -124,7 +124,7 @@ Items that give confidence before and after each change.
 | 7.1 | API regression scripts for contributions, timelines, reports | ✅ | `scripts/test-*.mjs` |
 | 7.2 | Ownership-residency regression matrix documented | ✅ | `Ownership-Residency-Regression-Matrix.md` |
 | 7.3 | Regression scripts runnable on clean seed data | ⬜ | Scripts require specific IDs from prior runs. Needs seed-aligned test fixtures. |
-| 7.4 | Vitest unit tests for domain service layer | ⬜ | No unit test framework configured. Domain business logic is currently covered only by API-level scripts. |
+| 7.4 | Vitest unit tests for domain service layer | ✅ | Vitest v4.1.5 + @vitest/coverage-v8 installed. `vitest.config.ts` configured. 3 test files, 69 tests: `contributions.helpers.test.ts` (33), `contributions.schemas.test.ts` (17), `ownerships.schemas.test.ts` (19). Pure helpers extracted to `contributions.helpers.ts`. All tests pass; lint and build clean. |
 | 7.5 | Automated test run in CI (GitHub Actions or Vercel check) | ⬜ | No CI pipeline. Lint and build run manually before deploy. |
 | 7.6 | Temporal edge case coverage: rate-period mismatch, overlap boundary, inception gap | ⬜ | Partially covered in regression matrix documentation but not yet in executable form. |
 
@@ -174,20 +174,20 @@ Items that keep V1 architecture extensible without rework.
 | 4. Observability and Error Handling | 6 | 0 | 2 |
 | 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 4 | 0 | 4 |
-| 7. Testing | 2 | 0 | 4 |
+| 7. Testing | 3 | 0 | 3 |
 | 8. Deployment and Operations | 4 | 0 | 5 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **47** | **1** | **24** |
+| **Total** | **48** | **1** | **23** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **5.6** — Fix `/api/units/lookups` performance (known 3.1s regression)
-2. **7.4** — Configure Vitest and add unit tests for domain service logic
-3. **7.3** — Make regression scripts runnable on clean seed data
+1. **2.7** — Record formal OWASP Top 10 gap review
+2. **7.3** — Make regression scripts runnable on clean seed data
+3. **7.5** — CI pipeline (GitHub Actions: lint + test on push)
 4. **1.9** — Decide rate-period coverage policy and document or guard
 5. **8.5** — Resolve `DATABASE_URL` SSL warning
 6. **6.4** — Decompose ownership transfer into focused policy steps
-7. **2.7** — Record formal OWASP Top 10 gap review
+7. **8.9** — Rate limiting on `/api/auth/*` endpoints
 8. **8.9** — Add rate limiting on auth endpoints before public launch
 9. **3.6** — Build an audit log admin view for SOCIETY_ADMIN
 10. **7.5** — Set up CI pipeline (lint + build + seed + test on push)
