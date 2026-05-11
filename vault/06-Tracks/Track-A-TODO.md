@@ -123,9 +123,9 @@ Items that give confidence before and after each change.
 |---|------|--------|-------|
 | 7.1 | API regression scripts for contributions, timelines, reports | ✅ | `scripts/test-*.mjs` |
 | 7.2 | Ownership-residency regression matrix documented | ✅ | `Ownership-Residency-Regression-Matrix.md` |
-| 7.3 | Regression scripts runnable on clean seed data | ⬜ | Scripts require specific IDs from prior runs. Needs seed-aligned test fixtures. |
+| 7.3 | Regression scripts runnable on clean seed data | ✅ | All `scripts/test-*.mjs` create their own data using `Date.now()` uniqueness stamps and clean up after themselves. `test-api-error-mapping.mjs` is pure in-memory. The only seed dependency is seeded contribution periods (current year) and seeded app users — both provided by `prisma db seed`. `test:api:*` npm scripts already present in `package.json`. Folded into 7.5. |
 | 7.4 | Vitest unit tests for domain service layer | ✅ | Vitest v4.1.5 + @vitest/coverage-v8 installed. `vitest.config.ts` configured. 3 test files, 69 tests: `contributions.helpers.test.ts` (33), `contributions.schemas.test.ts` (17), `ownerships.schemas.test.ts` (19). Pure helpers extracted to `contributions.helpers.ts`. All tests pass; lint and build clean. |
-| 7.5 | Automated test run in CI (GitHub Actions or Vercel check) | ⬜ | No CI pipeline. Lint and build run manually before deploy. |
+| 7.5 | Automated test run in CI (GitHub Actions or Vercel check) | ✅ | `.github/workflows/ci.yml` added. Runs on push and PR to master/main: `npm ci` → `npm run lint` → `npm test` (Vitest, no DB needed) → `npm run build` (dummy `DATABASE_URL` satisfies module-level guard; Prisma client connects lazily) → `npm audit --audit-level=high`. API integration scripts (`test:api:*`) remain manual pre-deploy checks — they require a live DB and running server. |
 | 7.6 | Temporal edge case coverage: rate-period mismatch, overlap boundary, inception gap | ⬜ | Partially covered in regression matrix documentation but not yet in executable form. |
 
 ---
@@ -174,20 +174,20 @@ Items that keep V1 architecture extensible without rework.
 | 4. Observability and Error Handling | 6 | 0 | 2 |
 | 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 4 | 0 | 4 |
-| 7. Testing | 3 | 0 | 3 |
+| 7. Testing | 5 | 0 | 1 |
 | 8. Deployment and Operations | 4 | 0 | 5 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **49** | **1** | **22** |
+| **Total** | **51** | **1** | **20** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **7.3** — Make regression scripts runnable on clean seed data
-2. **7.5** — CI pipeline (GitHub Actions: lint + test on push)
-3. **1.9** — Decide rate-period coverage policy and document or guard
-4. **8.5** — Resolve `DATABASE_URL` SSL warning
-5. **8.9** — Rate limiting on `/api/auth/*` endpoints
-6. **6.4** — Decompose ownership transfer into focused policy steps
-7. **4.6** — Add error tracking (Sentry or equivalent)
+1. **8.9** — Rate limiting on `/api/auth/*` endpoints
+2. **1.9** — Decide rate-period coverage policy and document or guard
+3. **8.5** — Resolve `DATABASE_URL` SSL warning
+4. **6.4** — Decompose ownership transfer into focused policy steps
+5. **4.6** — Add error tracking (Sentry or equivalent)
+6. **3.6** — Build audit log admin view for SOCIETY_ADMIN
+7. **8.8** — Production sign-in with real user accounts (not seed demo users)
 8. **8.9** — Add rate limiting on auth endpoints before public launch
 9. **3.6** — Build an audit log admin view for SOCIETY_ADMIN
 10. **7.5** — Set up CI pipeline (lint + build + seed + test on push)

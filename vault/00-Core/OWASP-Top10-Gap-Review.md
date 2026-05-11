@@ -193,18 +193,18 @@ No open gaps.
 
 ## Summary Table
 
-| # | Category | Status | Severity | Action Required |
-|---|----------|--------|----------|-----------------|
-| A01 | Broken Access Control | ✅ Pass | Low gap | Document single-tenancy assumption |
-| A02 | Cryptographic Failures | ✅ Pass | Advisory | Verify SSL in prod; rotate seed password |
-| A03 | Injection | ✅ Pass | None | — |
-| A04 | Insecure Design | ✅ Pass | Advisory | Activate maker-checker at scale |
+| #   | Category                  | Status     | Severity   | Action Required                                |
+| --- | ------------------------- | ---------- | ---------- | ---------------------------------------------- |
+| A01 | Broken Access Control     | ✅ Pass     | Low gap    | Document single-tenancy assumption             |
+| A02 | Cryptographic Failures    | ✅ Pass     | Advisory   | Verify SSL in prod; rotate seed password       |
+| A03 | Injection                 | ✅ Pass     | None       | —                                              |
+| A04 | Insecure Design           | ✅ Pass     | Advisory   | Activate maker-checker at scale                |
 | A05 | Security Misconfiguration | ⚠️ Partial | **Medium** | **Add HTTP security headers; rate limit auth** |
-| A06 | Vulnerable Components | ⚠️ Action | **High** | **Run `npm audit fix`; track Next.js patch** |
-| A07 | Auth Failures | ✅ Pass | Low gap | Rate limiting covers lockout gap |
-| A08 | Data Integrity | ✅ Pass | None | — |
-| A09 | Logging & Monitoring | ⚠️ Partial | Low | Add error tracker before production |
-| A10 | SSRF | ✅ Pass | None | — |
+| A06 | Vulnerable Components     | ⚠️ Action  | **High**   | **Run `npm audit fix`; track Next.js patch**   |
+| A07 | Auth Failures             | ✅ Pass     | Low gap    | Rate limiting covers lockout gap               |
+| A08 | Data Integrity            | ✅ Pass     | None       | —                                              |
+| A09 | Logging & Monitoring      | ⚠️ Partial | Low        | Add error tracker before production            |
+| A10 | SSRF                      | ✅ Pass     | None       | —                                              |
 
 ---
 
@@ -242,6 +242,34 @@ Run `npm audit fix` and verify:
 Defer to Track-A 8.9. Options evaluated at that point: Vercel Edge rate limiting, Upstash Redis, or `next-rate-limit`.
 
 ---
+## GitHub Copilot: ### Methodology
+
+### **What was referenced:**
+- The codebase itself — auth.ts, authz.ts, proxy.ts, next.config.ts, api-response.ts, pii-mask.ts, audit-log.ts, schema.prisma, seed.mjs, and a grep sweep of all `app/api/**` route handlers.
+- `npm audit` output for dependency CVEs.
+- OWASP Top 10 (2021) definitions as the checklist framework.
+
+### **How each was assessed:**
+
+| #   | Category                  | What was checked                                                                                                                                                                                                                                                                                                   |
+| --- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A01 | Broken Access Control     | Every `app/api/**` route handler grepped for `requireReadRole`/`requireMutationRole`. Confirmed no unguarded route except the auth handler itself. Noted the missing resource-level (row-level) ownership check — accepted for single-tenant V1.                                                                   |
+| A02 | Cryptographic Failures    | Traced password storage: `bcrypt.hash(password, 10)` in seed. Confirmed `AUTH_SECRET` from env, not hardcoded. Checked pii-mask.ts for PII handling. Noted unresolved SSL warning (Track-A 8.5).                                                                                                                   |
+| A03 | Injection                 | Searched entire codebase for raw SQL (`$queryRaw`), `eval`, `innerHTML`, `dangerouslySetInnerHTML`, `document.write` — all zero matches. All DB access goes through Prisma parameterized queries.                                                                                                                  |
+| A04 | Insecure Design           | Read `contributions.service.ts` for immutability enforcement, duplicate-payment guard, rate-locking, and maker-checker stub. Assessed whether the append-only model was structurally enforced vs. just policy.                                                                                                     |
+| A05 | Security Misconfiguration | Checked next.config.ts for security headers (none existed). Checked for debug endpoints (debug-cookie — empty). Checked for hardcoded secrets (none). Identified the missing headers as a concrete actionable gap.                                                                                                 |
+| A06 | Vulnerable Components     | Ran `npm audit` and parsed the JSON output to separate **direct** deps (`next`, prisma) from **transitive** deps. Checked which transitive packages (`hono`, `lodash`, etc.) were pulled through `@prisma/dev` (CLI dev tool, not shipped). The `next@16.2.0` DoS CVE was the only runtime-affecting high finding. |
+| A07 | Auth Failures             | Traced the full login flow in auth.ts: credential validation, `bcrypt.compare`, `isActive` check, role parse. Noted absence of account lockout and password-change functionality.                                                                                                                                  |
+| A08 | Data Integrity            | Checked for `require()`/`import()` of user-supplied paths, JSON deserialization of untrusted input, and migration versioning. Verified package-lock.json is committed.                                                                                                                                             |
+| A09 | Logging & Monitoring      | Confirmed `AuditLog` table coverage, structured JSON error logging in api-response.ts, `requestId` propagation. Noted absence of external alerting/aggregation.                                                                                                                                                    |
+| A10 | SSRF                      | Grepped all `app/api/**` for `fetch(`, `axios`, `http.`, `https.` — zero matches. No server-side URL fetching of any kind.                                                                                                                                                                                         |
+
+### **How severity and action-required was determined:**
+
+- **Pass / no action** — the OWASP attack class was structurally prevented by the framework or the code (e.g. Prisma parameterization for A03, append-only model for A08).
+- **Advisory / no immediate action** — a gap exists but the threat model is low (internal-only app, single-tenant, no public exposure). Noted for future reference.
+- **Actionable** — a concrete, implementable fix existed that closes a real attack vector regardless of deployment context. The two that crossed that threshold: missing security headers (A05, trivial to add) and the `next@16.2.0` DoS CVE (A06, a one-line upgrade). Both were implemented immediately rather than deferred.
+- **Deferred** — gaps that require architectural decisions or external services (rate limiting, Sentry, CSP). Recorded in the vault and back-referenced to Track-A items.
 
 ## References
 

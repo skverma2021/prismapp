@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00-Core/ADR-001-Data-Immutability-and-Corrections.md",
+                "file": "00-Core/OWASP-Top10-Gap-Review.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ADR-001-Data-Immutability-and-Corrections"
+              "title": "OWASP-Top10-Gap-Review"
             }
           },
           {
@@ -120,7 +120,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 220.5
+    "width": 219.5
   },
   "right": {
     "id": "12856a372520cbf7",
@@ -227,11 +227,13 @@
   },
   "active": "3e71d88191ac3799",
   "lastOpenFiles": [
+    "00-Core/Glossary.md",
     "00-Core/OWASP-Top10-Gap-Review.md",
+    "05-AI/Refactor-Hotspots-Roadmap.md",
+    "00-Core/ADR-001-Data-Immutability-and-Corrections.md",
     "05-AI/Execution-Status.md",
     "05-AI/Current-Sprint-Board.md",
     "06-Tracks/Track-A-TODO.md",
-    "00-Core/ADR-001-Data-Immutability-and-Corrections.md",
     "00-Core/ADR-003-Ownership-Continuity-and-Builder-Inventory.md",
     "00-Core/ADR-002-Pricing-Extensions.md",
     "01-Domain/Domain-Rules.md",
