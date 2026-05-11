@@ -225,8 +225,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "a6be21a88e8213ec",
+  "active": "3e71d88191ac3799",
   "lastOpenFiles": [
+    "00-Core/OWASP-Top10-Gap-Review.md",
     "05-AI/Execution-Status.md",
     "05-AI/Current-Sprint-Board.md",
     "06-Tracks/Track-A-TODO.md",

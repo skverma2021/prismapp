@@ -41,7 +41,7 @@ Items that protect data and operator accountability.
 | 2.4 | Auth.js credentials login baseline | ✅ | JWT-backed session, seeded app users |
 | 2.5 | Auth feedback on protected redirect (401 vs 403) | ✅ | Public entry and home page show explicit feedback |
 | 2.6 | OAuth Phase 2 (Google / Microsoft account linking) | ⬜ | Deferred. Plan in sprint board Stretch. |
-| 2.7 | OWASP Top 10 gap review for internal operator app | ⬜ | Informal review done during development. Formal pass not yet recorded. |
+| 2.7 | OWASP Top 10 gap review for internal operator app | ✅ | Formal pass completed 2026-05-11. Findings in `vault/00-Core/OWASP-Top10-Gap-Review.md`. A03/A08/A10 fully clear. A05: HTTP security headers added to `next.config.ts` (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy). A06: `npm audit fix` run; Next.js upgraded 16.2.0 → 16.2.6 (DoS patch GHSA-q4gf-8mx6-v5v3); 6 moderate transitive vulns remain via `@prisma/dev` (dev-only CLI, not shipped). Open: rate limiting (8.9), error tracker (4.6), bcrypt cost-factor review (advisory). |
 | 2.8 | Uniform auth feedback on every protected shell route | ⬜ | Sprint board item. Some redirect paths still rely on silent redirect only. |
 | 2.9 | Contribution posting actor identity: `depositedBy` references real individual | ✅ | System identities rejected as depositors |
 | 2.10 | `actorUserId` and `actorRole` captured in all mutations | ✅ | All 14 mutating route handlers now pass `actor` to service layer |
@@ -169,7 +169,7 @@ Items that keep V1 architecture extensible without rework.
 | Theme | Done | In Progress | Not Started |
 |-------|------|-------------|-------------|
 | 1. Domain Correctness | 8 | 0 | 1 |
-| 2. Security and Authorization | 7 | 0 | 3 |
+| 2. Security and Authorization | 8 | 0 | 2 |
 | 3. Audit and Immutability | 5 | 1 | 1 |
 | 4. Observability and Error Handling | 6 | 0 | 2 |
 | 5. Performance | 8 | 0 | 0 |
@@ -177,17 +177,17 @@ Items that keep V1 architecture extensible without rework.
 | 7. Testing | 3 | 0 | 3 |
 | 8. Deployment and Operations | 4 | 0 | 5 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **48** | **1** | **23** |
+| **Total** | **49** | **1** | **22** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **2.7** — Record formal OWASP Top 10 gap review
-2. **7.3** — Make regression scripts runnable on clean seed data
-3. **7.5** — CI pipeline (GitHub Actions: lint + test on push)
-4. **1.9** — Decide rate-period coverage policy and document or guard
-5. **8.5** — Resolve `DATABASE_URL` SSL warning
+1. **7.3** — Make regression scripts runnable on clean seed data
+2. **7.5** — CI pipeline (GitHub Actions: lint + test on push)
+3. **1.9** — Decide rate-period coverage policy and document or guard
+4. **8.5** — Resolve `DATABASE_URL` SSL warning
+5. **8.9** — Rate limiting on `/api/auth/*` endpoints
 6. **6.4** — Decompose ownership transfer into focused policy steps
-7. **8.9** — Rate limiting on `/api/auth/*` endpoints
+7. **4.6** — Add error tracking (Sentry or equivalent)
 8. **8.9** — Add rate limiting on auth endpoints before public launch
 9. **3.6** — Build an audit log admin view for SOCIETY_ADMIN
 10. **7.5** — Set up CI pipeline (lint + build + seed + test on push)
