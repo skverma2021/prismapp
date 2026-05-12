@@ -1,5 +1,5 @@
 export type ApiEnvelope<T> =
-  | { ok: true; data: T }
+  | { ok: true; data: T; warning?: string }
   | {
       ok: false;
       error?: {

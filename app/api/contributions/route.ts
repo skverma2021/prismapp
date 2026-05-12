@@ -19,11 +19,11 @@ export async function POST(request: Request) {
     const auth = await requireMutationRole(request);
     const payload = await request.json();
     const input = parseCreateContributionInput(payload);
-    const data = await createContribution(input, {
+    const { contribution, warning } = await createContribution(input, {
       actorUserId: auth.userId,
       actorRole: auth.role,
     });
-    return ok(data, 201);
+    return ok(contribution, 201, warning);
   } catch (error) {
     return fail(fromUnknownError(error, getRequestId(request)));
   }

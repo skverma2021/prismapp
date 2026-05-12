@@ -102,8 +102,10 @@ function isRetryableDatabaseFailure(error: unknown): boolean {
   );
 }
 
-export function ok<T>(data: T, status = 200): Response {
-  return Response.json({ ok: true, data }, { status });
+export function ok<T>(data: T, status = 200, warning?: string): Response {
+  const body: { ok: true; data: T; warning?: string } = { ok: true, data };
+  if (warning !== undefined) body.warning = warning;
+  return Response.json(body, { status });
 }
 
 export function fail(error: HttpError): Response {

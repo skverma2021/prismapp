@@ -88,6 +88,52 @@ async function deriveQuantity(
   throw new HttpError(400, "VALIDATION_ERROR", "Unsupported payUnit on contribution head.");
 }
 
+// ---------------------------------------------------------------------------
+// Rate-period coverage check (Domain Rule C2 / Track-A 1.9)
+// The applicable rate is resolved at transactionDateTime, not at the period
+// start. This means a payment captured in April for January can use a rate
+// that only became effective in February. This is accepted policy, but the
+// operator should be informed when it occurs.
+// ---------------------------------------------------------------------------
+function checkRatePeriodCoverage(
+  periods: Array<{ refYear: number; refMonth: number }>,
+  rateFromDt: Date
+): string | undefined {
+  let earliestYear = periods[0].refYear;
+  let earliestMonth = periods[0].refMonth;
+
+  for (const p of periods) {
+    if (
+      p.refYear < earliestYear ||
+      (p.refYear === earliestYear && p.refMonth < earliestMonth)
+    ) {
+      earliestYear = p.refYear;
+      earliestMonth = p.refMonth;
+    }
+  }
+
+  // refMonth = 0 means a whole-year period → start is Jan 1 of that year.
+  // refMonth = 1-12 → start is 1st of that month. (JS months are 0-indexed.)
+  const jsMonth = earliestMonth === 0 ? 0 : earliestMonth - 1;
+  const earliestPeriodStart = new Date(Date.UTC(earliestYear, jsMonth, 1));
+
+  if (rateFromDt <= earliestPeriodStart) {
+    return undefined;
+  }
+
+  const rateFromLabel = rateFromDt.toISOString().slice(0, 10);
+  const periodLabel =
+    earliestMonth === 0
+      ? String(earliestYear)
+      : `${monthLabel(earliestMonth)} ${earliestYear}`;
+
+  return (
+    `The applied rate (effective from ${rateFromLabel}) started after the ` +
+    `earliest selected period (${periodLabel}). ` +
+    `Rate was resolved at transaction date per domain policy.`
+  );
+}
+
 async function validatePeriodRules(
   tx: Pick<typeof db, "contributionPeriod">,
   contributionPeriodIds: number[],
@@ -464,6 +510,8 @@ export async function createContribution(input: CreateContributionInput, actor: 
         throw new HttpError(412, "PRECONDITION_FAILED", "Derived contribution amount must be positive.");
       }
 
+      const ratePeriodWarning = checkRatePeriodCoverage(periods, applicableRate.fromDt);
+
       const created = await tx.contribution.create({
         data: {
           unitId: input.unitId,
@@ -499,7 +547,7 @@ export async function createContribution(input: CreateContributionInput, actor: 
         },
       });
 
-      return created;
+      return { contribution: created, ratePeriodWarning };
     },
     { isolationLevel: "ReadCommitted" }
   );
@@ -509,7 +557,7 @@ export async function createContribution(input: CreateContributionInput, actor: 
     actorRole: actor.actorRole,
     action: "CONTRIBUTION_CREATED",
     entityType: "Contribution",
-    entityId: String(result.id),
+    entityId: String(result.contribution.id),
     payload: {
       unitId: input.unitId,
       contributionHeadId: input.contributionHeadId,
@@ -518,7 +566,7 @@ export async function createContribution(input: CreateContributionInput, actor: 
     },
   });
 
-  return result;
+  return { contribution: result.contribution, warning: result.ratePeriodWarning };
 }
 
 export async function createContributionCorrection(

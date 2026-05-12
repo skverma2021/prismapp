@@ -286,6 +286,7 @@ export default function ContributionCapturePage() {
   const [submitError, setSubmitError] = useState("");
   const [submitHint, setSubmitHint] = useState<ActionHint | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<ContributionSuccessState | null>(null);
+  const [submitWarning, setSubmitWarning] = useState("");
   const [showTestHeads, setShowTestHeads] = useState(false);
   const [activeResidents, setActiveResidents] = useState<ActiveResidency[]>([]);
   const [activeResidentsLoading, setActiveResidentsLoading] = useState(false);
@@ -386,6 +387,7 @@ export default function ContributionCapturePage() {
     setSubmitError("");
     setSubmitHint(null);
     setSubmitSuccess(null);
+    setSubmitWarning("");
   }, [searchParams]);
 
   const deferredHeadId = useDeferredValue(headId);
@@ -821,6 +823,7 @@ export default function ContributionCapturePage() {
     setSubmitError("");
     setSubmitHint(null);
     setSubmitSuccess(null);
+    setSubmitWarning("");
 
     if (!selectedHead || !headId) {
       setSubmitError("Select a contribution head before submitting.");
@@ -896,6 +899,7 @@ export default function ContributionCapturePage() {
         unitLabel: selectedUnit ? formatUnitLabel(selectedUnit) : unitId,
         payerLabel: selectedDepositor ? formatIndividualName(selectedDepositor) : depositedBy.trim(),
       });
+      setSubmitWarning(result.warning ?? "");
 
       if (isMonthly) {
         setMonths((prev) => prev.map((row) => ({ ...row, selected: false })));
@@ -1536,6 +1540,15 @@ export default function ContributionCapturePage() {
                 />
               </div>
             </div>
+          )}
+
+          {submitWarning && (
+            <InlineNotice
+              className="mt-4"
+              tone="warning"
+              title="Rate coverage notice"
+              message={submitWarning}
+            />
           )}
 
           <button

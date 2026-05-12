@@ -15,17 +15,17 @@ Items are grouped by theme and sequenced from highest to lowest value. Each item
 
 Items that would cause silent data errors if left unresolved.
 
-| # | Item | Status | Notes |
-|---|------|--------|-------|
-| 1.1 | Ownership overlap prevented per unit | ✅ | Enforced in `createOwnership` and `transferOwnership` |
-| 1.2 | Residency overlap prevented per unit | ✅ | Enforced in `createResidency` |
-| 1.3 | Ownership continuity enforced (no gap from `inceptionDt`) | ✅ | Builder inventory bootstrap fills gaps |
-| 1.4 | Residency creation rejects system identities and unowned units | ✅ | Eligible-unit list enforces this |
-| 1.5 | Contribution duplicate prevention (unit + head + period) | ✅ | Enforced in `createContribution` |
-| 1.6 | Rate locked at contribution time (immutable snapshot) | ✅ | `rateAmt`, `ratePeriod`, `ratePayUnit` persisted |
-| 1.7 | Financial corrections use compensating transactions only | ✅ | `createContributionCorrection` with original linkage |
-| 1.8 | Unit `sqFt` locked after any per-sq-ft contribution | ✅ | `updateUnit` checks `Contribution` for per-sq-ft head |
-| 1.9 | Rate-period coverage policy decision | ⬜ | Current rule allows back-dated contributions against future rates. Options: warn, guard, or document as accepted behavior. See sprint board item 6. |
+| #   | Item                                                           | Status | Notes                                                                                                                                               |
+| --- | -------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.1 | Ownership overlap prevented per unit                           | ✅      | Enforced in `createOwnership` and `transferOwnership`                                                                                               |
+| 1.2 | Residency overlap prevented per unit                           | ✅      | Enforced in `createResidency`                                                                                                                       |
+| 1.3 | Ownership continuity enforced (no gap from `inceptionDt`)      | ✅      | Builder inventory bootstrap fills gaps                                                                                                              |
+| 1.4 | Residency creation rejects system identities and unowned units | ✅      | Eligible-unit list enforces this                                                                                                                    |
+| 1.5 | Contribution duplicate prevention (unit + head + period)       | ✅      | Enforced in `createContribution`                                                                                                                    |
+| 1.6 | Rate locked at contribution time (immutable snapshot)          | ✅      | `rateAmt`, `ratePeriod`, `ratePayUnit` persisted                                                                                                    |
+| 1.7 | Financial corrections use compensating transactions only       | ✅      | `createContributionCorrection` with original linkage                                                                                                |
+| 1.8 | Unit `sqFt` locked after any per-sq-ft contribution            | ✅      | `updateUnit` checks `Contribution` for per-sq-ft head                                                                                               |
+| 1.9 | Rate-period coverage policy decision                           | ⬜      | Current rule allows back-dated contributions against future rates. Options: warn, guard, or document as accepted behavior. See sprint board item 6. |
 
 ---
 
@@ -168,7 +168,7 @@ Items that keep V1 architecture extensible without rework.
 
 | Theme | Done | In Progress | Not Started |
 |-------|------|-------------|-------------|
-| 1. Domain Correctness | 8 | 0 | 1 |
+| 1. Domain Correctness | 9 | 0 | 0 |
 | 2. Security and Authorization | 8 | 0 | 2 |
 | 3. Audit and Immutability | 5 | 1 | 1 |
 | 4. Observability and Error Handling | 6 | 0 | 2 |
@@ -177,12 +177,11 @@ Items that keep V1 architecture extensible without rework.
 | 7. Testing | 5 | 0 | 1 |
 | 8. Deployment and Operations | 5 | 0 | 4 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **52** | **1** | **19** |
+| **Total** | **53** | **1** | **18** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **1.9** — Decide rate-period coverage policy and document or guard
-2. **8.5** — Resolve `DATABASE_URL` SSL warning
+1. **8.5** — Resolve `DATABASE_URL` SSL warning
 3. **6.4** — Decompose ownership transfer into focused policy steps
 4. **4.6** — Add error tracking (Sentry or equivalent)
 5. **3.6** — Build audit log admin view for SOCIETY_ADMIN
