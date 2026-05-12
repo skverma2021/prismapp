@@ -144,7 +144,7 @@ Items required for a real production deployment.
 | 8.6 | Database backup policy | ⬜ | No automated backup configured. Depends on hosting provider. |
 | 8.7 | Environment variable hygiene (no secrets in repo, `.env.example` complete) | ✅ | `.env.example` present; secrets in Vercel env |
 | 8.8 | Production sign-in with real user accounts (not seed demo users) | ⬜ | Current seed users are demo accounts. Production requires admin-created accounts or OAuth Phase 2. |
-| 8.9 | Rate limiting on auth endpoints | ⬜ | No rate limiting on `/api/auth/*`. Relevant for public-facing deployment. |
+| 8.9 | Rate limiting on auth endpoints | ✅ | In-memory rate limiter added to `proxy.ts` (Next.js 16 proxy/middleware). Limits `POST /api/auth/callback/credentials` to 5 attempts per IP per 15 min; returns `429` with `Retry-After`. Closes OWASP A05-GAP-2 + A07-GAP-1. Also confirms `x-request-id` propagation now active (proxy was correctly named all along; Next.js 16 uses `proxy.ts` not `middleware.ts`). |
 
 ---
 
@@ -175,20 +175,17 @@ Items that keep V1 architecture extensible without rework.
 | 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 4 | 0 | 4 |
 | 7. Testing | 5 | 0 | 1 |
-| 8. Deployment and Operations | 4 | 0 | 5 |
+| 8. Deployment and Operations | 5 | 0 | 4 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **51** | **1** | **20** |
+| **Total** | **52** | **1** | **19** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **8.9** — Rate limiting on `/api/auth/*` endpoints
-2. **1.9** — Decide rate-period coverage policy and document or guard
-3. **8.5** — Resolve `DATABASE_URL` SSL warning
-4. **6.4** — Decompose ownership transfer into focused policy steps
-5. **4.6** — Add error tracking (Sentry or equivalent)
-6. **3.6** — Build audit log admin view for SOCIETY_ADMIN
-7. **8.8** — Production sign-in with real user accounts (not seed demo users)
-8. **8.9** — Add rate limiting on auth endpoints before public launch
-9. **3.6** — Build an audit log admin view for SOCIETY_ADMIN
-10. **7.5** — Set up CI pipeline (lint + build + seed + test on push)
-11. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)
+1. **1.9** — Decide rate-period coverage policy and document or guard
+2. **8.5** — Resolve `DATABASE_URL` SSL warning
+3. **6.4** — Decompose ownership transfer into focused policy steps
+4. **4.6** — Add error tracking (Sentry or equivalent)
+5. **3.6** — Build audit log admin view for SOCIETY_ADMIN
+6. **8.8** — Production sign-in with real user accounts (not seed demo users)
+7. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)
+8. **2.8** — Uniform auth feedback on every protected shell route
