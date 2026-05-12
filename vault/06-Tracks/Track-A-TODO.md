@@ -140,7 +140,7 @@ Items required for a real production deployment.
 | 8.2 | PostgreSQL in production (Vercel Postgres or Neon) | ✅ | Connected and seeded |
 | 8.3 | `prisma migrate deploy` runs cleanly on empty DB | ✅ | Tested |
 | 8.4 | `prisma db seed` reproducible and idempotent | ✅ | Builder ownership deduplication in place |
-| 8.5 | `DATABASE_URL` SSL semantics resolved | ⬜ | SSL warning present on some environments. Sprint board item 4. |
+| 8.5 | `DATABASE_URL` SSL semantics resolved | ✅ | Confirmed Vercel `DATABASE_URL` was missing `?sslmode=require` — fixed by appending it to the connection string in Vercel environment variables. Defensive `console.warn` added to `src/lib/db.ts` at startup if `sslmode` is absent (visible in Vercel logs). |
 | 8.6 | Database backup policy | ⬜ | No automated backup configured. Depends on hosting provider. |
 | 8.7 | Environment variable hygiene (no secrets in repo, `.env.example` complete) | ✅ | `.env.example` present; secrets in Vercel env |
 | 8.8 | Production sign-in with real user accounts (not seed demo users) | ⬜ | Current seed users are demo accounts. Production requires admin-created accounts or OAuth Phase 2. |
@@ -175,15 +175,14 @@ Items that keep V1 architecture extensible without rework.
 | 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 4 | 0 | 4 |
 | 7. Testing | 5 | 0 | 1 |
-| 8. Deployment and Operations | 5 | 0 | 4 |
+| 8. Deployment and Operations | 6 | 0 | 3 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **53** | **1** | **18** |
+| **Total** | **54** | **1** | **17** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **8.5** — Resolve `DATABASE_URL` SSL warning
-3. **6.4** — Decompose ownership transfer into focused policy steps
-4. **4.6** — Add error tracking (Sentry or equivalent)
+1. **6.4** — Decompose ownership transfer into focused policy steps
+2. **4.6** — Add error tracking (Sentry or equivalent)
 5. **3.6** — Build audit log admin view for SOCIETY_ADMIN
 6. **8.8** — Production sign-in with real user accounts (not seed demo users)
 7. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)
