@@ -12,21 +12,20 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set. Configure it in .env before using Prisma.");
 }
 
-// Warn loudly if SSL is not explicitly required.
-// Prisma Postgres / Neon enforces TLS server-side, but omitting sslmode
-// from the connection string is a misconfiguration that can silently fall
-// back to unencrypted on other hosts. Track-A 8.5.
-if (!connectionString.includes("sslmode")) {
-  console.warn(
-    JSON.stringify({
-      level: "warn",
-      message:
-        "DATABASE_URL does not include sslmode. Add ?sslmode=require to your connection string to enforce encrypted connections.",
-    })
-  );
-}
+// Enforce TLS in code rather than relying on ?sslmode=require in the URL.
+// Prisma Postgres / Neon integration-managed URLs in Vercel cannot be manually
+// edited to add sslmode, so we pass ssl explicitly to the pg adapter.
+// In local dev (DATABASE_URL pointing to a local or CI postgres), ssl: false
+// avoids connection errors on servers with no TLS configured.
+const isLocalOrCi =
+  connectionString.includes("localhost") ||
+  connectionString.includes("127.0.0.1") ||
+  connectionString.includes("ci:ci@");
 
-const adapter = new PrismaPg({ connectionString });
+const adapter = new PrismaPg({
+  connectionString,
+  ...(isLocalOrCi ? {} : { ssl: true }),
+});
 
 export const db =
   global.prisma ??
