@@ -9,7 +9,7 @@ import type { NextRequest } from "next/server";
 // without requiring an external dependency.
 // ---------------------------------------------------------------------------
 
-const RATE_LIMIT_MAX = 5; // attempts per window
+const RATE_LIMIT_MAX = 10; // attempts per window
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 type RateLimitEntry = { count: number; resetAt: number };
