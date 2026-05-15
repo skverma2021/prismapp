@@ -319,6 +319,103 @@ export async function deleteOwnership(id: string) {
   throw new HttpError(412, "PRECONDITION_FAILED", "Ownership history is immutable and cannot be deleted.");
 }
 
+// --- Transfer policy helpers ---
+
+type ScheduledOwnershipRow = {
+  id: string;
+  fromDt: Date;
+  indId: string;
+  individual: { isSystemIdentity: boolean; systemTag: string | null };
+};
+
+async function loadScheduledOwnershipRows(
+  tx: Pick<typeof db, "unitOwner">,
+  unitId: string,
+  fromDt: Date
+): Promise<ScheduledOwnershipRow[]> {
+  return tx.unitOwner.findMany({
+    where: { unitId, fromDt: { gte: fromDt } },
+    select: {
+      id: true,
+      fromDt: true,
+      indId: true,
+      individual: { select: { isSystemIdentity: true, systemTag: true } },
+    },
+    orderBy: [{ fromDt: "asc" }, { createdAt: "asc" }],
+  });
+}
+
+function classifyFutureOwnershipRows(
+  scheduledRows: ScheduledOwnershipRow[],
+  transferAnchor: Date
+): { futureNaturalOwners: ScheduledOwnershipRow[]; redundantBuilderRowIds: string[] } {
+  const futureNaturalOwners = scheduledRows.filter(
+    (row) => !row.individual.isSystemIdentity && row.fromDt.getTime() >= transferAnchor.getTime()
+  );
+  const redundantBuilderRowIds = scheduledRows
+    .filter((row) => row.individual.isSystemIdentity || row.individual.systemTag === BUILDER_INVENTORY_TAG)
+    .map((row) => row.id);
+  return { futureNaturalOwners, redundantBuilderRowIds };
+}
+
+async function repairRedundantBuilderRows(
+  tx: Pick<typeof db, "unitOwner">,
+  ids: string[]
+): Promise<void> {
+  if (ids.length === 0) return;
+  await tx.unitOwner.deleteMany({ where: { id: { in: ids } } });
+}
+
+async function loadActiveOwnershipAtDate(
+  tx: Pick<typeof db, "unitOwner">,
+  unitId: string,
+  date: Date
+) {
+  const current = await tx.unitOwner.findFirst({
+    where: {
+      unitId,
+      fromDt: { lte: date },
+      OR: [{ toDt: null }, { toDt: { gte: date } }],
+    },
+    orderBy: { fromDt: "desc" },
+  });
+  if (!current) {
+    throw new HttpError(412, "PRECONDITION_FAILED", "An active ownership is required before transfer.");
+  }
+  return current;
+}
+
+function validateTransferDateAgainstCurrentOwner(
+  current: { id: string; indId: string; fromDt: Date },
+  incoming: { indId: string; fromDt: Date }
+): void {
+  if (current.indId === incoming.indId) {
+    throw new HttpError(400, "VALIDATION_ERROR", "Transfer owner must be different from active owner.");
+  }
+  const previousToDt = new Date(incoming.fromDt.getTime() - 24 * 60 * 60 * 1000);
+  if (previousToDt.getTime() < current.fromDt.getTime()) {
+    throw new HttpError(
+      412,
+      "PRECONDITION_FAILED",
+      `Ownership transfer date must be after the current owner's start date (${current.fromDt.toISOString().slice(0, 10)}).`
+    );
+  }
+}
+
+async function applyOwnershipTransfer(
+  tx: Pick<typeof db, "unitOwner">,
+  current: { id: string; fromDt: Date },
+  input: { unitId: string; indId: string; fromDt: Date },
+  unit: { inceptionDt: Date }
+) {
+  const previousToDt = new Date(input.fromDt.getTime() - 24 * 60 * 60 * 1000);
+  await tx.unitOwner.update({ where: { id: current.id }, data: { toDt: previousToDt } });
+  await ensureOwnershipContinuity(tx, input.unitId, unit.inceptionDt, { fromDt: input.fromDt, toDt: null });
+  return tx.unitOwner.create({
+    data: { unitId: input.unitId, indId: input.indId, fromDt: input.fromDt, toDt: null },
+  });
+}
+
 export async function transferOwnership(input: TransferOwnershipInput, actor: AuthContext) {
   const result = await db.$transaction(
     async (tx) => {
@@ -327,28 +424,8 @@ export async function transferOwnership(input: TransferOwnershipInput, actor: Au
 
       const transferAnchor = input.fromDt;
 
-      const scheduledRows = await tx.unitOwner.findMany({
-        where: {
-          unitId: input.unitId,
-          fromDt: { gte: transferAnchor },
-        },
-        select: {
-          id: true,
-          fromDt: true,
-          indId: true,
-          individual: {
-            select: {
-              isSystemIdentity: true,
-              systemTag: true,
-            },
-          },
-        },
-        orderBy: [{ fromDt: "asc" }, { createdAt: "asc" }],
-      });
-
-      const futureNaturalOwners = scheduledRows.filter(
-        (row) => !row.individual.isSystemIdentity && row.fromDt.getTime() >= transferAnchor.getTime()
-      );
+      const scheduledRows = await loadScheduledOwnershipRows(tx, input.unitId, transferAnchor);
+      const { futureNaturalOwners, redundantBuilderRowIds } = classifyFutureOwnershipRows(scheduledRows, transferAnchor);
 
       if (futureNaturalOwners.length > 0) {
         throw new HttpError(
@@ -358,71 +435,12 @@ export async function transferOwnership(input: TransferOwnershipInput, actor: Au
         );
       }
 
-      const redundantBuilderRowIds = scheduledRows
-        .filter(
-          (row) =>
-            row.individual.isSystemIdentity ||
-            row.individual.systemTag === BUILDER_INVENTORY_TAG
-        )
-        .map((row) => row.id);
+      await repairRedundantBuilderRows(tx, redundantBuilderRowIds);
 
-      if (redundantBuilderRowIds.length > 0) {
-        await tx.unitOwner.deleteMany({
-          where: {
-            id: {
-              in: redundantBuilderRowIds,
-            },
-          },
-        });
-      }
+      const current = await loadActiveOwnershipAtDate(tx, input.unitId, transferAnchor);
+      validateTransferDateAgainstCurrentOwner(current, input);
 
-      const current = await tx.unitOwner.findFirst({
-        where: {
-          unitId: input.unitId,
-          fromDt: { lte: transferAnchor },
-          OR: [{ toDt: null }, { toDt: { gte: transferAnchor } }],
-        },
-        orderBy: { fromDt: "desc" },
-      });
-
-      if (!current) {
-        throw new HttpError(412, "PRECONDITION_FAILED", "An active ownership is required before transfer.");
-      }
-
-      if (current.indId === input.indId) {
-        throw new HttpError(400, "VALIDATION_ERROR", "Transfer owner must be different from active owner.");
-      }
-
-      const previousToDt = new Date(input.fromDt.getTime() - 24 * 60 * 60 * 1000);
-
-      if (previousToDt.getTime() < current.fromDt.getTime()) {
-        throw new HttpError(
-          412,
-          "PRECONDITION_FAILED",
-          `Ownership transfer date must be after the current owner's start date (${current.fromDt.toISOString().slice(0, 10)}).`
-        );
-      }
-
-      await tx.unitOwner.update({
-        where: { id: current.id },
-        data: { toDt: previousToDt },
-      });
-
-      await ensureOwnershipContinuity(tx, input.unitId, unit.inceptionDt, {
-        fromDt: input.fromDt,
-        toDt: null,
-      });
-
-      const created = await tx.unitOwner.create({
-        data: {
-          unitId: input.unitId,
-          indId: input.indId,
-          fromDt: input.fromDt,
-          toDt: null,
-        },
-      });
-
-      return created;
+      return applyOwnershipTransfer(tx, current, input, unit);
     },
     { isolationLevel: "ReadCommitted" }
   );

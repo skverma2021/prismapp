@@ -107,7 +107,7 @@ Items that prevent future breakage when adding modules.
 | 6.1 | Shared `ApiEnvelope<T>`, `PaginatedResponse<T>`, `toErrorMessage()` types | ✅ | `src/types/api.ts`; 12 client files updated |
 | 6.2 | Shared table / filter bar / form shell components extracted | ✅ | `DataTable`, `BrowseFilterBar`, `NoticeStack`, `useBrowseState`, `useCrudActions` |
 | 6.3 | Lookup cache invalidation centralized | ✅ | `invalidateLookups()` core with semantic wrappers |
-| 6.4 | Ownership transfer decomposed into focused policy steps | ⬜ | Refactor Hotspot 2. Current single-function body is hard to extend safely. |
+| 6.4 | Ownership transfer decomposed into focused policy steps | ✅      | Refactor Hotspot 2. Extracted 6 named helpers from `transferOwnership` in `ownerships.service.ts`: `loadScheduledOwnershipRows`, `classifyFutureOwnershipRows`, `repairRedundantBuilderRows`, `loadActiveOwnershipAtDate`, `validateTransferDateAgainstCurrentOwner`, `applyOwnershipTransfer`. Pure structural refactor — no behavior change. |
 | 6.5 | Timeline overlap helpers shared between ownerships and residencies | ⬜ | Refactor Hotspot 3. Low priority until a third timeline entity appears. |
 | 6.6 | Eligibility function names made domain-explicit | ⬜ | Refactor Hotspot 4. `listResidencyEligibleUnitIds` → `listUnitsEligibleForResidencyCreation()` etc. |
 | 6.7 | `ReadCommitted` isolation on all interactive transactions | ✅ | All 9 transactions aligned |
