@@ -85,6 +85,12 @@ export const dashboardNavItems: AppNavItem[] = [
     description: "Review unit-level payment coverage for a head and year.",
     roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
   },
+  {
+    href: "/audit-log",
+    label: "Audit Log",
+    description: "Read-only record of all mutations. Visible to Society Admin only.",
+    roles: ["SOCIETY_ADMIN"],
+  },
 ];
 
 const routeMeta = [

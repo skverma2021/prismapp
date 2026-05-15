@@ -94,3 +94,7 @@ export function requireReadRole(request: Request): Promise<AuthContext> {
 export function requireMutationRole(request: Request): Promise<AuthContext> {
   return requireRole(request, MUTATION_ROLES);
 }
+
+export function requireAdminRole(request: Request): Promise<AuthContext> {
+  return requireRole(request, ["SOCIETY_ADMIN"]);
+}

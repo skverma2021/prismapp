@@ -59,7 +59,7 @@ Items that make the system auditable and safe for financial records.
 | 3.3 | Audit logging on contribution creation and correction | ✅ | Wired in `contributions.service.ts` |
 | 3.4 | Audit logging on all master-data mutations | ✅ | Blocks, units, individuals, contribution heads, rates, ownerships, residencies all wired |
 | 3.5 | In-place edit/delete of posted contributions blocked | ✅ | Domain rule enforced server-side |
-| 3.6 | Audit log reader / admin view | ⬜ | No UI to query `AuditLog`. Useful for SOCIETY_ADMIN but not yet built. |
+| 3.6 | Audit log reader / admin view | ✅      | `GET /api/audit-log` (SOCIETY_ADMIN only). Service in `src/modules/audit-log/audit-log.service.ts`. Filters: action, entityType, actorUserId. Paginated, sorted newest-first. UI at `app/(dashboard)/audit-log/page.tsx` with DataTable, expandable payload cells, filter dropdowns. Nav item added (SOCIETY_ADMIN role only). `requireAdminRole()` helper added to `src/lib/authz.ts`. |
 | 3.7 | Maker-checker extension hooks for correction approval | 🔄 | Schema fields (`correctionStatus`, `correctionApprovedById/At`, `correctionRejectedById/At/Reason`) added. Migration `20260507100000_correction_status_hooks` backfills existing rows to `POSTED`. `MAKER_CHECKER_ENABLED` flag + `CORRECTION_STATUS` constant in service. Approval UI and `approveCorrection()` / `rejectCorrection()` service functions remain to be built when triggered by ADR-001 thresholds. |
 
 ---
@@ -68,16 +68,16 @@ Items that make the system auditable and safe for financial records.
 
 Items that make production failures diagnosable.
 
-| # | Item | Status | Notes |
-|---|------|--------|-------|
-| 4.1 | Request-ID middleware on all `/api/*` routes | ✅ | UUID generated and propagated via `x-request-id` |
-| 4.2 | Request-ID wired into all 33 route handler catch blocks | ✅ | `getRequestId()` used uniformly |
-| 4.3 | Structured JSON error logging on `500`-class failures | ✅ | `api-response.ts` logs to server console |
-| 4.4 | React error boundaries (global, dashboard, contributions, reports) | ✅ | `global-error.tsx` and three route-group boundaries |
-| 4.5 | Clean 404 page | ✅ | `app/not-found.tsx` |
-| 4.6 | Error tracking integration (Sentry or equivalent) | ⬜ | No external error tracker configured. Server logs only. |
-| 4.7 | Uptime / health-check endpoint | ⬜ | No `/api/health` route. Useful for Vercel and monitoring. |
-| 4.8 | Retry on transient failures (client-side) | ✅ | `fetchJsonWithRetry` used on all protected reads |
+| #   | Item                                                               | Status | Notes                                                     |
+| --- | ------------------------------------------------------------------ | ------ | --------------------------------------------------------- |
+| 4.1 | Request-ID middleware on all `/api/*` routes                       | ✅      | UUID generated and propagated via `x-request-id`          |
+| 4.2 | Request-ID wired into all 33 route handler catch blocks            | ✅      | `getRequestId()` used uniformly                           |
+| 4.3 | Structured JSON error logging on `500`-class failures              | ✅      | `api-response.ts` logs to server console                  |
+| 4.4 | React error boundaries (global, dashboard, contributions, reports) | ✅      | `global-error.tsx` and three route-group boundaries       |
+| 4.5 | Clean 404 page                                                     | ✅      | `app/not-found.tsx`                                       |
+| 4.6 | Error tracking integration (Sentry or equivalent)                  | ⬜      | No external error tracker configured. Server logs only.   |
+| 4.7 | Uptime / health-check endpoint                                     | ⬜      | No `/api/health` route. Useful for Vercel and monitoring. |
+| 4.8 | Retry on transient failures (client-side)                          | ✅      | `fetchJsonWithRetry` used on all protected reads          |
 
 ---
 
