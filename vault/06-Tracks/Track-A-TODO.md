@@ -75,7 +75,7 @@ Items that make production failures diagnosable.
 | 4.3 | Structured JSON error logging on `500`-class failures              | ✅      | `api-response.ts` logs to server console                  |
 | 4.4 | React error boundaries (global, dashboard, contributions, reports) | ✅      | `global-error.tsx` and three route-group boundaries       |
 | 4.5 | Clean 404 page                                                     | ✅      | `app/not-found.tsx`                                       |
-| 4.6 | Error tracking integration (Sentry or equivalent)                  | ⬜      | No external error tracker configured. Server logs only.   |
+| 4.6 | Error tracking integration (Sentry or equivalent)                  | ✅      | `@sentry/nextjs@10.53.1` installed. `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` created. `instrumentation.ts` registers server/edge runtimes. `next.config.ts` wrapped with `withSentryConfig`. `global-error.tsx` calls `Sentry.captureException`. DSN in `NEXT_PUBLIC_SENTRY_DSN` env var. Source map upload requires `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in Vercel build env (skipped gracefully if absent). |
 | 4.7 | Uptime / health-check endpoint                                     | ⬜      | No `/api/health` route. Useful for Vercel and monitoring. |
 | 4.8 | Retry on transient failures (client-side)                          | ✅      | `fetchJsonWithRetry` used on all protected reads          |
 

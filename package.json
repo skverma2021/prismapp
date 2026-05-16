@@ -25,6 +25,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "@sentry/nextjs": "^10.53.1",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
     "next": "^16.2.6",

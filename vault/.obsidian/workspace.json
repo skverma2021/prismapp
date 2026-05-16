@@ -8,20 +8,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "a327707885ba9592",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "06-Tracks/Track-A-TODO.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Track-A-TODO"
-            }
-          },
-          {
             "id": "5ab72330b4545b09",
             "type": "leaf",
             "state": {
@@ -48,8 +34,23 @@
               "icon": "lucide-file",
               "title": "Current-Sprint-Board"
             }
+          },
+          {
+            "id": "8fd8dac0a3707b71",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "06-Tracks/Track-A-TODO.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Track-A-TODO"
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -211,11 +212,11 @@
       "bases:Create new base": false
     }
   },
-  "active": "a327707885ba9592",
+  "active": "a6be21a88e8213ec",
   "lastOpenFiles": [
-    "05-AI/Current-Sprint-Board.md",
-    "06-Tracks/Track-A-TODO.md",
     "00-Core/OWASP-Top10-Gap-Review.md",
+    "06-Tracks/Track-A-TODO.md",
+    "05-AI/Current-Sprint-Board.md",
     "05-AI/Execution-Status.md",
     "00-Core/Glossary.md",
     "05-AI/Refactor-Hotspots-Roadmap.md",

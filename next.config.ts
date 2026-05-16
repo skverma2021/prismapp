@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -18,4 +19,16 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Org and project are read from SENTRY_ORG / SENTRY_PROJECT env vars at build time.
+  // Silent: suppress Sentry CLI output in CI logs.
+  silent: !process.env.CI,
+
+  // Upload source maps only when SENTRY_AUTH_TOKEN is present (i.e. on Vercel).
+  // In local dev (no token) source maps are skipped without breaking the build.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Disable automatic performance instrumentation wrappers for now — keep it simple.
+  disableLogger: true,
+  automaticVercelMonitors: false,
+});
