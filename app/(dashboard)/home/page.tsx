@@ -119,9 +119,11 @@ export default function DashboardHomePage() {
         description="Your authenticated role controls which entry points are visible in the shell and which workflow screens are available in this phase."
       />
       <button
+        type="button"
         onClick={throwFakeError}
+        className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 active:bg-red-800 cursor-pointer"
       >
-        Throw an error!
+        Throw a Sentry test error
       </button>
 
       {authStatus === "denied" ? (
