@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+import * as Sentry from "@sentry/nextjs";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { PageHeader } from "@/src/components/shell/page-header";
 import { StateSurface } from "@/src/components/ui/state-surface";
@@ -103,6 +104,12 @@ export default function DashboardHomePage() {
   const authStatus = searchParams.get("auth");
   const deniedFrom = searchParams.get("from");
 
+  const throwFakeError = () => {
+    const error = new Error("Sentry test: thrown from dashboard home page.");
+    Sentry.captureException(error);
+    console.error("Sentry test error captured:", error.message);
+  };
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -111,6 +118,11 @@ export default function DashboardHomePage() {
         title={`Welcome, ${session.displayName}`}
         description="Your authenticated role controls which entry points are visible in the shell and which workflow screens are available in this phase."
       />
+      <button
+        onClick={throwFakeError}
+      >
+        Throw an error!
+      </button>
 
       {authStatus === "denied" ? (
         <InlineNotice
