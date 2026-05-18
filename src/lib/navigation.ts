@@ -92,6 +92,12 @@ export const dashboardNavItems: AppNavItem[] = [
     roles: ["SOCIETY_ADMIN"],
   },
   {
+    href: "/contributions/corrections",
+    label: "Pending Corrections",
+    description: "Review and approve or reject pending contribution corrections.",
+    roles: ["SOCIETY_ADMIN"],
+  },
+  {
     href: "/app-users",
     label: "App Users",
     description: "Create and manage operator accounts and roles. Visible to Society Admin only.",
@@ -166,6 +172,11 @@ const routeMeta = [
     description: "Read-only record of all system mutations. Society Admin only.",
   },
   {
+    href: "/contributions/corrections",
+    title: "Pending Corrections",
+    description: "Review and approve or reject correction submissions awaiting a second approver.",
+  },
+  {
     href: "/app-users",
     title: "App Users",
     description: "Create and manage operator accounts and their assigned roles.",
@@ -219,6 +230,10 @@ export function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
       { label: "Reports" },
       { label: "Paid/Unpaid Matrix" },
     ];
+  }
+
+  if (pathname.startsWith("/contributions/corrections")) {
+    return [{ label: "Home", href: "/home" }, { label: "Pending Corrections" }];
   }
 
   if (pathname.startsWith("/contributions")) {

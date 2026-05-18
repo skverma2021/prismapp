@@ -694,3 +694,168 @@ export async function createContributionCorrection(
 
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// Maker-checker: list pending corrections
+// ---------------------------------------------------------------------------
+
+export async function listPendingCorrections() {
+  return db.contribution.findMany({
+    where: { correctionStatus: CORRECTION_STATUS.PENDING },
+    select: {
+      id: true,
+      correctionOfContributionId: true,
+      correctionReasonCode: true,
+      correctionReasonText: true,
+      correctionStatus: true,
+      transactionId: true,
+      transactionDateTime: true,
+      actorUserId: true,
+      actorRole: true,
+      createdAt: true,
+      unit: { select: { id: true, description: true, block: { select: { description: true } } } },
+      contributionHead: { select: { id: true, description: true } },
+      details: {
+        select: { amt: true, contributionPeriod: { select: { refYear: true, refMonth: true } } },
+        orderBy: [{ contributionPeriod: { refYear: "asc" } }, { contributionPeriod: { refMonth: "asc" } }],
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Maker-checker: approve a pending correction
+// ---------------------------------------------------------------------------
+
+export async function approveCorrection(correctionId: number, actor: ContributionActor) {
+  const correction = await db.contribution.findUnique({
+    where: { id: correctionId },
+    select: {
+      id: true,
+      correctionStatus: true,
+      correctionOfContributionId: true,
+      actorUserId: true,
+    },
+  });
+
+  if (!correction) {
+    throw new HttpError(404, "NOT_FOUND", "Correction not found.");
+  }
+
+  if (!correction.correctionOfContributionId) {
+    throw new HttpError(400, "VALIDATION_ERROR", "This contribution is not a correction.");
+  }
+
+  if (correction.correctionStatus !== CORRECTION_STATUS.PENDING) {
+    throw new HttpError(
+      409,
+      "CONFLICT",
+      `Correction is not pending (current status: ${correction.correctionStatus ?? "POSTED"}).`
+    );
+  }
+
+  // Maker and checker must be different users.
+  if (correction.actorUserId && correction.actorUserId === actor.actorUserId) {
+    throw new HttpError(
+      403,
+      "FORBIDDEN",
+      "The approver must be a different user than the one who submitted the correction."
+    );
+  }
+
+  const result = await db.contribution.update({
+    where: { id: correctionId },
+    data: {
+      correctionStatus: CORRECTION_STATUS.POSTED,
+      correctionApprovedById: actor.actorUserId,
+      correctionApprovedAt: new Date(),
+    },
+    select: { id: true, correctionStatus: true, correctionApprovedById: true, correctionApprovedAt: true },
+  });
+
+  await writeAuditLog(db, {
+    actorUserId: actor.actorUserId,
+    actorRole: actor.actorRole,
+    action: "CONTRIBUTION_CORRECTION_APPROVED",
+    entityType: "Contribution",
+    entityId: String(correctionId),
+    payload: {
+      originalContributionId: correction.correctionOfContributionId,
+      approvedBy: actor.actorUserId,
+    },
+  });
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Maker-checker: reject a pending correction
+// ---------------------------------------------------------------------------
+
+export async function rejectCorrection(correctionId: number, rejectionReason: string, actor: ContributionActor) {
+  if (!rejectionReason.trim()) {
+    throw new HttpError(400, "VALIDATION_ERROR", "rejectionReason is required.");
+  }
+
+  const correction = await db.contribution.findUnique({
+    where: { id: correctionId },
+    select: {
+      id: true,
+      correctionStatus: true,
+      correctionOfContributionId: true,
+      actorUserId: true,
+    },
+  });
+
+  if (!correction) {
+    throw new HttpError(404, "NOT_FOUND", "Correction not found.");
+  }
+
+  if (!correction.correctionOfContributionId) {
+    throw new HttpError(400, "VALIDATION_ERROR", "This contribution is not a correction.");
+  }
+
+  if (correction.correctionStatus !== CORRECTION_STATUS.PENDING) {
+    throw new HttpError(
+      409,
+      "CONFLICT",
+      `Correction is not pending (current status: ${correction.correctionStatus ?? "POSTED"}).`
+    );
+  }
+
+  // Maker and checker must be different users.
+  if (correction.actorUserId && correction.actorUserId === actor.actorUserId) {
+    throw new HttpError(
+      403,
+      "FORBIDDEN",
+      "The rejector must be a different user than the one who submitted the correction."
+    );
+  }
+
+  const result = await db.contribution.update({
+    where: { id: correctionId },
+    data: {
+      correctionStatus: CORRECTION_STATUS.REJECTED,
+      correctionRejectedById: actor.actorUserId,
+      correctionRejectedAt: new Date(),
+      correctionRejectionReason: rejectionReason.trim(),
+    },
+    select: { id: true, correctionStatus: true, correctionRejectedById: true, correctionRejectedAt: true },
+  });
+
+  await writeAuditLog(db, {
+    actorUserId: actor.actorUserId,
+    actorRole: actor.actorRole,
+    action: "CONTRIBUTION_CORRECTION_REJECTED",
+    entityType: "Contribution",
+    entityId: String(correctionId),
+    payload: {
+      originalContributionId: correction.correctionOfContributionId,
+      rejectedBy: actor.actorUserId,
+      rejectionReason: rejectionReason.trim(),
+    },
+  });
+
+  return result;
+}
