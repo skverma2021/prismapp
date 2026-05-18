@@ -75,7 +75,7 @@ Items that make production failures diagnosable.
 | 4.3 | Structured JSON error logging on `500`-class failures              | ✅      | `api-response.ts` logs to server console                  |
 | 4.4 | React error boundaries (global, dashboard, contributions, reports) | ✅      | `global-error.tsx` and three route-group boundaries       |
 | 4.5 | Clean 404 page                                                     | ✅      | `app/not-found.tsx`                                       |
-| 4.6 | Error tracking integration (Sentry or equivalent)                  | ✅      | `@sentry/nextjs@10.53.1` installed. `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` created. `instrumentation.ts` registers server/edge runtimes. `next.config.ts` wrapped with `withSentryConfig`. `global-error.tsx` calls `Sentry.captureException`. DSN in `NEXT_PUBLIC_SENTRY_DSN` env var. Source map upload requires `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in Vercel build env (skipped gracefully if absent). |
+| 4.6 | Error tracking integration (Sentry or equivalent)                  | ✅      | `@sentry/nextjs@10.53.1` installed. `instrumentation-client.ts` initializes Sentry in browser. `sentry.server.config.ts` + `sentry.edge.config.ts` for server/edge runtimes. `instrumentation.ts` registers server/edge and exports `onRequestError = Sentry.captureRequestError`. `next.config.ts` wrapped with `withSentryConfig`. `global-error.tsx` calls `Sentry.captureException`. DSN in `NEXT_PUBLIC_SENTRY_DSN` env var. Verified working on Vercel production (2026-05-18) — test error appeared in Sentry Issues within 30 seconds. Source map upload requires `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in Vercel build env (skipped gracefully if absent). |
 | 4.7 | Uptime / health-check endpoint                                     | ⬜      | No `/api/health` route. Useful for Vercel and monitoring. |
 | 4.8 | Retry on transient failures (client-side)                          | ✅      | `fetchJsonWithRetry` used on all protected reads          |
 
@@ -171,19 +171,18 @@ Items that keep V1 architecture extensible without rework.
 | 1. Domain Correctness | 9 | 0 | 0 |
 | 2. Security and Authorization | 8 | 0 | 2 |
 | 3. Audit and Immutability | 5 | 1 | 1 |
-| 4. Observability and Error Handling | 6 | 0 | 2 |
+| 4. Observability and Error Handling | 7 | 0 | 1 |
 | 5. Performance | 8 | 0 | 0 |
-| 6. Code Maintainability | 4 | 0 | 4 |
+| 6. Code Maintainability | 5 | 0 | 3 |
 | 7. Testing | 5 | 0 | 1 |
 | 8. Deployment and Operations | 6 | 0 | 3 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **54** | **1** | **17** |
+| **Total** | **56** | **1** | **15** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **6.4** — Decompose ownership transfer into focused policy steps
-2. **4.6** — Add error tracking (Sentry or equivalent)
-5. **3.6** — Build audit log admin view for SOCIETY_ADMIN
-6. **8.8** — Production sign-in with real user accounts (not seed demo users)
-7. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)
-8. **2.8** — Uniform auth feedback on every protected shell route
+1. **8.8** — Production sign-in with real user accounts (not seed demo users)
+2. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)
+3. **2.8** — Uniform auth feedback on every protected shell route
+4. **4.7** — Uptime / health-check endpoint (`/api/health`)
+5. **7.6** — Temporal edge case test coverage (rate-period mismatch, overlap boundary, inception gap)
