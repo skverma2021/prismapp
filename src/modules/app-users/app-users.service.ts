@@ -160,7 +160,6 @@ export async function updateAppUser(id: string, input: UpdateAppUserInput, actor
   }
 
   const data: Record<string, unknown> = {};
-  if (input.displayName !== undefined) data.displayName = input.displayName;
   if (input.role !== undefined) data.role = input.role;
   if (input.isActive !== undefined) data.isActive = input.isActive;
   if (input.password !== undefined) {

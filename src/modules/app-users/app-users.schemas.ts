@@ -8,7 +8,6 @@ export type CreateAppUserInput = {
 };
 
 export type UpdateAppUserInput = {
-  displayName?: string;
   role?: string;
   isActive?: boolean;
   password?: string;
@@ -43,7 +42,6 @@ export function parseUpdateAppUserInput(payload: unknown): UpdateAppUserInput {
 
   const record = payload as Record<string, unknown>;
 
-  const displayName = parseOptionalString(record.displayName);
   const roleRaw = parseOptionalString(record.role);
   const password = parseOptionalString(record.password);
 
@@ -64,9 +62,9 @@ export function parseUpdateAppUserInput(payload: unknown): UpdateAppUserInput {
     throw new HttpError(400, "VALIDATION_ERROR", "password must be at least 10 characters.");
   }
 
-  if (displayName === undefined && roleRaw === undefined && isActive === undefined && password === undefined) {
+  if (roleRaw === undefined && isActive === undefined && password === undefined) {
     throw new HttpError(400, "VALIDATION_ERROR", "At least one mutable field is required.");
   }
 
-  return { displayName, role: roleRaw, isActive, password };
+  return { role: roleRaw, isActive, password };
 }

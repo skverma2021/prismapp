@@ -74,7 +74,7 @@ export default function AppUsersPage() {
 
   const [form, setForm] = useState(EMPTY_CREATE);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ displayName: "", role: "MANAGER", isActive: true, password: "" });
+  const [editForm, setEditForm] = useState({ role: "MANAGER", isActive: true, password: "" });
   const [roleFilter, setRoleFilter] = useState("");
   const [availableIndividuals, setAvailableIndividuals] = useState<AvailableIndividual[]>([]);
 
@@ -104,12 +104,11 @@ export default function AppUsersPage() {
 
   function startEdit(item: AppUserItem) {
     setEditingId(item.id);
-    setEditForm({ displayName: item.displayName, role: item.role, isActive: item.isActive, password: "" });
+    setEditForm({ role: item.role, isActive: item.isActive, password: "" });
   }
 
   function handleUpdate(id: string) {
     const body: Record<string, unknown> = {
-      displayName: editForm.displayName.trim(),
       role: editForm.role,
       isActive: editForm.isActive,
     };
@@ -189,10 +188,10 @@ export default function AppUsersPage() {
                   disabled={crud.createLoading}
                   className={INPUT_DISABLED_CLASS}
                 >
-                  <option value="">â€” select individual â€”</option>
+                  <option value="">{"\u2014"} select individual {"\u2014"}</option>
                   {availableIndividuals.map((ind) => (
                     <option key={ind.id} value={ind.id}>
-                      {fullName(ind)} â€” {ind.eMail}
+                      {fullName(ind)} {"\u2014"} {ind.eMail}
                     </option>
                   ))}
                 </select>
@@ -257,19 +256,12 @@ export default function AppUsersPage() {
               columns={[
                 {
                   header: "Name / Email",
-                  render: (item) =>
-                    editingId === item.id ? (
-                      <input
-                        value={editForm.displayName}
-                        onChange={(e) => setEditForm((f) => ({ ...f, displayName: e.target.value }))}
-                        className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
-                      />
-                    ) : (
-                      <div>
-                        <p className="font-medium text-slate-900">{item.displayName}</p>
-                        <p className="text-xs text-slate-500">{item.email}</p>
-                      </div>
-                    ),
+                  render: (item) => (
+                    <div>
+                      <p className="font-medium text-slate-900">{item.displayName}</p>
+                      <p className="text-xs text-slate-500">{item.email}</p>
+                    </div>
+                  ),
                 },
                 {
                   header: "Role",
@@ -318,7 +310,7 @@ export default function AppUsersPage() {
                         className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
                       />
                     ) : (
-                      <span className="text-slate-400 text-xs">â€”</span>
+                      <span className="text-slate-400 text-xs">{"\u2014"}</span>
                     ),
                 },
                 {
@@ -328,7 +320,7 @@ export default function AppUsersPage() {
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
-                          disabled={!editForm.displayName.trim() || (!!editForm.password && editForm.password.length < 10)}
+                          disabled={!!editForm.password && editForm.password.length < 10}
                           onClick={() => handleUpdate(item.id)}
                           className={BTN_SAVE}
                         >
