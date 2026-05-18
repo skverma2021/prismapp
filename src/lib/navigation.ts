@@ -91,6 +91,12 @@ export const dashboardNavItems: AppNavItem[] = [
     description: "Read-only record of all mutations. Visible to Society Admin only.",
     roles: ["SOCIETY_ADMIN"],
   },
+  {
+    href: "/app-users",
+    label: "App Users",
+    description: "Create and manage operator accounts and roles. Visible to Society Admin only.",
+    roles: ["SOCIETY_ADMIN"],
+  },
 ];
 
 const routeMeta = [
@@ -153,6 +159,16 @@ const routeMeta = [
     href: "/reports/contributions/paid-unpaid-matrix",
     title: "Paid/Unpaid Matrix",
     description: "Review expected and collected contribution coverage across units.",
+  },
+  {
+    href: "/audit-log",
+    title: "Audit Log",
+    description: "Read-only record of all system mutations. Society Admin only.",
+  },
+  {
+    href: "/app-users",
+    title: "App Users",
+    description: "Create and manage operator accounts and their assigned roles.",
   },
 ];
 

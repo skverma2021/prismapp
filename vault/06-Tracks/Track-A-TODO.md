@@ -143,7 +143,7 @@ Items required for a real production deployment.
 | 8.5 | `DATABASE_URL` SSL semantics resolved                                      | ✅      | Added `withVerifyFullSsl()` to `src/lib/db.ts` (commit `ecc765d`) — rewrites `sslmode=require\|prefer\|verify-ca` → `sslmode=verify-full` at runtime to preserve strong-TLS semantics and silence the `pg-connection-string` v3 deprecation warning. No env file changes required. Vercel Prisma Postgres enforces TLS server-side regardless. When connection pooling is needed, swap `DATABASE_URL` on Vercel to the Prisma Accelerate URL (`prisma+postgres://accelerate.prisma-data.net/...`). |
 | 8.6 | Database backup policy                                                     | ⬜      | No automated backup configured. Depends on hosting provider.                                                                                                                                                                                                                                                                                                             |
 | 8.7 | Environment variable hygiene (no secrets in repo, `.env.example` complete) | ✅      | `.env.example` present; secrets in Vercel env                                                                                                                                                                                                                                                                                                                            |
-| 8.8 | Production sign-in with real user accounts (not seed demo users)           | ⬜      | Current seed users are demo accounts. Production requires admin-created accounts or OAuth Phase 2.                                                                                                                                                                                                                                                                       |
+| 8.8 | Production sign-in with real user accounts (not seed demo users)           | ✅      | App Users management screen added at `/app-users` (SOCIETY_ADMIN only). `GET/POST /api/app-users` and `GET/PATCH /api/app-users/[id]` route handlers. Service in `src/modules/app-users/app-users.service.ts` with `bcrypt` cost factor 12. `parseCreateAppUserInput` validates email format, password min 10 chars, valid role. Admins can create accounts, change display name, role, active flag, and reset passwords. Audit log entries written for `APP_USER_CREATED` and `APP_USER_UPDATED`. Seed demo users remain for dev/staging; production admin creates real accounts via this screen then disables or removes demo users. |
 | 8.9 | Rate limiting on auth endpoints                                            | ✅      | In-memory rate limiter added to `proxy.ts` (Next.js 16 proxy/middleware). Limits `POST /api/auth/callback/credentials` to 5 attempts per IP per 15 min; returns `429` with `Retry-After`. Closes OWASP A05-GAP-2 + A07-GAP-1. Also confirms `x-request-id` propagation now active (proxy was correctly named all along; Next.js 16 uses `proxy.ts` not `middleware.ts`). |
 
 ---
@@ -175,14 +175,14 @@ Items that keep V1 architecture extensible without rework.
 | 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 5 | 0 | 3 |
 | 7. Testing | 5 | 0 | 1 |
-| 8. Deployment and Operations | 6 | 0 | 3 |
+| 8. Deployment and Operations | 7 | 0 | 2 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **56** | **1** | **15** |
+| **Total** | **57** | **1** | **14** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **8.8** — Production sign-in with real user accounts (not seed demo users)
-2. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)
-3. **2.8** — Uniform auth feedback on every protected shell route
-4. **4.7** — Uptime / health-check endpoint (`/api/health`)
-5. **7.6** — Temporal edge case test coverage (rate-period mismatch, overlap boundary, inception gap)
+1. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)
+2. **2.8** — Uniform auth feedback on every protected shell route
+3. **4.7** — Uptime / health-check endpoint (`/api/health`)
+4. **7.6** — Temporal edge case test coverage (rate-period mismatch, overlap boundary, inception gap)
+5. **8.6** — Database backup policy (depends on hosting provider)
