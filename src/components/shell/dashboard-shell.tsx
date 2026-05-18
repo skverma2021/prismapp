@@ -60,8 +60,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-slate-500">{session.email}</p>
             <p className="mt-1 text-xs text-slate-500">User ID: {session.userId}</p>
             <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">Mode: {sessionMode}</p>
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-2">
               <SignOutButton />
+              <Link
+                href="/change-password"
+                className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-teal-300 hover:text-teal-700 transition"
+              >
+                Change password
+              </Link>
             </div>
           </div>
 

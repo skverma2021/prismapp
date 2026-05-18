@@ -170,6 +170,11 @@ const routeMeta = [
     title: "App Users",
     description: "Create and manage operator accounts and their assigned roles.",
   },
+  {
+    href: "/change-password",
+    title: "Change Password",
+    description: "Update your sign-in password. You must provide your current password.",
+  },
 ];
 
 export function getVisibleNavItems(role: UserRole) {

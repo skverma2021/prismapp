@@ -93,17 +93,35 @@ export async function getAppUserById(id: string) {
 }
 
 export async function createAppUser(input: CreateAppUserInput, actor: AuthContext) {
-  const existing = await db.appUser.findUnique({ where: { email: input.email } });
+  // Resolve individual — this enforces that every operator account is a registered person.
+  const individual = await db.individual.findUnique({
+    where: { id: input.individualId },
+    select: { id: true, fName: true, mName: true, sName: true, eMail: true, isSystemIdentity: true },
+  });
+
+  if (!individual) {
+    throw new HttpError(404, "NOT_FOUND", "Individual not found.");
+  }
+
+  if (individual.isSystemIdentity) {
+    throw new HttpError(400, "VALIDATION_ERROR", "System identities cannot have app user accounts.");
+  }
+
+  const email = individual.eMail.toLowerCase();
+  const nameParts = [individual.fName, individual.mName, individual.sName].filter(Boolean);
+  const displayName = nameParts.join(" ");
+
+  const existing = await db.appUser.findUnique({ where: { email } });
   if (existing) {
-    throw new HttpError(409, "CONFLICT", "An account with this email already exists.");
+    throw new HttpError(409, "CONFLICT", "An account already exists for this individual's email.");
   }
 
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
 
   const result = await db.appUser.create({
     data: {
-      email: input.email,
-      displayName: input.displayName,
+      email,
+      displayName,
       role: input.role,
       passwordHash,
       isActive: true,
@@ -125,7 +143,7 @@ export async function createAppUser(input: CreateAppUserInput, actor: AuthContex
     action: "APP_USER_CREATED",
     entityType: "AppUser",
     entityId: result.id,
-    payload: { email: result.email, displayName: result.displayName, role: result.role },
+    payload: { email: result.email, displayName: result.displayName, role: result.role, individualId: input.individualId },
   });
 
   return result;

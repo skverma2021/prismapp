@@ -104,6 +104,20 @@ export async function listIndividualLookups() {
   });
 }
 
+export async function listIndividualsAvailableForAppUser() {
+  // Return non-system individuals whose email is not already used by any AppUser.
+  const usedEmails = await db.appUser.findMany({ select: { email: true } });
+  const usedEmailSet = new Set(usedEmails.map((u) => u.email));
+
+  const individuals = await db.individual.findMany({
+    where: { isSystemIdentity: false },
+    select: { id: true, fName: true, mName: true, sName: true, eMail: true },
+    orderBy: [{ sName: "asc" }, { fName: "asc" }],
+  });
+
+  return individuals.filter((ind) => !usedEmailSet.has(ind.eMail));
+}
+
 export async function getIndividualById(id: string, role: UserRole) {
   const individual = await db.individual.findUnique({
     where: { id },

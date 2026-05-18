@@ -2,8 +2,7 @@ import { HttpError, parseOptionalString, requireString } from "@/src/lib/api-res
 import { parseUserRole } from "@/src/lib/user-role";
 
 export type CreateAppUserInput = {
-  email: string;
-  displayName: string;
+  individualId: string;
   password: string;
   role: string;
 };
@@ -22,14 +21,9 @@ export function parseCreateAppUserInput(payload: unknown): CreateAppUserInput {
 
   const record = payload as Record<string, unknown>;
 
-  const email = requireString(record.email, "email").toLowerCase();
-  const displayName = requireString(record.displayName, "displayName");
+  const individualId = requireString(record.individualId, "individualId");
   const password = requireString(record.password, "password");
   const roleRaw = requireString(record.role, "role");
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new HttpError(400, "VALIDATION_ERROR", "email must be a valid email address.");
-  }
 
   if (password.length < 10) {
     throw new HttpError(400, "VALIDATION_ERROR", "password must be at least 10 characters.");
@@ -39,7 +33,7 @@ export function parseCreateAppUserInput(payload: unknown): CreateAppUserInput {
     throw new HttpError(400, "VALIDATION_ERROR", "role must be SOCIETY_ADMIN, MANAGER, or READ_ONLY.");
   }
 
-  return { email, displayName, password, role: roleRaw };
+  return { individualId, password, role: roleRaw };
 }
 
 export function parseUpdateAppUserInput(payload: unknown): UpdateAppUserInput {

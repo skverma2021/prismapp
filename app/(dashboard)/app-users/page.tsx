@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BrowseFilterBar, BTN_CANCEL, BTN_SAVE, BTN_SUBMIT, INPUT_CLASS, INPUT_DISABLED_CLASS } from "@/src/components/master-data/browse-filter-bar";
 import { DataTable } from "@/src/components/master-data/data-table";
@@ -19,6 +19,14 @@ type AppUserItem = {
   role: string;
   isActive: boolean;
   createdAt: string;
+};
+
+type AvailableIndividual = {
+  id: string;
+  fName: string;
+  mName: string | null;
+  sName: string;
+  eMail: string;
 };
 
 type SortOption = "displayName" | "email" | "role" | "createdAt";
@@ -43,7 +51,11 @@ const ROLE_LABELS: Record<string, string> = {
   READ_ONLY: "Read Only",
 };
 
-const EMPTY_CREATE = { email: "", displayName: "", password: "", role: "MANAGER" };
+const EMPTY_CREATE = { individualId: "", password: "", role: "MANAGER" };
+
+function fullName(ind: AvailableIndividual) {
+  return [ind.fName, ind.mName, ind.sName].filter(Boolean).join(" ");
+}
 
 export default function AppUsersPage() {
   const browse = useBrowseState<AppUserItem, SortOption>({
@@ -64,14 +76,26 @@ export default function AppUsersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ displayName: "", role: "MANAGER", isActive: true, password: "" });
   const [roleFilter, setRoleFilter] = useState("");
+  const [availableIndividuals, setAvailableIndividuals] = useState<AvailableIndividual[]>([]);
+
+  useEffect(() => {
+    fetch("/api/individuals/available-for-app-user")
+      .then((r) => r.json() as Promise<{ data?: AvailableIndividual[] }>)
+      .then((j) => { if (j.data) setAvailableIndividuals(j.data); })
+      .catch(() => { /* non-critical â€” picker will show empty */ });
+  }, []);
+
+  const selectedIndividual = availableIndividuals.find((ind) => ind.id === form.individualId);
 
   function handleCreate() {
     void crud.create<AppUserItem>({
       endpoint: "/api/app-users",
-      body: { email: form.email.trim(), displayName: form.displayName.trim(), password: form.password, role: form.role },
+      body: { individualId: form.individualId, password: form.password, role: form.role },
       errorMessage: "Unable to create user.",
       onSuccess: (data) => {
         setForm(EMPTY_CREATE);
+        // Remove the newly linked individual from the available list.
+        setAvailableIndividuals((prev) => prev.filter((ind) => ind.eMail !== data.email));
         browse.setSubmitSuccess(`User created: ${data.displayName} (${data.email})`);
         browse.setPage(1);
       },
@@ -106,8 +130,7 @@ export default function AppUsersPage() {
 
   const createDisabled =
     crud.createLoading ||
-    !form.email.trim() ||
-    !form.displayName.trim() ||
+    !form.individualId ||
     form.password.length < 10 ||
     !form.role;
 
@@ -123,8 +146,8 @@ export default function AppUsersPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-(--accent-strong)">Administration</p>
             <h2 className="mt-2 text-2xl font-semibold text-slate-900">App Users</h2>
             <p className="mt-2 max-w-3xl text-sm text-slate-600">
-              Create and manage operator accounts. Each user has a role that controls what they can see and do.
-              Passwords must be at least 10 characters. Only Society Admins can access this screen.
+              Create operator accounts by selecting a registered individual. The individual&apos;s email becomes the sign-in
+              credential. Assign a role and initial password (min 10 characters). Users can change their own password after sign-in.
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-3">
@@ -154,41 +177,64 @@ export default function AppUsersPage() {
           {/* Create form */}
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-sm font-semibold text-slate-900">Create User</p>
-            <p className="mt-1 text-xs text-slate-500">Password must be at least 10 characters.</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Only registered individuals without an existing account appear in the list.
+            </p>
             <div className="mt-4 grid gap-3">
-              <input
-                value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                placeholder="Email address"
-                type="email"
-                disabled={crud.createLoading}
-                className={INPUT_DISABLED_CLASS}
-              />
-              <input
-                value={form.displayName}
-                onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-                placeholder="Display name"
-                disabled={crud.createLoading}
-                className={INPUT_DISABLED_CLASS}
-              />
-              <input
-                value={form.password}
-                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                placeholder="Password (min 10 chars)"
-                type="password"
-                disabled={crud.createLoading}
-                className={INPUT_DISABLED_CLASS}
-              />
-              <select
-                value={form.role}
-                onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-                disabled={crud.createLoading}
-                className={INPUT_DISABLED_CLASS}
-              >
-                <option value="SOCIETY_ADMIN">Society Admin</option>
-                <option value="MANAGER">Manager</option>
-                <option value="READ_ONLY">Read Only</option>
-              </select>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Individual</label>
+                <select
+                  value={form.individualId}
+                  onChange={(e) => setForm((f) => ({ ...f, individualId: e.target.value }))}
+                  disabled={crud.createLoading}
+                  className={INPUT_DISABLED_CLASS}
+                >
+                  <option value="">â€” select individual â€”</option>
+                  {availableIndividuals.map((ind) => (
+                    <option key={ind.id} value={ind.id}>
+                      {fullName(ind)} â€” {ind.eMail}
+                    </option>
+                  ))}
+                </select>
+                {availableIndividuals.length === 0 && (
+                  <p className="mt-1 text-xs text-slate-400">
+                    All registered individuals already have accounts, or none exist yet.
+                  </p>
+                )}
+              </div>
+
+              {selectedIndividual && (
+                <p className="rounded-lg bg-white px-3 py-2 text-xs text-slate-600 border border-slate-200">
+                  Sign-in email: <span className="font-medium">{selectedIndividual.eMail}</span>
+                </p>
+              )}
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Role</label>
+                <select
+                  value={form.role}
+                  onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+                  disabled={crud.createLoading}
+                  className={INPUT_DISABLED_CLASS}
+                >
+                  <option value="SOCIETY_ADMIN">Society Admin</option>
+                  <option value="MANAGER">Manager</option>
+                  <option value="READ_ONLY">Read Only</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">Initial password (min 10 chars)</label>
+                <input
+                  value={form.password}
+                  onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                  placeholder="Set initial password"
+                  type="password"
+                  disabled={crud.createLoading}
+                  className={INPUT_DISABLED_CLASS}
+                />
+              </div>
+
               <button
                 type="button"
                 disabled={createDisabled}
@@ -261,7 +307,7 @@ export default function AppUsersPage() {
                     ),
                 },
                 {
-                  header: "New Password",
+                  header: "Admin reset password",
                   render: (item) =>
                     editingId === item.id ? (
                       <input
@@ -272,7 +318,7 @@ export default function AppUsersPage() {
                         className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm"
                       />
                     ) : (
-                      <span className="text-slate-400 text-xs">—</span>
+                      <span className="text-slate-400 text-xs">â€”</span>
                     ),
                 },
                 {
