@@ -76,7 +76,7 @@ Items that make production failures diagnosable.
 | 4.4 | React error boundaries (global, dashboard, contributions, reports) | ✅      | `global-error.tsx` and three route-group boundaries       |
 | 4.5 | Clean 404 page                                                     | ✅      | `app/not-found.tsx`                                       |
 | 4.6 | Error tracking integration (Sentry or equivalent)                  | ✅      | `@sentry/nextjs@10.53.1` installed. `instrumentation-client.ts` initializes Sentry in browser. `sentry.server.config.ts` + `sentry.edge.config.ts` for server/edge runtimes. `instrumentation.ts` registers server/edge and exports `onRequestError = Sentry.captureRequestError`. `next.config.ts` wrapped with `withSentryConfig`. `global-error.tsx` calls `Sentry.captureException`. DSN in `NEXT_PUBLIC_SENTRY_DSN` env var. Verified working on Vercel production (2026-05-18) — test error appeared in Sentry Issues within 30 seconds. Source map upload requires `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in Vercel build env (skipped gracefully if absent). |
-| 4.7 | Uptime / health-check endpoint                                     | ⬜      | No `/api/health` route. Useful for Vercel and monitoring. |
+| 4.7 | Uptime / health-check endpoint                                     | ✅      | `GET /api/health` — public, no auth. Runs `SELECT 1` to verify DB reachability. Returns `200 { status:"ok", timestamp, db:"ok" }` on success; `503 { status:"degraded", db:"unreachable", detail }` on DB failure. `app/api/health/route.ts`. |
 | 4.8 | Retry on transient failures (client-side)                          | ✅      | `fetchJsonWithRetry` used on all protected reads          |
 
 ---
@@ -171,18 +171,18 @@ Items that keep V1 architecture extensible without rework.
 | 1. Domain Correctness | 9 | 0 | 0 |
 | 2. Security and Authorization | 8 | 0 | 2 |
 | 3. Audit and Immutability | 5 | 1 | 1 |
-| 4. Observability and Error Handling | 7 | 0 | 1 |
+| 4. Observability and Error Handling | 8 | 0 | 0 |
 | 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 5 | 0 | 3 |
 | 7. Testing | 5 | 0 | 1 |
 | 8. Deployment and Operations | 7 | 0 | 2 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **57** | **1** | **14** |
+| **Total** | **58** | **0** | **14** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **3.7** — Complete maker-checker approval UI and service functions (activate when ADR-001 thresholds are met)
-2. **2.8** — Uniform auth feedback on every protected shell route
-3. **4.7** — Uptime / health-check endpoint (`/api/health`)
-4. **7.6** — Temporal edge case test coverage (rate-period mismatch, overlap boundary, inception gap)
-5. **8.6** — Database backup policy (depends on hosting provider)
+1. **1.9** — Rate-period coverage policy decision (warn/guard/document for back-dated contributions vs future rates)
+2. **7.6** — Temporal edge case test coverage (rate-period mismatch, overlap boundary, inception gap)
+3. **8.6** — Database backup policy (depends on hosting provider)
+4. **2.6** — OAuth Phase 2 (Google / Microsoft account linking) — deferred stretch
+5. **6.5** — Timeline overlap helpers shared between ownerships and residencies
