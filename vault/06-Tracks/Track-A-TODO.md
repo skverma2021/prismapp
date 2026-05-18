@@ -25,7 +25,7 @@ Items that would cause silent data errors if left unresolved.
 | 1.6 | Rate locked at contribution time (immutable snapshot)          | ✅      | `rateAmt`, `ratePeriod`, `ratePayUnit` persisted                                                                                                    |
 | 1.7 | Financial corrections use compensating transactions only       | ✅      | `createContributionCorrection` with original linkage                                                                                                |
 | 1.8 | Unit `sqFt` locked after any per-sq-ft contribution            | ✅      | `updateUnit` checks `Contribution` for per-sq-ft head                                                                                               |
-| 1.9 | Rate-period coverage policy decision                           | ⬜      | Current rule allows back-dated contributions against future rates. Options: warn, guard, or document as accepted behavior. See sprint board item 6. |
+| 1.9 | Rate-period coverage policy decision                           | ✅      | **Warn** option implemented. `checkRatePeriodCoverage()` in `contributions.service.ts` compares the applicable rate's `fromDt` against the earliest selected period's start date. When the rate started after the period, a human-readable warning string is returned in `createContribution`'s response (`{ contribution, warning }`). Accepted policy: rate is always resolved at `transactionDateTime` (not period start); operator is notified when a mismatch occurs. No blocking guard — just a surfaced warning. |
 
 ---
 
@@ -177,12 +177,11 @@ Items that keep V1 architecture extensible without rework.
 | 7. Testing | 5 | 0 | 1 |
 | 8. Deployment and Operations | 7 | 0 | 2 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **58** | **0** | **14** |
+| **Total** | **59** | **0** | **13** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **1.9** — Rate-period coverage policy decision (warn/guard/document for back-dated contributions vs future rates)
-2. **7.6** — Temporal edge case test coverage (rate-period mismatch, overlap boundary, inception gap)
-3. **8.6** — Database backup policy (depends on hosting provider)
-4. **2.6** — OAuth Phase 2 (Google / Microsoft account linking) — deferred stretch
-5. **6.5** — Timeline overlap helpers shared between ownerships and residencies
+1. **7.6** — Temporal edge case test coverage (rate-period mismatch, overlap boundary, inception gap)
+2. **8.6** — Database backup policy (depends on hosting provider)
+3. **2.6** — OAuth Phase 2 (Google / Microsoft account linking) — deferred stretch
+4. **6.5** — Timeline overlap helpers shared between ownerships and residencies
