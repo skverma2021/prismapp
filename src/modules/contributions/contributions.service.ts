@@ -23,7 +23,7 @@ const MAX_PAGE_SIZE = 100;
 // When false (current default), corrections post immediately as POSTED.
 // When true, corrections start as PENDING and require a checker to approve
 // via approveCorrection() before they count in reports.
-const MAKER_CHECKER_ENABLED = false;
+const MAKER_CHECKER_ENABLED = true;
 
 export const CORRECTION_STATUS = {
   POSTED: "POSTED",
