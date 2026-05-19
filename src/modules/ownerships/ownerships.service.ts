@@ -7,22 +7,12 @@ import type {
   TransferOwnershipInput,
   UpdateOwnershipInput,
 } from "./ownerships.schemas";
+import { addDays, ensureNotBeforeUnitInception, rangesOverlap } from "./ownerships.helpers";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 const BUILDER_INVENTORY_TAG = "BUILDER_INVENTORY";
-
-function rangesOverlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date | null): boolean {
-  const aEndTime = aEnd ? aEnd.getTime() : Number.POSITIVE_INFINITY;
-  const bEndTime = bEnd ? bEnd.getTime() : Number.POSITIVE_INFINITY;
-
-  return aStart.getTime() <= bEndTime && bStart.getTime() <= aEndTime;
-}
-
-function addDays(value: Date, days: number) {
-  return new Date(value.getTime() + days * 24 * 60 * 60 * 1000);
-}
 
 async function ensureNoOwnershipOverlap(
   tx: Pick<typeof db, "unitOwner">,
@@ -123,16 +113,6 @@ async function ensureOwnershipReferencesExist(
   }
 
   return unit;
-}
-
-function ensureNotBeforeUnitInception(unitInceptionDt: Date, fromDt: Date, label: string) {
-  if (fromDt.getTime() < unitInceptionDt.getTime()) {
-    throw new HttpError(
-      400,
-      "VALIDATION_ERROR",
-      `${label} cannot be earlier than the unit inception date (${unitInceptionDt.toISOString().slice(0, 10)}).`
-    );
-  }
 }
 
 export async function listOwnerships(searchParams: URLSearchParams) {

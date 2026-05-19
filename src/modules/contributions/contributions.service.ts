@@ -13,6 +13,7 @@ import {
   parseOptionalDate,
   parseOptionalPositiveInt,
   roundTo2,
+  checkRatePeriodCoverage,
 } from "./contributions.helpers";
 
 const DEFAULT_PAGE = 1;
@@ -89,51 +90,8 @@ async function deriveQuantity(
 }
 
 // ---------------------------------------------------------------------------
-// Rate-period coverage check (Domain Rule C2 / Track-A 1.9)
-// The applicable rate is resolved at transactionDateTime, not at the period
-// start. This means a payment captured in April for January can use a rate
-// that only became effective in February. This is accepted policy, but the
-// operator should be informed when it occurs.
+// validatePeriodRules
 // ---------------------------------------------------------------------------
-function checkRatePeriodCoverage(
-  periods: Array<{ refYear: number; refMonth: number }>,
-  rateFromDt: Date
-): string | undefined {
-  let earliestYear = periods[0].refYear;
-  let earliestMonth = periods[0].refMonth;
-
-  for (const p of periods) {
-    if (
-      p.refYear < earliestYear ||
-      (p.refYear === earliestYear && p.refMonth < earliestMonth)
-    ) {
-      earliestYear = p.refYear;
-      earliestMonth = p.refMonth;
-    }
-  }
-
-  // refMonth = 0 means a whole-year period → start is Jan 1 of that year.
-  // refMonth = 1-12 → start is 1st of that month. (JS months are 0-indexed.)
-  const jsMonth = earliestMonth === 0 ? 0 : earliestMonth - 1;
-  const earliestPeriodStart = new Date(Date.UTC(earliestYear, jsMonth, 1));
-
-  if (rateFromDt <= earliestPeriodStart) {
-    return undefined;
-  }
-
-  const rateFromLabel = rateFromDt.toISOString().slice(0, 10);
-  const periodLabel =
-    earliestMonth === 0
-      ? String(earliestYear)
-      : `${monthLabel(earliestMonth)} ${earliestYear}`;
-
-  return (
-    `The applied rate (effective from ${rateFromLabel}) started after the ` +
-    `earliest selected period (${periodLabel}). ` +
-    `Rate was resolved at transaction date per domain policy.`
-  );
-}
-
 async function validatePeriodRules(
   tx: Pick<typeof db, "contributionPeriod">,
   contributionPeriodIds: number[],

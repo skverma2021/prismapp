@@ -126,7 +126,7 @@ Items that give confidence before and after each change.
 | 7.3 | Regression scripts runnable on clean seed data | ✅ | All `scripts/test-*.mjs` create their own data using `Date.now()` uniqueness stamps and clean up after themselves. `test-api-error-mapping.mjs` is pure in-memory. The only seed dependency is seeded contribution periods (current year) and seeded app users — both provided by `prisma db seed`. `test:api:*` npm scripts already present in `package.json`. Folded into 7.5. |
 | 7.4 | Vitest unit tests for domain service layer | ✅ | Vitest v4.1.5 + @vitest/coverage-v8 installed. `vitest.config.ts` configured. 3 test files, 69 tests: `contributions.helpers.test.ts` (33), `contributions.schemas.test.ts` (17), `ownerships.schemas.test.ts` (19). Pure helpers extracted to `contributions.helpers.ts`. All tests pass; lint and build clean. |
 | 7.5 | Automated test run in CI (GitHub Actions or Vercel check) | ✅ | `.github/workflows/ci.yml` added. Runs on push and PR to master/main: `npm ci` → `npm run lint` → `npm test` (Vitest, no DB needed) → `npm run build` (dummy `DATABASE_URL` satisfies module-level guard; Prisma client connects lazily) → `npm audit --audit-level=high`. API integration scripts (`test:api:*`) remain manual pre-deploy checks — they require a live DB and running server. |
-| 7.6 | Temporal edge case coverage: rate-period mismatch, overlap boundary, inception gap | ⬜ | Partially covered in regression matrix documentation but not yet in executable form. |
+| 7.6 | Temporal edge case coverage: rate-period mismatch, overlap boundary, inception gap | ✅ | Pure temporal helpers extracted and tested. `checkRatePeriodCoverage` moved to `contributions.helpers.ts` (10 tests). `rangesOverlap`, `addDays`, `ensureNotBeforeUnitInception` extracted to `ownerships.helpers.ts` (23 tests) and `residencies.helpers.ts` (11 tests). Total test count: 69 → 113. All passing. |
 
 ---
 
@@ -174,14 +174,13 @@ Items that keep V1 architecture extensible without rework.
 | 4. Observability and Error Handling | 8 | 0 | 0 |
 | 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 5 | 0 | 3 |
-| 7. Testing | 5 | 0 | 1 |
+| 7. Testing | 6 | 0 | 0 |
 | 8. Deployment and Operations | 7 | 0 | 2 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **59** | **0** | **13** |
+| **Total** | **60** | **0** | **12** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **7.6** — Temporal edge case test coverage (rate-period mismatch, overlap boundary, inception gap)
-2. **8.6** — Database backup policy (depends on hosting provider)
-3. **2.6** — OAuth Phase 2 (Google / Microsoft account linking) — deferred stretch
-4. **6.5** — Timeline overlap helpers shared between ownerships and residencies
+1. **8.6** — Database backup policy (depends on hosting provider)
+2. **2.6** — OAuth Phase 2 (Google / Microsoft account linking) — deferred stretch
+3. **6.5** — Timeline overlap helpers shared between ownerships and residencies

@@ -7,6 +7,7 @@ import {
   parseContributionId,
   parseOptionalPositiveInt,
   parseOptionalDate,
+  checkRatePeriodCoverage,
 } from "../contributions.helpers";
 
 // ---------------------------------------------------------------------------
@@ -199,5 +200,124 @@ describe("parseOptionalDate", () => {
 
   it("throws HttpError 400 for a structurally invalid date", () => {
     expect(() => parseOptionalDate("2026-13-01", "field")).toThrow(HttpError);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// checkRatePeriodCoverage
+// ---------------------------------------------------------------------------
+describe("checkRatePeriodCoverage", () => {
+  // Helper: build a UTC midnight Date
+  const d = (iso: string) => new Date(iso + "T00:00:00.000Z");
+
+  // ── no-warning cases ────────────────────────────────────────────────────
+
+  it("returns undefined when rate started before the period", () => {
+    // Rate: 2026-01-01, Period: Mar 2026 → rate predates period → OK
+    const result = checkRatePeriodCoverage(
+      [{ refYear: 2026, refMonth: 3 }],
+      d("2026-01-01")
+    );
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined when rate started on the exact period start", () => {
+    // Rate: 2026-03-01, Period: Mar 2026 → rate starts exactly on period start → OK
+    const result = checkRatePeriodCoverage(
+      [{ refYear: 2026, refMonth: 3 }],
+      d("2026-03-01")
+    );
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined for an annual period when rate started on Jan 1 of that year", () => {
+    // Annual period refMonth=0 → start is 2026-01-01; rate on same day → OK
+    const result = checkRatePeriodCoverage(
+      [{ refYear: 2026, refMonth: 0 }],
+      d("2026-01-01")
+    );
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined for an annual period when rate started before Jan 1 of that year", () => {
+    const result = checkRatePeriodCoverage(
+      [{ refYear: 2026, refMonth: 0 }],
+      d("2025-06-15")
+    );
+    expect(result).toBeUndefined();
+  });
+
+  it("returns undefined when multiple periods exist and rate predates the earliest", () => {
+    // Periods: Jan, Feb, Mar 2026 — rate from 2025-12-01 predates all of them
+    const result = checkRatePeriodCoverage(
+      [
+        { refYear: 2026, refMonth: 3 },
+        { refYear: 2026, refMonth: 1 },
+        { refYear: 2026, refMonth: 2 },
+      ],
+      d("2025-12-01")
+    );
+    expect(result).toBeUndefined();
+  });
+
+  // ── warning cases ────────────────────────────────────────────────────────
+
+  it("returns a warning string when rate started after the period", () => {
+    // Rate: 2026-04-01, Period: Jan 2026 → rate is AFTER period start
+    const result = checkRatePeriodCoverage(
+      [{ refYear: 2026, refMonth: 1 }],
+      d("2026-04-01")
+    );
+    expect(result).toBeTypeOf("string");
+    expect(result).toContain("2026-04-01");
+    expect(result).toContain("Jan 2026");
+  });
+
+  it("uses the earliest period as the comparison baseline in a multi-period submission", () => {
+    // Periods: Apr, Feb, Jun 2026 — Feb is earliest; rate from Mar should trigger on Feb
+    const result = checkRatePeriodCoverage(
+      [
+        { refYear: 2026, refMonth: 4 },
+        { refYear: 2026, refMonth: 2 },
+        { refYear: 2026, refMonth: 6 },
+      ],
+      d("2026-03-15")
+    );
+    expect(result).toBeTypeOf("string");
+    expect(result).toContain("Feb 2026");
+  });
+
+  it("returns a warning for an annual period when rate started after Jan 1 of that year", () => {
+    // Annual period 2026 → start is 2026-01-01; rate from Feb means mismatch
+    const result = checkRatePeriodCoverage(
+      [{ refYear: 2026, refMonth: 0 }],
+      d("2026-02-01")
+    );
+    expect(result).toBeTypeOf("string");
+    expect(result).toContain("2026-02-01");
+    // Period label for annual period should be just the year string
+    expect(result).toContain("2026");
+    expect(result).not.toContain("Jan 2026");
+  });
+
+  it("includes the policy explanation in the warning message", () => {
+    const result = checkRatePeriodCoverage(
+      [{ refYear: 2026, refMonth: 1 }],
+      d("2026-06-01")
+    );
+    expect(result).toContain("transaction date per domain policy");
+  });
+
+  it("handles cross-year periods: rate after Jan of the earlier year triggers warning", () => {
+    // Periods: Dec 2025 and Jan 2026 — earliest is Dec 2025; rate from Feb 2026 warns
+    const result = checkRatePeriodCoverage(
+      [
+        { refYear: 2025, refMonth: 12 },
+        { refYear: 2026, refMonth: 1 },
+      ],
+      d("2026-02-01")
+    );
+    expect(result).toBeTypeOf("string");
+    expect(result).toContain("Dec 2025");
   });
 });

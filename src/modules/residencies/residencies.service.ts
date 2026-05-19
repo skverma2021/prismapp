@@ -3,18 +3,12 @@ import { HttpError, parseQueryInt } from "@/src/lib/api-response";
 import { writeAuditLog } from "@/src/lib/audit-log";
 import type { AuthContext } from "@/src/lib/user-role";
 import type { CreateResidencyInput, UpdateResidencyInput } from "./residencies.schemas";
+import { ensureNotBeforeUnitInception, rangesOverlap } from "./residencies.helpers";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 500;
 const BUILDER_INVENTORY_TAG = "BUILDER_INVENTORY";
-
-function rangesOverlap(aStart: Date, aEnd: Date | null, bStart: Date, bEnd: Date | null): boolean {
-  const aEndTime = aEnd ? aEnd.getTime() : Number.POSITIVE_INFINITY;
-  const bEndTime = bEnd ? bEnd.getTime() : Number.POSITIVE_INFINITY;
-
-  return aStart.getTime() <= bEndTime && bStart.getTime() <= aEndTime;
-}
 
 async function ensureResidencyReferencesExist(
   tx: Pick<typeof db, "unit" | "individual">,
@@ -99,16 +93,6 @@ async function ensureResidencyAllowedByOwnership(tx: Pick<typeof db, "unitOwner"
       412,
       "PRECONDITION_FAILED",
       "Residency cannot be recorded while the unit is still in builder inventory. Transfer ownership to a real individual first."
-    );
-  }
-}
-
-function ensureNotBeforeUnitInception(unitInceptionDt: Date, fromDt: Date, label: string) {
-  if (fromDt.getTime() < unitInceptionDt.getTime()) {
-    throw new HttpError(
-      400,
-      "VALIDATION_ERROR",
-      `${label} cannot be earlier than the unit inception date (${unitInceptionDt.toISOString().slice(0, 10)}).`
     );
   }
 }
