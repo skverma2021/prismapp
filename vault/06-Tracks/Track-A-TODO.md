@@ -141,7 +141,7 @@ Items required for a real production deployment.
 | 8.3 | `prisma migrate deploy` runs cleanly on empty DB                           | ✅      | Tested                                                                                                                                                                                                                                                                                                                                                                   |
 | 8.4 | `prisma db seed` reproducible and idempotent                               | ✅      | Builder ownership deduplication in place                                                                                                                                                                                                                                                                                                                                 |
 | 8.5 | `DATABASE_URL` SSL semantics resolved                                      | ✅      | Added `withVerifyFullSsl()` to `src/lib/db.ts` (commit `ecc765d`) — rewrites `sslmode=require\|prefer\|verify-ca` → `sslmode=verify-full` at runtime to preserve strong-TLS semantics and silence the `pg-connection-string` v3 deprecation warning. No env file changes required. Vercel Prisma Postgres enforces TLS server-side regardless. When connection pooling is needed, swap `DATABASE_URL` on Vercel to the Prisma Accelerate URL (`prisma+postgres://accelerate.prisma-data.net/...`). |
-| 8.6 | Database backup policy                                                     | ⬜      | No automated backup configured. Depends on hosting provider.                                                                                                                                                                                                                                                                                                             |
+| 8.6 | Database backup policy                                                     | ✅      | **Provider**: Vercel Postgres (Neon-backed) provides automatic daily backups with 7-day PITR on free tier, 30-day on Pro — no configuration required from the app. **Manual backups**: `scripts/backup-db.mjs` — `pg_dump` wrapper that reads `DATABASE_URL` from `.env`, writes a plain-SQL dump to `backups/prismapp-<timestamp>.sql`. Run via `npm run backup:db`. `backups/` is git-ignored (contains real data). Restore: `psql "$DATABASE_URL" < backups/<file>.sql`. Requires PostgreSQL client tools (`pg_dump`) in PATH. **Policy**: run before every schema migration and after each production data-load. |
 | 8.7 | Environment variable hygiene (no secrets in repo, `.env.example` complete) | ✅      | `.env.example` present; secrets in Vercel env                                                                                                                                                                                                                                                                                                                            |
 | 8.8 | Production sign-in with real user accounts (not seed demo users)           | ✅      | App Users management screen added at `/app-users` (SOCIETY_ADMIN only). `GET/POST /api/app-users` and `GET/PATCH /api/app-users/[id]` route handlers. Service in `src/modules/app-users/app-users.service.ts` with `bcrypt` cost factor 12. `parseCreateAppUserInput` validates email format, password min 10 chars, valid role. Admins can create accounts, change display name, role, active flag, and reset passwords. Audit log entries written for `APP_USER_CREATED` and `APP_USER_UPDATED`. Seed demo users remain for dev/staging; production admin creates real accounts via this screen then disables or removes demo users. |
 | 8.9 | Rate limiting on auth endpoints                                            | ✅      | In-memory rate limiter added to `proxy.ts` (Next.js 16 proxy/middleware). Limits `POST /api/auth/callback/credentials` to 5 attempts per IP per 15 min; returns `429` with `Retry-After`. Closes OWASP A05-GAP-2 + A07-GAP-1. Also confirms `x-request-id` propagation now active (proxy was correctly named all along; Next.js 16 uses `proxy.ts` not `middleware.ts`). |
@@ -175,12 +175,11 @@ Items that keep V1 architecture extensible without rework.
 | 5. Performance | 8 | 0 | 0 |
 | 6. Code Maintainability | 5 | 0 | 3 |
 | 7. Testing | 6 | 0 | 0 |
-| 8. Deployment and Operations | 7 | 0 | 2 |
+| 8. Deployment and Operations | 8 | 0 | 0 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **60** | **0** | **12** |
+| **Total** | **61** | **0** | **11** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **8.6** — Database backup policy (depends on hosting provider)
-2. **2.6** — OAuth Phase 2 (Google / Microsoft account linking) — deferred stretch
-3. **6.5** — Timeline overlap helpers shared between ownerships and residencies
+1. **2.6** — OAuth Phase 2 (Google / Microsoft account linking) — deferred stretch
+2. **6.5** — Timeline overlap helpers shared between ownerships and residencies
