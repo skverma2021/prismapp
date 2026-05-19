@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { enabledOAuthProviders } from "@/auth";
 import { LoginForm } from "@/src/components/auth/login-form";
 import { PageHeader } from "@/src/components/shell/page-header";
 import { StateSurface } from "@/src/components/ui/state-surface";
@@ -20,6 +21,14 @@ function getAuthBanner(searchParams: { auth?: string; next?: string }) {
     return {
       tone: "success" as const,
       message: "You have been signed out of PrismApp.",
+    };
+  }
+
+  if (searchParams.auth === "oauth-denied") {
+    return {
+      tone: "danger" as const,
+      message:
+        "No active account found for that email address. Ask your administrator to create an account before signing in with Google or Microsoft.",
     };
   }
 
@@ -79,6 +88,7 @@ export default async function PublicLandingPage({
               redirectTo={redirectTo}
               bannerTone={authBanner?.tone}
               bannerMessage={authBanner?.message}
+              enabledOAuthProviders={enabledOAuthProviders}
             />
             <StateSurface
               title="Auth status"

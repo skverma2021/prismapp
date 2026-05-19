@@ -40,7 +40,7 @@ Items that protect data and operator accountability.
 | 2.3 | PII masking: email and mobile masked for READ_ONLY role | ✅ | `maskIndividualPii` applied in `listIndividuals` and `getIndividualById` |
 | 2.4 | Auth.js credentials login baseline | ✅ | JWT-backed session, seeded app users |
 | 2.5 | Auth feedback on protected redirect (401 vs 403) | ✅ | Public entry and home page show explicit feedback |
-| 2.6 | OAuth Phase 2 (Google / Microsoft account linking) | ⬜ | Deferred. Plan in sprint board Stretch. |
+| 2.6 | OAuth Phase 2 (Google / Microsoft account linking) | ✅ | Email-matching strategy — `AppUser` must pre-exist with the OAuth provider email (no new DB table or schema change). `enabledOAuthProviders` export from `auth.ts` controls which buttons render (conditional on `GOOGLE_CLIENT_ID/SECRET` and `AZURE_AD_CLIENT_ID/SECRET` env vars). `signIn` callback gates OAuth against `AppUser.isActive`; inactive or missing → `/?auth=oauth-denied` (danger banner). `jwt` callback is now `async` and distinguishes credentials vs OAuth via `account?.provider` to load role/displayName from `AppUser`. Providers: `GoogleProvider` + `AzureADProvider` from `next-auth/providers/*` (no new npm deps). Credentials login remains a standalone fallback when OAuth env vars are absent. `.env.example` updated with commented OAuth variable stubs. |
 | 2.7 | OWASP Top 10 gap review for internal operator app | ✅ | Formal pass completed 2026-05-11. Findings in `vault/00-Core/OWASP-Top10-Gap-Review.md`. A03/A08/A10 fully clear. A05: HTTP security headers added to `next.config.ts` (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy). A06: `npm audit fix` run; Next.js upgraded 16.2.0 → 16.2.6 (DoS patch GHSA-q4gf-8mx6-v5v3); 6 moderate transitive vulns remain via `@prisma/dev` (dev-only CLI, not shipped). Open: rate limiting (8.9), error tracker (4.6), bcrypt cost-factor review (advisory). |
 | 2.8 | Uniform auth feedback on every protected shell route | ✅ | Server-side `layout.tsx` guards added for all SOCIETY_ADMIN-only routes: `/app-users`, `/audit-log`, `/contributions/corrections`. Each calls `requireServerAppSession({ allowedRoles: ["SOCIETY_ADMIN"] })` and redirects to `/home?auth=denied&from=<name>`. Home page already renders `InlineNotice` for `auth=denied`. Unauthenticated access redirects to `/?auth=required` with banner. Contribution capture (`/contributions`) already had `allowedRoles: ["SOCIETY_ADMIN","MANAGER"]`. |
 | 2.9 | Contribution posting actor identity: `depositedBy` references real individual | ✅ | System identities rejected as depositors |
@@ -169,7 +169,7 @@ Items that keep V1 architecture extensible without rework.
 | Theme | Done | In Progress | Not Started |
 |-------|------|-------------|-------------|
 | 1. Domain Correctness | 9 | 0 | 0 |
-| 2. Security and Authorization | 8 | 0 | 2 |
+| 2. Security and Authorization | 9 | 0 | 1 |
 | 3. Audit and Immutability | 5 | 1 | 1 |
 | 4. Observability and Error Handling | 8 | 0 | 0 |
 | 5. Performance | 8 | 0 | 0 |
@@ -177,9 +177,8 @@ Items that keep V1 architecture extensible without rework.
 | 7. Testing | 6 | 0 | 0 |
 | 8. Deployment and Operations | 8 | 0 | 0 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **61** | **0** | **11** |
+| **Total** | **62** | **0** | **11** |
 
 ### Highest-Value Open Items (Ordered)
 
-1. **2.6** — OAuth Phase 2 (Google / Microsoft account linking) — deferred stretch
-2. **6.5** — Timeline overlap helpers shared between ownerships and residencies
+1. **6.5** — Timeline overlap helpers shared between ownerships and residencies
