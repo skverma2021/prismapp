@@ -384,6 +384,45 @@ async function seedAppUsers() {
   }
 }
 
+async function seedComplaintCategories() {
+  const categories = [
+    "Plumbing",
+    "Electrical",
+    "Civil",
+    "Lift",
+    "Security",
+    "Housekeeping",
+    "Parking",
+    "Noise",
+    "Common Area Misuse",
+    "Billing Dispute",
+  ];
+
+  for (const description of categories) {
+    await prisma.complaintCategory.upsert({
+      where: { description },
+      update: {},
+      create: { description },
+    });
+  }
+}
+
+async function seedComplaintPriorities() {
+  const priorities = [
+    { label: "P1", slaHours: 4,  description: "No water / power outage" },
+    { label: "P2", slaHours: 24, description: "Lift breakdown" },
+    { label: "P3", slaHours: 72, description: "Gardening, cosmetic" },
+  ];
+
+  for (const entry of priorities) {
+    await prisma.complaintPriority.upsert({
+      where: { label: entry.label },
+      update: { slaHours: entry.slaHours, description: entry.description },
+      create: entry,
+    });
+  }
+}
+
 async function main() {
   const currentYear = new Date().getUTCFullYear();
 
@@ -396,6 +435,8 @@ async function main() {
   await seedContributionHeads();
   await seedContributionRates(currentYear);
   await seedContributionPeriods(currentYear);
+  await seedComplaintCategories();
+  await seedComplaintPriorities();
 
   console.log(`Seed complete for year ${currentYear}`);
 }

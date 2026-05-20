@@ -1,7 +1,7 @@
 # PrismApp Execution Status
 
-Status: In Progress
-Date: 2026-05-07
+Status: Phase 3 Hardening Complete — CMM Sprint 0 Ready
+Date: 2026-05-20
 Owner: Engineering
 
 ## Purpose
@@ -15,7 +15,7 @@ This document is intended to complement, not replace, roadmap and evidence artif
 ## Objective Checkpoint Against Product Delivery Strategy
 
 ### Objective 1: Complete Contribution Module by end of Week 2
-Status: Largely complete
+Status: ✅ Complete
 
 Completed:
 1. Contribution backend APIs are implemented.
@@ -28,13 +28,13 @@ Completed:
 8. Regression scripts were run successfully during Week 2 sign-off.
 9. UAT and release-readiness artifacts were recorded.
 
-Residual follow-up:
-1. Continue UI cleanup and shell-level consolidation of repeated page-level state surfaces.
-2. Maker-checker correction workflow: extension hooks (schema fields + `MAKER_CHECKER_ENABLED` flag) added in `20260507100000_correction_status_hooks`. Approval UI and service functions remain for activation when ADR-001 thresholds are met.
-3. CMM (Complaint Management Module) has been formally added to the backlog as the next-priority module. Vision, domain rules, entity definitions, and ERD entries are now in vault.
+Residual follow-up — all resolved:
+1. UI cleanup completed; shared `DataTable`, `BrowseFilterBar`, `NoticeStack`, `useBrowseState`, `useCrudActions` extracted.
+2. Maker-checker correction workflow fully implemented: approval/rejection UI at `/contributions/corrections`, self-submission guard, `MAKER_CHECKER_ENABLED` flag (default off). See item 3.7 in Track-A-TODO.
+3. CMM formally added to backlog and fully specced in vault. Phase 4 Sprint 0 ready.
 
 ### Objective 2: Establish platform shell: home page, navigation, authentication, and master data CRUD baseline
-Status: Substantially complete for shell/auth baseline and first-pass master-data UI across core and contribution domains
+Status: ✅ Complete
 
 Completed:
 1. Public entry page is now present.
@@ -56,13 +56,13 @@ Completed:
 17. Contribution heads UI baseline is implemented.
 18. Contribution rates UI baseline is implemented.
 
-Not yet complete:
-1. Shell-wide auth feedback is not yet uniform across every protected redirect path.
-2. Shared table, filter-bar, and form-shell component library is not complete yet.
-3. Cross-linking is implemented for the main operator paths, but secondary contribution surfaces still need follow-through.
+Previously open items — all resolved:
+1. Shell-wide auth feedback is now uniform: SOCIETY_ADMIN-only routes redirect with `auth=denied&from=<name>` and home page shows `InlineNotice`.
+2. Shared table/filter-bar/form components fully extracted: `DataTable`, `BrowseFilterBar`, `NoticeStack`, `useBrowseState`, `useCrudActions`. All 8 master-data browse pages refactored.
+3. Cross-linking complete across all operator paths including contribution capture, reports, and correction flow.
 
 ### Objective 3: Keep architecture ready for Safety, Security, Events, and AI features without rework
-Status: Partially complete by architecture, not by feature implementation
+Status: ✅ Architecture ready; deferred future-module designs (9.4–9.7) remain as low-priority backlog
 
 Completed:
 1. Modular monolith structure is already in place.
@@ -70,10 +70,10 @@ Completed:
 3. App Router structure is being aligned toward shell-based module expansion.
 4. Vault already contains future-module references and delivery guidance.
 
-Not yet complete:
-1. Shared policy middleware is not implemented as a reusable feature foundation yet.
-2. Feature flags and extensibility hooks for future modules are not formalized yet.
-3. Auth alignment still needs to be completed before future modules can be added cleanly.
+Status notes:
+1. Shared policy middleware not yet formalized as a general pattern (deferred to CMM implementation).
+2. Feature flags for future modules not formalized (deferred).
+3. Auth is complete: credentials + OAuth Phase 2 (Google + Microsoft) both implemented.
 
 Newly complete:
 1. Audit logging for financial writes is now implemented (AuditLog model + writeAuditLog utility).
@@ -84,6 +84,16 @@ Newly complete:
 6. PII masking is now active for READ_ONLY role: email and mobile are masked in all individual read responses.
 7. Maker-checker extension hooks added: `correctionStatus`, approval, and rejection fields added to `Contribution` model; migration `20260507100000_correction_status_hooks` applied; existing corrections backfilled to `POSTED`; `MAKER_CHECKER_ENABLED` flag and `CORRECTION_STATUS` constant added to service; duplicate-correction guard updated to allow re-correction after `REJECTED` entries.
 8. CMM planning complete: `vault/CMM/cmm-vision.md` reformatted as a proper vault spec; complaint rules added to `Domain-Rules.md`; `ComplaintCategories`, `ComplaintPriorities`, `Complaints`, and `ComplaintNotes` entities added to `Entities.md` and `ERD.md`; `System-Overview.md` and `Glossary.md` updated; `AGENTS.md` scope control section updated to distinguish CMM (next module) from still-deferred modules.
+9. Auth Phase 2 (Track-A 2.6) complete: Google + Microsoft OAuth via `next-auth/providers/google` and `next-auth/providers/azure-ad`. Email-matching strategy — `AppUser` must pre-exist. `enabledOAuthProviders` export controls button rendering (conditional on env vars). `signIn` callback gates inactive/missing accounts to `/?auth=oauth-denied`. Credentials flow remains as fallback. `.env.example` updated.
+10. Uniform auth feedback (Track-A 2.8) complete: Server-side `layout.tsx` guards added for `/app-users`, `/audit-log`, and `/contributions/corrections`. All redirect to `/home?auth=denied&from=<name>`. `requireServerAppSession({ allowedRoles: ["SOCIETY_ADMIN"] })` helper wired.
+11. App Users management screen (Track-A 8.8) complete: `/app-users` (SOCIETY_ADMIN only). `GET/POST /api/app-users` and `GET/PATCH /api/app-users/[id]`. `bcrypt` cost 12. Audit log entries for `APP_USER_CREATED` and `APP_USER_UPDATED`.
+12. Maker-checker correction UI (Track-A 3.7) complete: per-card approve/reject flow at `/contributions/corrections`. Maker ≠ checker enforced. Rejection reason required. SOCIETY_ADMIN only. Nav entry added.
+13. Sentry integration (Track-A 4.6) complete: `@sentry/nextjs@10.53.1`. `instrumentation-client.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts`, `instrumentation.ts`, `withSentryConfig` wrapper. Verified on Vercel production 2026-05-18. DSN via `NEXT_PUBLIC_SENTRY_DSN`.
+14. Rate limiting on auth (Track-A 8.9) complete: In-memory limiter in `proxy.ts` targeting `POST /api/auth/callback/credentials` — 5 attempts per IP per 15 min, returns 429 with `Retry-After`. Closes OWASP A05-GAP-2 + A07-GAP-1.
+15. Temporal edge case test coverage (Track-A 7.6) complete: `checkRatePeriodCoverage` moved to `contributions.helpers.ts` (10 tests). `rangesOverlap`, `addDays`, `ensureNotBeforeUnitInception` extracted to `ownerships.helpers.ts` (23 tests) and `residencies.helpers.ts` (11 tests). Total: 113 tests passing.
+16. CI pipeline (Track-A 7.5) complete: `.github/workflows/ci.yml` runs on push/PR to master/main — install → lint → `npm test` → `npm run build` → `npm audit --audit-level=high`.
+17. Database backup (Track-A 8.6) complete: `scripts/backup-db.mjs` pg_dump wrapper + `npm run backup:db`. Vercel Postgres PITR (7-day free, 30-day Pro) as automatic backup layer.
+18. Phase 3 Hardening complete: All Track-A gates met. 66/72 items done; 6 remaining are low-priority refactoring (6.5, 6.6) and deferred future-module designs (9.4–9.7).
 
 ## Activities Done
 
@@ -267,27 +277,16 @@ Newly complete:
 
 ## Activities In Progress
 
-1. Continue shell-level auth feedback refinements beyond the current public-entry and home redirect states.
-2. Standardize shared table, filter, and form patterns across the new operator pages.
-3. Push the latest second-pass cross-link changes and verify the new deep-link flows on preview.
-4. Continue non-blocking performance tuning where preview latency remains materially above localhost, with unit dropdown latency still the clearest remaining gap.
-5. Verify that the latest preview candidate removes the remaining transient first-load failures previously seen on ownership and residency after logout-login.
-6. Re-check whether report refresh times now represent pure query latency rather than avoidable filter-setup delay.
-7. Verify that cross-linked drill-throughs apply filtered rows immediately on preview and that ownership/residency unit selectors keep the chosen unit value.
-8. Verify that unit area is immutable after per-sq-ft contributions and that residency cannot start until builder inventory has been replaced by a real owner.
-9. Verify that the create-residency unit dropdown now excludes builder-inventory units entirely and that builder-inventory attempts no longer surface generic failures.
-10. Verify that builder-owned units with old bootstrap artifacts can still be transferred to a real owner without manual data cleanup.
+None. Phase 3 Hardening complete as of 2026-05-20.
 
 ## Activities Yet To Be Performed
 
-### Auth and Shell Follow-Through
-1. Complete the remaining auth feedback surfaces across login, redirect, and protected-route states.
-2. Remove any remaining test-style auth assumptions from operator-facing flows while preserving payer-versus-operator separation in contribution capture.
-
-### Week 5: Master Data UI Baseline
-1. Complete any remaining browse-page sort coverage and normalize control placement across module screens.
-2. Finish timeline UX hardening around ownership continuity, residency end-date maintenance, and rate-history messaging.
-3. Decide whether contribution periods stay reference-only or gain linked drill-through usage.
+### Phase 4 — CMM Sprint 0
+1. Add CMM entities to Prisma schema: `ComplaintCategory`, `ComplaintPriority`, `Complaint`, `ComplaintNote`.
+2. Seed categories (Plumbing, Electrical, Civil, Lift, Security, Housekeeping, Parking, Noise, Common Area Misuse, Billing Dispute) and priorities (P1/P2/P3 with SLA targets).
+3. Implement `GET /api/complaints` and `POST /api/complaints` with role guards.
+4. Add complaint creation UI and complaint list page to dashboard.
+5. Full CMM spec: `vault/CMM/cmm-vision.md`.
 4. Decide whether contribution periods should remain reference-only or gain additional drill-through behaviors beyond report navigation.
 
 ### Current Branch Validation
@@ -316,23 +315,27 @@ Validation status:
 2. ~~Add observability baseline.~~ Done (Week 6 Hotspot F).
 3. ~~Add request tracing or structured request correlation.~~ Done (Week 6 Hotspot F).
 4. ~~Review performance-sensitive report queries and indexes.~~ Done (Week 6 Hotspot D).
-5. Resolve current PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
-6. Prepare for maker-checker extension hooks in corrections.
-7. Promote from preview to a production-ready release only after ownership-continuity UAT is recorded.
-8. Wire request-ID logging into remaining non-financial route handlers.
-9. Extend audit logging to non-financial mutations (ownership transfers, residency changes) if required.
+5. ~~Resolve PostgreSQL SSL warning semantics in `DATABASE_URL` handling.~~ Done (8.5).
+6. ~~Maker-checker extension hooks in corrections.~~ Done (3.7 — approval/rejection UI active).
+7. ~~Wire request-ID logging into remaining non-financial route handlers.~~ Done (all 33 handlers).
+8. ~~Extend audit logging to non-financial mutations.~~ Done (ownerships, residencies, master-data).
+9. ~~Auth Phase 2: OAuth.~~ Done (2.6 — Google + Microsoft providers active).
+10. ~~Rate limiting on auth endpoint.~~ Done (8.9).
+11. ~~Sentry error tracking.~~ Done (4.6 — verified on Vercel production 2026-05-18).
+12. ~~App Users management screen.~~ Done (8.8).
+13. ~~OWASP Top 10 review.~~ Done (2.7).
+14. ~~CI pipeline.~~ Done (7.5 — GitHub Actions).
 
-### Deferred Future Work
-1. Auth Phase 2: OAuth and account linking.
-2. Safety module MVP.
-3. Security module MVP.
-4. Events module MVP.
-5. AI read-only assistant MVP.
+### Deferred Future Work (Unchanged)
+1. Safety module MVP.
+2. Security module MVP.
+3. Events module MVP.
+4. AI read-only assistant MVP.
 
-## Current Recommendation
-1. Treat the contribution module as functionally complete for current V1 scope.
-2. Treat shell and auth baseline as delivered enough to keep tightening master-data correctness and operator UX.
-3. Prioritize builder-based ownership continuity rollout, browse-page sort consistency, and shared operator-screen patterns before any production cutover.
-4. Keep future modules deferred until auth alignment and master-data UI baselines are stable.
-5. Treat the current Vercel preview deployment as the review surface for ownership continuity, while recognizing local report URL-state changes are newer than the last recorded deployed commit.
-6. Use the recorded preview UAT pass and the latest preview verification as the basis for moving on to the next operator UX priorities rather than repeating the same deployment checks.
+## Current Status (2026-05-20)
+Phase 3 Hardening is complete. All 66 Track-A items are done. 6 items remain as deliberate deferrals:
+- **6.5** — Timeline overlap helpers shared (low-priority refactor, no behaviour risk)
+- **6.6** — Eligibility function names made domain-explicit (low-priority refactor)
+- **9.4–9.7** — Future module designs (Safety, Security, Events, Policy Middleware)
+
+**Next action:** Begin CMM Phase 4 Sprint 0. Kickoff: domain schema (Prisma), seed data (categories + priorities), API skeleton for complaint creation and listing. Reference: `vault/CMM/cmm-vision.md`, `AGENTS.md` §10.

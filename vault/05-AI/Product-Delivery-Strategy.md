@@ -1,7 +1,7 @@
 # PrismApp Product Delivery Strategy
 
-Status: Active — Contribution Module Hardening
-Date: 2026-05-07
+Status: Active — CMM Phase 4 Sprint 0
+Date: 2026-05-20
 Owner: Product + Engineering
 
 ## 1) Objective
@@ -78,20 +78,22 @@ Deliver a production-ready modular society management app from zero baseline wit
 - Reports: contribution reports with filters, pagination, and totals.
 - Maker-checker extension hooks: schema fields, `MAKER_CHECKER_ENABLED` flag, migration. Approval UI deferred to hardening trigger.
 
-### Phase 3 — Hardening 🔄 In Progress
-Key remaining items (from `vault/06-Tracks/Track-A-TODO.md`):
-1. **5.6** — Fix `/api/units/lookups` performance (3.1s regression — `include: { block: true }` on 3,958 rows).
-2. **1.9** — Rate-period coverage policy: decide and document or guard.
-3. **7.4 / 7.3 / 7.5** — Testing infrastructure: Vitest unit tests, seed-independent regression scripts, CI pipeline.
-4. **2.7 / 8.9** — Security: OWASP Top 10 gap review, rate limiting on `/api/auth/*`.
-5. **4.6 / 3.6** — Observability: Sentry integration, audit log admin view.
-6. **8.5** — Resolve `DATABASE_URL` SSL warning semantics.
-7. **2.6** — Auth Phase 2: OAuth providers (Google/Microsoft). Deferred; still not started.
+### Phase 3 — Hardening ✅ Complete (2026-05-20)
+All Track-A hardening gates are met. Key items completed:
+1. **5.6** ✅ — `/api/units/lookups` performance: `include: { block: true }` eliminated, client-side enrichment via `/api/blocks/lookups`.
+2. **1.9** ✅ — Rate-period coverage: warn option implemented; policy documented in Domain-Rules.md.
+3. **7.4 / 7.3 / 7.5** ✅ — Testing: 113 Vitest unit tests, self-contained API regression scripts, GitHub Actions CI pipeline.
+4. **2.7 / 8.9** ✅ — Security: OWASP Top 10 gap review, HTTP security headers, Next.js upgraded (DoS CVE patched), rate limiting on `/api/auth/*` (5 req/IP/15 min, 429).
+5. **4.6 / 3.6** ✅ — Observability: Sentry integration verified on Vercel production (2026-05-18), audit log admin view at `/audit-log`.
+6. **8.5** ✅ — `DATABASE_URL` SSL semantics resolved with `withVerifyFullSsl()`.
+7. **2.6** ✅ — Auth Phase 2: Google + Microsoft OAuth providers (conditional on env vars); email-matching strategy; `AppUser` pre-existence gate.
+8. **3.7** ✅ — Maker-checker extension hooks: schema fields, migration, approval/rejection UI at `/contributions/corrections`, maker ≠ checker enforced.
+9. **8.8** ✅ — App Users management screen at `/app-users` (SOCIETY_ADMIN only); bcrypt cost 12; audit-logged.
 
 **Hardening definition of done:** All Phase 3 checklist gates in `AGENTS.md` §9 pass.
 
-### Phase 4 — CMM ⬜ Planned
-Starts only after Phase 3 production-grade gate.
+### Phase 4 — CMM 🔄 Ready to Start
+Phase 3 hardening gates are met. CMM is the highest-priority next module.
 - Domain: fully specced — `vault/CMM/cmm-vision.md`, `vault/01-Domain/Domain-Rules.md` §CM rules, `vault/01-Domain/ERD.md`, `vault/01-Domain/Entities.md`.
 - Sprint 0: Prisma schema (CMM entities), seed data (categories + priorities), API skeleton.
 - Ref: `AGENTS.md` §10 Scope Control.

@@ -22,6 +22,10 @@ export class HttpError extends Error {
   }
 }
 
+export function getRequestId(request: Request): string {
+  return request.headers.get("x-request-id") ?? "unknown";
+}
+
 function logServerError(error: unknown, requestId?: string) {
   if (error instanceof HttpError) {
     if (error.status >= 500) {
@@ -45,22 +49,20 @@ function logServerError(error: unknown, requestId?: string) {
       requestId,
       code: prismaLikeError.code,
       message: prismaLikeError.message,
-      meta: prismaLikeError.meta,
     }));
     return;
   }
 
   if (error instanceof Error) {
-    console.error(JSON.stringify({
-      level: "error",
-      requestId,
+    console.error("[api] Unknown error", {
       name: error.name,
       message: error.message,
-    }));
+      stack: error.stack,
+    });
     return;
   }
 
-  console.error(JSON.stringify({ level: "error", requestId, error: String(error) }));
+  console.error("[api] Unknown error", error);
 }
 
 function isConnectivityFailure(error: unknown): boolean {
@@ -103,9 +105,7 @@ function isRetryableDatabaseFailure(error: unknown): boolean {
 }
 
 export function ok<T>(data: T, status = 200, warning?: string): Response {
-  const body: { ok: true; data: T; warning?: string } = { ok: true, data };
-  if (warning !== undefined) body.warning = warning;
-  return Response.json(body, { status });
+  return Response.json({ ok: true, data, ...(warning ? { warning } : {}) }, { status });
 }
 
 export function fail(error: HttpError): Response {
@@ -181,10 +181,6 @@ export function fromUnknownError(error: unknown, requestId?: string): HttpError 
   logServerError(error, requestId);
 
   return new HttpError(500, "INTERNAL_ERROR", "Unexpected server error.");
-}
-
-export function getRequestId(request: Request): string | undefined {
-  return request.headers.get("x-request-id") ?? undefined;
 }
 
 export function requireString(value: unknown, field: string): string {

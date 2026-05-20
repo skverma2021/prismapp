@@ -103,6 +103,12 @@ export const dashboardNavItems: AppNavItem[] = [
     description: "Create and manage operator accounts and roles. Visible to Society Admin only.",
     roles: ["SOCIETY_ADMIN"],
   },
+  {
+    href: "/complaints",
+    label: "Complaints",
+    description: "Submit and track resident complaints with priority and SLA visibility.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
 ];
 
 const routeMeta = [
@@ -185,6 +191,11 @@ const routeMeta = [
     href: "/change-password",
     title: "Change Password",
     description: "Update your sign-in password. You must provide your current password.",
+  },
+  {
+    href: "/complaints",
+    title: "Complaints",
+    description: "Submit and track resident complaints with category, priority, and SLA visibility.",
   },
 ];
 

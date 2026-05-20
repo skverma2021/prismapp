@@ -166,18 +166,22 @@ Items that keep V1 architecture extensible without rework.
 
 ## Summary
 
+Last updated: 2026-05-20
+
 | Theme | Done | In Progress | Not Started |
 |-------|------|-------------|-------------|
 | 1. Domain Correctness | 9 | 0 | 0 |
-| 2. Security and Authorization | 9 | 0 | 1 |
-| 3. Audit and Immutability | 5 | 1 | 1 |
+| 2. Security and Authorization | 10 | 0 | 0 |
+| 3. Audit and Immutability | 7 | 0 | 0 |
 | 4. Observability and Error Handling | 8 | 0 | 0 |
 | 5. Performance | 8 | 0 | 0 |
-| 6. Code Maintainability | 5 | 0 | 3 |
+| 6. Code Maintainability | 6 | 0 | 2 |
 | 7. Testing | 6 | 0 | 0 |
-| 8. Deployment and Operations | 8 | 0 | 0 |
+| 8. Deployment and Operations | 9 | 0 | 0 |
 | 9. Future Modules | 3 | 0 | 4 |
-| **Total** | **62** | **0** | **11** |
+| **Total** | **66** | **0** | **6** |
+
+**Phase 3 Hardening is effectively complete for V1 production operation.** The 6 remaining open items are 2 low-priority refactoring items (6.5, 6.6) and 4 deferred future-module designs (9.4–9.7). CMM (Phase 4) can begin.
 
 ### Highest-Value Open Items (Ordered)
 

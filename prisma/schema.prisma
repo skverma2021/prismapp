@@ -30,6 +30,7 @@ model Unit {
   owners        UnitOwner[]
   residents     UnitResident[]
   contributions Contribution[]
+  complaints    Complaint[]
 
   @@unique([blockId, description])
   @@index([blockId])
@@ -60,10 +61,12 @@ model Individual {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  genderType    GenderType        @relation(fields: [genderId], references: [id], onDelete: Restrict)
-  ownedUnits    UnitOwner[]
-  livedUnits    UnitResident[]
-  contributions Contribution[]    @relation("ContributionDepositedBy")
+  genderType         GenderType        @relation(fields: [genderId], references: [id], onDelete: Restrict)
+  ownedUnits         UnitOwner[]
+  livedUnits         UnitResident[]
+  contributions      Contribution[]    @relation("ContributionDepositedBy")
+  reportedComplaints Complaint[]       @relation("ComplaintReporter")
+  assignedComplaints Complaint[]       @relation("ComplaintAssignee")
 
   @@index([sName, fName])
   @@map("individuals")
@@ -234,4 +237,86 @@ model AuditLog {
   @@index([actorUserId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// CMM — Complaint Management Module
+// ---------------------------------------------------------------------------
+
+model ComplaintCategory {
+  id          Int    @id @default(autoincrement())
+  description String @unique
+
+  complaints Complaint[]
+
+  @@map("complaint_categories")
+}
+
+model ComplaintPriority {
+  id          Int    @id @default(autoincrement())
+  label       String @unique // P1 | P2 | P3
+  slaHours    Int
+  description String
+
+  complaints Complaint[]
+
+  @@map("complaint_priorities")
+}
+
+/// status: Open | Assigned | InProgress | Resolved | Closed | Reopened
+/// Immutable after creation: ticketId, unitId, reportedById, isAnonymous, createdAt (CM17)
+/// ticketId is service-generated in the format MSH-{year}-{zero-padded-seq} (CM6, CM7)
+model Complaint {
+  id             String    @id @default(uuid())
+  ticketId       String    @unique
+  unitId         String
+  reportedById   String
+  categoryId     Int
+  priorityId     Int
+  title          String
+  description    String
+  isAnonymous    Boolean   @default(false)
+  status         String    @default("Open") // Open | Assigned | InProgress | Resolved | Closed | Reopened
+  assignedToId   String?
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+  reopenDeadline DateTime? // resolvedAt + 48h; cleared when Closed (CM3)
+  actorUserId    String?   // AppUser.id of operator who created the record
+  actorRole      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  unit     Unit              @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  reporter Individual        @relation("ComplaintReporter", fields: [reportedById], references: [id], onDelete: Restrict)
+  category ComplaintCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  priority ComplaintPriority @relation(fields: [priorityId], references: [id], onDelete: Restrict)
+  assignee Individual?       @relation("ComplaintAssignee", fields: [assignedToId], references: [id], onDelete: Restrict)
+  notes    ComplaintNote[]
+
+  @@index([unitId])
+  @@index([status])
+  @@index([categoryId])
+  @@index([priorityId])
+  @@index([reportedById])
+  @@index([assignedToId])
+  @@index([createdAt])
+  @@map("complaints")
+}
+
+/// visibility: Internal | Resident
+/// Append-only — no update or delete permitted (CM16)
+/// authorId uses AppUser.id (actorUserId) to match V1 operator actor model
+model ComplaintNote {
+  id          String   @id @default(uuid())
+  complaintId String
+  content     String
+  visibility  String   // Internal | Resident
+  actorUserId String   // AppUser.id of the operator who wrote the note
+  actorRole   String
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Restrict)
+
+  @@index([complaintId])
+  @@map("complaint_notes")
 }

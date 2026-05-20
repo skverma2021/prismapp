@@ -1,7 +1,7 @@
 # Current Sprint Board
 
-Status: In Progress
-Date: 2026-04-24
+Status: Phase 4 CMM Sprint 0
+Date: 2026-05-20
 Owner: Engineering
 
 ## Purpose
@@ -10,9 +10,15 @@ Provide one short-horizon execution board for the active sprint window.
 This file should stay concise and operational. Historical detail belongs in evidence or archived notes.
 
 ## Current Focus
-Week 6 hardening and shared table/filter/form extraction are both complete. Post-extraction smoke testing surfaced two bugs (URL filter initialization, duplicate cancellation) — both fixed and evidenced. The proxy convention was renamed per Next.js 16.
+Phase 3 Hardening is complete (2026-05-20). All 66 Track-A items done; only low-priority refactoring (6.5, 6.6) and deferred future-module designs (9.4–9.7) remain open.
 
-Next priorities: request-ID logging expansion, audit logging expansion, PII masking, and remaining auth feedback polish — all now complete.
+**Current sprint: CMM Phase 4 Sprint 0.** Goal: build the Prisma schema, seed master data, and stand up the complaint creation + list API. Reference: `vault/CMM/cmm-vision.md`, `AGENTS.md §10`.
+
+Previous milestones delivered:
+- Week 6 hardening and shared component extraction complete.
+- Request-ID logging, audit logging expansion, PII masking, and auth feedback polish — all complete.
+- OAuth Phase 2 (Google + Microsoft), App Users screen, rate limiting, Sentry integration — all verified on Vercel production.
+- 113 Vitest unit tests passing; GitHub Actions CI active.
 
 ## Done
 1. Week 2 contribution scope completed and validated.
@@ -133,39 +139,36 @@ Next priorities: request-ID logging expansion, audit logging expansion, PII mask
 116. Track-A 7.3 + 7.5 complete: 7.3 confirmed already done — all `test:api:*` scripts are self-contained with `Date.now()` uniqueness; `test:api:*` npm scripts already present in `package.json`; only seed dependency is current-year contribution periods and app users (both from `prisma db seed`). 7.5: `.github/workflows/ci.yml` added — runs on push/PR to master/main: install → lint → `npm test` (Vitest, no DB) → `npm run build` (dummy `DATABASE_URL` confirmed safe; Prisma connects lazily) → `npm audit --audit-level=high`. API integration scripts remain manual pre-deploy.
 117. Track-A 8.9 complete: Rate limiting on auth endpoint. In-memory rate limiter added to `proxy.ts` (Next.js 16 proxy/middleware file). Targets `POST /api/auth/callback/credentials` — 5 attempts per IP per 15 minutes; returns `429 Too Many Requests` with `Retry-After` header. IP extracted from `x-forwarded-for` (Vercel standard; `request.ip` removed in Next.js 16). Key discovery: `proxy.ts` IS the Next.js 16 middleware file (build output now shows "Proxy (Middleware)") — `x-request-id` propagation that was previously in `proxy.ts` is now confirmed active. Closes OWASP A05-GAP-2 + A07-GAP-1. 0 lint errors; 69/69 tests pass; build clean.
 118. Track-A 1.9 complete: Rate-period coverage warn option implemented. Rate continues to be resolved at `transactionDateTime` per Domain-Rules C2. Added `checkRatePeriodCoverage()` in `contributions.service.ts`: compares resolved rate's `fromDt` against earliest selected period's start date. If rate is newer than the period, `createContribution` returns `{ contribution, warning: string }`. API envelope extended (`src/types/api.ts`, `src/lib/api-response.ts`) to support optional `warning` on success responses. UI (`app/contributions/page.tsx`) shows amber "Rate coverage notice" after successful post when warning is present. Domain-Rules.md updated with the policy decision. 69/69 tests pass; build clean.
+119. CMM Sprint 0 Task 1 complete: `ComplaintCategory`, `ComplaintPriority`, `Complaint`, `ComplaintNote` models added to `prisma/schema.prisma`. Back-relations wired on `Unit` (complaints) and `Individual` (reportedComplaints, assignedComplaints). `ComplaintNote` uses `actorUserId`/`actorRole` (V1 operator actor model) instead of an Individual FK, consistent with Contribution and AuditLog patterns. All indexes for `[unitId]`, `[status]`, `[categoryId]`, `[priorityId]`, `[reportedById]`, `[assignedToId]`, `[createdAt]`, `[complaintId]` added. `prisma validate` passes; lint 0 errors.
+120. CMM Sprint 0 Tasks 2–4 complete: Migration `cmm_entities` applied (`npx prisma migrate dev --name cmm_entities`). `prisma generate` run. `seedComplaintCategories()` and `seedComplaintPriorities()` added to `prisma/seed.mjs`; seed succeeded (10 categories + 3 priorities). `src/lib/api-response.ts` restored: `getRequestId()` export added, `fromUnknownError(error, requestId?)` updated with optional requestId param, `logServerError()` updated with structured JSON format, `ok(data, status, warning?)` updated with optional warning. CMM service (`src/modules/complaints/complaints.service.ts`) implemented: `listComplaints`, `getComplaintById`, `createComplaint`, `addComplaintNote`, `listComplaintCategories`, `listComplaintPriorities`. CMM schemas (`src/modules/complaints/complaints.schemas.ts`): `COMPLAINT_STATUSES`, `NOTE_VISIBILITIES`, `parseCreateComplaintInput`, `parseCreateComplaintNoteInput`. Route handlers: `GET/POST /api/complaints`, `GET /api/complaints/[id]`, `POST /api/complaints/notes`, `GET /api/complaints/categories`, `GET /api/complaints/priorities`. Audit logging wired on COMPLAINT_CREATED and COMPLAINT_NOTE_ADDED. Lint: 0 errors.
 
 ## In Progress
 
+None. Phase 3 complete.
+
 ## Next
 
-### Immediate Next Steps
-1. Wire request-ID logging into remaining non-financial route handlers. ✅ Done — all 33 handlers wired.
-2. Extend audit logging to all master-data mutations. ✅ Done — blocks, units, individuals, contribution heads, rates, ownerships, residencies all wired.
-3. Prepare maker-checker extension hooks for correction workflows. ✅ Done — schema fields, migration, service constant, and REJECTED-aware duplicate guard added.
-4. Resolve PostgreSQL SSL warning semantics in `DATABASE_URL` handling.
-5. Fix `/api/units/lookups` performance: Prisma `include: { block: true }` on ~3,958 units generates a single `WHERE id IN (...)` with ~3,958 bind parameters for block resolution (3.1s application time). The lookup should return only `id`, `description`, `blockId` without the block relation include — the client already has block names from the blocks lookup cache. ✅ Done — items 112–113.
-6. Decide rate-period coverage policy: current rule resolves rate at `transactionDateTime` (per Domain-Rules.md). This allows contributions for periods that predate the earliest rate for a head (e.g., Jan 2026 contribution captured in Apr 2026 using a rate effective from Feb 2026). Options: (a) keep as-is — operator knows the rate; (b) add operator warning when rate `fromDt` postdates the earliest selected period; (c) add hard guard rejecting such cases. See UAT finding: Contribution 150, head "Car Pool - Morabadi Morning Walk", rate from 1 Feb 2026 applied to Jan 2026 period.
+### Phase 4 — CMM Sprint 0
+1. ✅ Add CMM entities to Prisma schema: `ComplaintCategory`, `ComplaintPriority`, `Complaint`, `ComplaintNote`.
+2. ✅ Write and apply migration for CMM schema.
+3. ✅ Seed categories and priorities (from `vault/CMM/cmm-vision.md` §A.1 and §A.4).
+4. ✅ Implement `POST /api/complaints` (SOCIETY_ADMIN/MANAGER only) and `GET /api/complaints` (read-role). Also `GET /api/complaints/[id]`, `POST /api/complaints/notes`, `GET /api/complaints/categories`, `GET /api/complaints/priorities`.
+5. Implement complaint list page at `app/(dashboard)/complaints/`.
+6. Wire navigation (`src/lib/navigation.ts` and `src/components/master-data/master-data-nav.tsx`).
 
-### Stretch
-1. Decide whether contribution periods gain linked drill-through usage beyond report navigation.
-2. Auth Phase 2 planning (OAuth and account linking).
-3. Begin Safety or Security module design if V1 scope allows.
+### Low-Priority Refactoring (Track-A Open)
+- **6.5** — Extract shared timeline overlap helpers (`rangesOverlap` etc.) used by both ownerships and residencies into a shared module. Deferred until a third timeline entity appears.
+- **6.6** — Rename eligibility functions to domain-explicit names (`listResidencyEligibleUnitIds` → `listUnitsEligibleForResidencyCreation()`). Low risk; can be done opportunistically.
 
-## Risks
-1. Shell and page responsibilities may overlap if repeated page-local UI is not cleaned up.
-2. Auth feedback can still feel inconsistent if redirect reasons are not surfaced uniformly across all protected shell routes.
-3. Large seeded datasets can still surface performance issues in operator screens if client loading is not kept paginated and incremental.
-4. Timeline screens will become harder to evolve if lookup loading and mutation feedback patterns diverge between ownerships and residencies.
-6. Contribution-head deletion behavior depends on related rates and posted contributions, so operator-facing error copy must stay clear when FK restrictions fire.
-7. Audit log writes are best-effort (outside transaction); a transient failure could leave a contribution without supplementary audit context. The contribution row itself remains the primary audit trail.
-8. `@prisma/adapter-pg` interactive transaction limitation means any future multi-table writes must be designed with awareness that rollback is not guaranteed.
+## Risks (Current)
+1. Audit log writes are best-effort (outside transaction); a transient failure could leave a financial record without supplementary audit context. The contribution row remains the primary audit trail.
+2. `@prisma/adapter-pg` interactive transaction limitation: any future multi-table writes must account for the fact that rollback is not guaranteed if a step after the commit fails.
+3. In-memory rate limiter in `proxy.ts` resets on each Vercel cold-start; does not protect against distributed brute-force across multiple edge instances. Acceptable for V1 solo-operator context.
 
 ## References
 1. `Product-Delivery-Strategy.md`
 2. `Execution-Status.md`
-3. `Evidence/Day-10-Release-Readiness.md`
-4. `Evidence/Week-3-Shell-Smoke-Notes.md`
-5. `Evidence/Preview-Deployment-Status.md`
-6. `Evidence/Ownership-Continuity-Preview-UAT.md`
-7. `Evidence/Week-6-Lookup-Cache-Hardening.md`
-8. `Evidence/Week-6-Hardening-Complete.md`
+3. `vault/CMM/cmm-vision.md`
+4. `vault/06-Tracks/Track-A-TODO.md`
+5. `Evidence/Week-6-Hardening-Complete.md`
+6. `Evidence/Post-Shared-Extraction-Fixes.md`
