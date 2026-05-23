@@ -10,6 +10,8 @@
 7. O7- Ownership periods for a Unit must not have gaps; with current date-only inputs, `next.fromDt` must equal `previous.toDt + 1 day`.
 8. O8- Ownership transfer is contiguous by rule: the outgoing owner ends on the day before the incoming owner starts.
 
+> **Design note — O4 and BUILDER_INVENTORY:** Rule O4 requires exactly one active owner at all times, including from the moment a unit enters the system. Before any real sale, the builder is the de facto possessor. `BUILDER_INVENTORY` is the system identity that fills this requirement on day zero. Unit creation and first-ownership-row creation are a single atomic operation. This ensures the ownership timeline is answerable for every date from `inceptionDt` onward without special-casing the pre-sale period.
+
 ## Unit Lifecycle Rules
 1. U1- Each Unit has an `inceptionDt` that marks when it enters builder inventory and ownership continuity begins.
 2. U2- Creating a Unit also creates its initial active ownership row for `BUILDER_INVENTORY` starting on `inceptionDt`.
@@ -24,6 +26,8 @@
 4. R4- A Unit may have zero or one active resident (i.e., can be vacant).
 5. R5- Residency cannot start while the active owner is `BUILDER_INVENTORY`; transfer ownership to a real individual first.
 6. R6- System identities cannot be selected as residents.
+
+> **Design note — R4 / O4:** Vacancy is a residency state, not an ownership state. A vacant unit has exactly one owner in `UnitOwners` — the ownership chain must never break, but the residency chain is not required to be continuous. A unit can remain vacant for months or years (between a sale and move-in, during renovation, between tenancies) while ownership is tracked without interruption.
 
 ## Temporal Integrity Rules
 

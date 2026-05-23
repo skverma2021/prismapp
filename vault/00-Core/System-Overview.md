@@ -4,6 +4,13 @@ A comprehensive management system for **Magadh Signature Homes (MSH)** residenti
 
 To start with, the module for managing contributions by residents/owners has been taken up. The following modules are planned as backlog items after V1:
 
+## V1 Delivered Modules
+
+The following modules have been delivered and are production-ready:
+
+1. **Master Data** — Blocks, Units, Individuals, Ownership timelines, Residency timelines. See [`vault/V1/master-data-vision.md`](../V1/master-data-vision.md).
+2. **Contributions** — Contribution heads, rates, periods, payment capture, financial immutability, compensating corrections, and reports. See [`vault/V1/contribution-vision.md`](../V1/contribution-vision.md).
+
 ## Backlog Modules (Post V1)
 
 The following modules are planned in priority order. CMM is the next module to be developed after the Contribution Module achieves production-grade status.
