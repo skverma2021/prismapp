@@ -11,10 +11,14 @@
             "id": "dc3bd1ef6a1ef5da",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "D-crud/slides/D-crud-notes.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "D-crud-notes"
             }
           }
         ]
@@ -176,7 +180,7 @@
       "bases:Create new base": false
     }
   },
-  "active": "a981f5f2d05aff75",
+  "active": "dc3bd1ef6a1ef5da",
   "lastOpenFiles": [
     "00-intro/app-tour.md",
     "00-intro/react-express-transition.md",
