@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
+import { ComplaintSummaryCard } from "@/src/components/complaints/complaint-summary-card";
 import { InlineNotice } from "@/src/components/ui/inline-notice";
 import { PageHeader } from "@/src/components/shell/page-header";
 import { StateSurface } from "@/src/components/ui/state-surface";
@@ -94,6 +95,13 @@ const entryCards: EntryCard[] = [
     href: "/reports/contributions/paid-unpaid-matrix",
     roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
   },
+  {
+    kicker: "CMM",
+    title: "Complaints",
+    description: "Submit and track resident complaints with priority and SLA visibility.",
+    href: "/complaints",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
 ];
 
 export default function DashboardHomePage() {
@@ -142,6 +150,7 @@ export default function DashboardHomePage() {
         </div>
 
         <div className="space-y-4">
+          <ComplaintSummaryCard />
           <StateSurface
             title="Current role"
             message={`${session.role} can ${session.role === "READ_ONLY" ? "view reports only" : "access contribution capture and reports"}.`}

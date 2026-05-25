@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import {
@@ -9,6 +10,7 @@ import {
   INPUT_DISABLED_CLASS,
 } from "@/src/components/master-data/browse-filter-bar";
 import { DataTable } from "@/src/components/master-data/data-table";
+import { MasterDataNav } from "@/src/components/master-data/master-data-nav";
 import { NoticeStack } from "@/src/components/master-data/notice-stack";
 import { PaginationControls } from "@/src/components/master-data/pagination-controls";
 import { SessionContextNotice } from "@/src/components/shell/session-context-notice";
@@ -46,6 +48,8 @@ type ComplaintItem = {
   isAnonymous: boolean;
   status: string;
   createdAt: string;
+  resolvedAt: string | null;
+  closedAt: string | null;
   unit: { id: string; description: string; block: { description: string } };
   reporter: ComplaintReporter;
   category: { id: number; description: string };
@@ -89,6 +93,28 @@ const STATUS_BADGE: Record<string, string> = {
 function formatName(ind: ComplaintReporter | null | undefined) {
   if (!ind) return "—";
   return [ind.fName, ind.mName ?? "", ind.sName].filter(Boolean).join(" ");
+}
+
+type SlaStatus = { label: string; className: string };
+
+function computeSlaStatus(item: ComplaintItem): SlaStatus {
+  const slaMs = item.priority.slaHours * 3_600_000;
+  const createdMs = new Date(item.createdAt).getTime();
+  const endMs = item.resolvedAt
+    ? new Date(item.resolvedAt).getTime()
+    : item.closedAt
+      ? new Date(item.closedAt).getTime()
+      : Date.now();
+  const pct = (endMs - createdMs) / slaMs;
+
+  if (item.status === "Resolved" || item.status === "Closed") {
+    return pct > 1
+      ? { label: "Breached", className: "bg-rose-50 text-rose-700" }
+      : { label: "Met", className: "bg-emerald-50 text-emerald-700" };
+  }
+  if (pct >= 1) return { label: "Breached", className: "bg-rose-100 text-rose-700" };
+  if (pct >= 0.8) return { label: "At Risk", className: "bg-amber-100 text-amber-700" };
+  return { label: "On Track", className: "bg-emerald-100 text-emerald-700" };
 }
 
 // ---------------------------------------------------------------------------
@@ -143,6 +169,7 @@ export default function ComplaintsPage() {
     defaultSortDir: "desc",
     filters: [
       { key: "status" },
+      { key: "unitId" },
       { key: "categoryId" },
       { key: "priorityId" },
     ],
@@ -211,6 +238,8 @@ export default function ComplaintsPage() {
 
   return (
     <div className="space-y-4">
+      <MasterDataNav />
+
       <SessionContextNotice
         className="mt-4"
         mode="mutation"
@@ -257,6 +286,20 @@ export default function ComplaintsPage() {
               {categories.map((c) => (
                 <option key={c.id} value={String(c.id)}>
                   {c.description}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={browse.filters["unitId"] ?? ""}
+              onChange={(e) => browse.setFilter("unitId", e.target.value)}
+              className={INPUT_CLASS}
+              disabled={lookupsLoading}
+            >
+              <option value="">All units</option>
+              {units.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {formatUnitLabel(u)}
                 </option>
               ))}
             </select>
@@ -417,9 +460,12 @@ export default function ComplaintsPage() {
                 {
                   header: "Ticket",
                   render: (item) => (
-                    <span className="font-mono text-xs font-semibold text-slate-700">
+                    <Link
+                      href={`/complaints/${item.id}`}
+                      className="font-mono text-xs font-semibold text-(--accent) underline-offset-2 hover:underline"
+                    >
                       {item.ticketId}
-                    </span>
+                    </Link>
                   ),
                 },
                 {
@@ -446,6 +492,19 @@ export default function ComplaintsPage() {
                       </span>
                     </span>
                   ),
+                },
+                {
+                  header: "SLA",
+                  render: (item) => {
+                    const sla = computeSlaStatus(item);
+                    return (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${sla.className}`}
+                      >
+                        {sla.label}
+                      </span>
+                    );
+                  },
                 },
                 {
                   header: "Status",

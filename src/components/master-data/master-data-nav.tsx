@@ -36,6 +36,10 @@ const items = [
     href: "/contribution-rates",
     label: "Rates",
   },
+  {
+    href: "/complaints",
+    label: "Complaints",
+  },
 ];
 
 export function MasterDataNav() {

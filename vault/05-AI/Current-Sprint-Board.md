@@ -153,8 +153,66 @@ None. Phase 3 complete.
 2. ✅ Write and apply migration for CMM schema.
 3. ✅ Seed categories and priorities (from `vault/CMM/cmm-vision.md` §A.1 and §A.4).
 4. ✅ Implement `POST /api/complaints` (SOCIETY_ADMIN/MANAGER only) and `GET /api/complaints` (read-role). Also `GET /api/complaints/[id]`, `POST /api/complaints/notes`, `GET /api/complaints/categories`, `GET /api/complaints/priorities`.
-5. Implement complaint list page at `app/(dashboard)/complaints/`.
-6. Wire navigation (`src/lib/navigation.ts` and `src/components/master-data/master-data-nav.tsx`).
+5. ✅ Implement complaint list page at `app/(dashboard)/complaints/`.
+6. ✅ Wire navigation (`src/lib/navigation.ts` and `src/components/master-data/master-data-nav.tsx`).
+
+### Phase 4 — CMM Sprint 1: Operator Workflow ✅ DONE
+Goal: make the complaint lifecycle operable — view detail, transition status, assign, add notes, reopen.
+
+1. ✅ Add `unitId` filter to the complaints browse page (`app/(dashboard)/complaints/page.tsx`). Added to `useBrowseState` filters and `BrowseFilterBar`; ticket IDs are now links to the detail page.
+2. ✅ Complaint detail page at `app/(dashboard)/complaints/[id]/page.tsx`. Shows all fields, priority/SLA, category, status badge, reporter (PII-masked for READ_ONLY), assignee, and notes thread.
+3. ✅ Status transition actions on detail page. `PATCH /api/complaints/[id]` added with full transition guard (CM1–CM2). Buttons are role-gated (MANAGER/ADMIN). Auto-advances `Open→Assigned` when assignee is set.
+4. ✅ Add-note UI on the detail page. Wired to existing `POST /api/complaints/notes`. Visibility selector: `Internal` (MANAGER/ADMIN) or `Resident` (all roles).
+5. ✅ Reopen flow. 48-hour window (CM3) validated server-side in `PATCH`. `reopenDeadline` set on `Resolved` transition; cleared on `Closed`. "Reopen" button hidden if window has elapsed.
+6. ✅ Assignee picker. Loaded from `loadIndividualLookupsCached()` on detail page. MANAGER/ADMIN can set/clear `assignedToId` via `PATCH`.
+
+### Phase 4 — CMM Sprint 2: SLA Visibility and Dashboard ✅ DONE
+Goal: make SLA breach visible and give the MC a summary view.
+
+7. ✅ SLA status column on complaints list page. Computed client-side from `createdAt + priority.slaHours`; shows `On Track` / `At Risk` (≥80%) / `Breached` for active tickets, `Met` / `Breached` for resolved/closed. `resolvedAt` and `closedAt` added to `ComplaintItem` type.
+8. ✅ Complaint summary card on dashboard home page (`src/components/complaints/complaint-summary-card.tsx`). Fetches `GET /api/complaints/summary` (new route). Shows: open ticket count, breached SLA count (highlighted red when >0), oldest open ticket age. All roles. Complaints entry card added to `entryCards` on home page.
+9. Block/unit breakdown deferred — low immediate value; can be a Sprint 3 accordion if needed.
+
+### Phase 4 — CMM Sprint 3: Operational Backlog (Not Course Material)
+Goal: production polish for a live MSH deployment. These items introduce external service dependencies without adding new software design patterns, so they are excluded from the course.
+
+10. Photo attachment on complaint creation. Requires Vercel Blob (storage provider). Add `photoUrls: string[]` to `Complaint` schema. Upload at create time; display thumbnails on detail page.
+11. Status change notifications. Extend `PATCH /api/complaints/[id]` to trigger a notification (email initially). Requires a notification utility in `src/lib/notify.ts` and an email provider (Resend or SendGrid).
+12. SLA escalation hook. Detect SLA-breached open tickets and write an internal note or notification. Vercel Cron (`cron.json`) is the simplest option.
+
+Implement only when deploying to a live MSH instance. Do not include in course.
+
+### Module I — Events and Common-Space Bookings (Next Course Module)
+Goal: student exercise that applies the slot/resource conflict-prevention pattern from Section D in a new domain.
+
+Designated as the **course capstone exercise** for Module I. Students receive a skeleton ERD and domain rules; they implement the full module end-to-end using patterns already taught.
+
+Key domain concepts to cover:
+- Resources: halls and amenities (Gym, Pool, Yoga room, Common Hall)
+- Bookings: start/end datetime, resource, booked-by individual, purpose
+- Conflict rule: no two approved bookings for the same resource may overlap
+- Approval flow: MANAGER approves/rejects; READ_ONLY views calendar
+- Status lifecycle: `Pending → Approved | Rejected`; approved bookings are immutable
+- Cancellation: only before event start; write an audit entry
+
+This module will be scaffolded as a vault spec (`vault/Events/`) before students begin.
+
+### Hardware-Dependent Modules — Course-Deferred
+The following modules require physical device infrastructure and are excluded from the course. They remain valid backlog items for a live MSH deployment.
+
+- **Safety** — Checklists, incident reporting, compliance tracking. Requires sensor data ingestion and safety device integration.
+- **Security** — Visitor management, incident logging, access control. Requires barcode/QR scanners, cameras, and access control hardware.
+
+Do not begin implementation until physical infrastructure decisions are made for MSH.
+
+### CMM Deferred (V3+ — do not implement in current cycles)
+- WhatsApp / SMS bot intake
+- OTP-based physical closure
+- Upvote / merge similar tickets
+- Festival / event suppression mode
+- Vendor rating and feedback
+- Authority letter generation
+- Maker-checker for MC closure approvals
 
 ### Low-Priority Refactoring (Track-A Open)
 - **6.5** — Extract shared timeline overlap helpers (`rangesOverlap` etc.) used by both ownerships and residencies into a shared module. Deferred until a third timeline entity appears.

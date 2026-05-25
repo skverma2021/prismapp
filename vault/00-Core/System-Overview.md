@@ -13,12 +13,23 @@ The following modules have been delivered and are production-ready:
 
 ## Backlog Modules (Post V1)
 
-The following modules are planned in priority order. CMM is the next module to be developed after the Contribution Module achieves production-grade status.
+The following modules are planned in priority order.
 
-1. **CMM (Complaint Management Module)** — Complaint lifecycle management, ticketing with auto ID, priority and SLA tracking, routing and escalation, and resident-facing status updates. See [`vault/CMM/cmm-vision.md`](../CMM/cmm-vision.md).
-2. **Safety** — Checklists, incident reporting, and compliance tracking for common areas and building systems.
-3. **Security** — Visitor management, security incident logging, and access control workflows.
-4. **Events and Common-Space Bookings** — Event scheduling, common hall and amenity reservations, and calendar management.
+### In Progress
+
+1. **CMM (Complaint Management Module)** — Complaint lifecycle management, ticketing with auto ID, priority and SLA tracking, routing and escalation, and resident-facing status updates. Sprints 0–2 delivered (schema, APIs, list page, detail page, lifecycle transitions, SLA visibility, dashboard summary card). See [`vault/CMM/cmm-vision.md`](../CMM/cmm-vision.md).
+   - Sprint 3 items (photo attachment, notifications, SLA escalation cron) are captured as **operational backlog** for a live MSH deployment. They are not part of the course — each requires an external service dependency (Vercel Blob, email provider, Vercel Cron) that adds infrastructure overhead without introducing new software design patterns.
+
+### Next — Course Module I
+
+2. **Events and Common-Space Bookings** — Event scheduling, common hall and amenity reservations, and calendar management. This is the designated **Module I student exercise**. It is a pure software problem with no hardware or external service dependencies. The core challenge — slot and resource conflict prevention — directly mirrors the ownership/residency timeline pattern taught in Section D, giving students a concrete opportunity to apply that pattern in a new domain.
+
+### Hardware-Dependent — Course-Deferred
+
+The following modules require physical infrastructure (scanners, sensors, cameras, access control hardware) that cannot be realistically demonstrated in a software course. They remain valid backlog items for a live MSH deployment but are excluded from course scope.
+
+3. **Safety** — Checklists, incident reporting, and compliance tracking for common areas and building systems. Requires sensor data ingestion and safety device integration.
+4. **Security** — Visitor management, security incident logging, and access control workflows. Requires barcode/QR scanners, camera feeds, and access control hardware.
 
 These modules will reuse the shared policy, audit, and role infrastructure established during V1 hardening. Domain rules and API contracts should be added to `vault/01-Domain/` and `vault/03-API/` when implementation begins.
 
