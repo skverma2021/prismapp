@@ -102,6 +102,13 @@ const entryCards: EntryCard[] = [
     href: "/complaints",
     roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
   },
+  {
+    kicker: "Events",
+    title: "Bookings",
+    description: "Request and manage bookings for shared resources: hall, gym, pool, and yoga room.",
+    href: "/bookings",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
 ];
 
 export default function DashboardHomePage() {

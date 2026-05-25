@@ -40,6 +40,10 @@ const items = [
     href: "/complaints",
     label: "Complaints",
   },
+  {
+    href: "/bookings",
+    label: "Bookings",
+  },
 ];
 
 export function MasterDataNav() {

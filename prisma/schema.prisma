@@ -67,6 +67,7 @@ model Individual {
   contributions      Contribution[]    @relation("ContributionDepositedBy")
   reportedComplaints Complaint[]       @relation("ComplaintReporter")
   assignedComplaints Complaint[]       @relation("ComplaintAssignee")
+  bookingRequests    Booking[]         @relation("BookingRequestor")
 
   @@index([sName, fName])
   @@map("individuals")
@@ -319,4 +320,57 @@ model ComplaintNote {
 
   @@index([complaintId])
   @@map("complaint_notes")
+}
+
+// ===========================================================================
+// EVENTS MODULE
+// ===========================================================================
+
+/// Bookable shared resources: Common Hall, Gym, Swimming Pool, Yoga Room
+model Resource {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  capacity    Int?     // max guests; null = no limit enforced
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  bookings Booking[]
+
+  @@map("resources")
+}
+
+/// Booking status: Pending | Approved | Rejected | Cancelled
+/// Overlap prevention for same resource enforced on Approve (BK2)
+model Booking {
+  id                 String    @id @default(uuid())
+  resourceId         Int
+  requestedById      String    // Individual.id
+  title              String
+  purpose            String?
+  startDt            DateTime
+  endDt              DateTime
+  guestCount         Int       @default(0)
+  status             String    @default("Pending")
+  approvedById       String?   // AppUser.id
+  approvedAt         DateTime?
+  rejectedById       String?   // AppUser.id
+  rejectedAt         DateTime?
+  rejectionReason    String?
+  cancelledById      String?   // AppUser.id
+  cancelledAt        DateTime?
+  cancellationReason String?
+  actorUserId        String?   // AppUser.id who created the record
+  actorRole          String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  resource    Resource   @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+  requestedBy Individual @relation("BookingRequestor", fields: [requestedById], references: [id], onDelete: Restrict)
+
+  @@index([resourceId])
+  @@index([requestedById])
+  @@index([status])
+  @@index([startDt])
+  @@map("bookings")
 }

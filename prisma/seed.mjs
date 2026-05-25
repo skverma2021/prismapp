@@ -423,6 +423,22 @@ async function seedComplaintPriorities() {
   }
 }
 
+async function seedResources() {
+  const resources = [
+    { name: "Common Hall",  description: "Main community hall for events and gatherings.", capacity: 150 },
+    { name: "Gym",          description: "Fitness centre with exercise equipment.",         capacity: 20  },
+    { name: "Swimming Pool",description: "Outdoor swimming pool.",                          capacity: 40  },
+    { name: "Yoga Room",    description: "Dedicated yoga and meditation space.",            capacity: 15  },
+  ];
+  for (const r of resources) {
+    await prisma.resource.upsert({
+      where: { name: r.name },
+      update: { description: r.description, capacity: r.capacity },
+      create: r,
+    });
+  }
+}
+
 async function main() {
   const currentYear = new Date().getUTCFullYear();
 
@@ -437,6 +453,7 @@ async function main() {
   await seedContributionPeriods(currentYear);
   await seedComplaintCategories();
   await seedComplaintPriorities();
+  await seedResources();
 
   console.log(`Seed complete for year ${currentYear}`);
 }

@@ -109,6 +109,12 @@ export const dashboardNavItems: AppNavItem[] = [
     description: "Submit and track resident complaints with priority and SLA visibility.",
     roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
   },
+  {
+    href: "/bookings",
+    label: "Bookings",
+    description: "Request and manage bookings for shared resources: hall, gym, pool, yoga room.",
+    roles: ["SOCIETY_ADMIN", "MANAGER", "READ_ONLY"],
+  },
 ];
 
 const routeMeta = [
