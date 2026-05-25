@@ -7,7 +7,7 @@
 **Headline:** Apply this checklist to every route handler you write. Every item is a production requirement.
 
 **Talking points:**
-- Open the parking space module from the Section D exercise, or any new module you've written. Work through all five points:
+- Open the complaints module from the Section D exercise, or any new module you've written. Work through all five points:
 
 **1. Auth on every read handler**
 ```typescript

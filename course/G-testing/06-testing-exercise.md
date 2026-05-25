@@ -147,13 +147,71 @@ Find `contributions-reports.service.ts` in the coverage report. What percentage 
 
 ---
 
-## Part 5 — Reflection Questions
+## Part 5 — Write the First CMM Test File (20 minutes)
+
+The CMM module (`src/modules/complaints/`) has a complete service and schema layer — but no unit tests yet. Your task: write the first test file.
+
+### Step 12: Create the File
+
+```
+src/modules/complaints/__tests__/complaints.schemas.test.ts
+```
+
+### Step 13: Import What You Need
+
+```ts
+import { describe, it, expect } from "vitest";
+import { HttpError } from "@/src/lib/api-response";
+import { parseCreateComplaintInput } from "../complaints.schemas";
+```
+
+### Step 14: Write Tests for `parseCreateComplaintInput`
+
+The function signature accepts `unknown`. Look at `complaints.schemas.ts` to understand what fields it validates before writing tests.
+
+Write at least 6 tests:
+
+1. **Valid minimal input** — `unitId`, `reportedById`, `categoryId` (numeric string), `priorityId` (numeric string), and `title` present. Assert the returned object has the correct shape.
+   ```ts
+   const result = parseCreateComplaintInput({
+     unitId: "unit-123",
+     reportedById: "ind-456",
+     categoryId: "1",
+     priorityId: "2",
+     title: "Water leaking from ceiling",
+   });
+   expect(result.unitId).toBe("unit-123");
+   expect(result.isAnonymous).toBe(false); // default
+   ```
+
+2. **Missing `unitId`** — omit `unitId`. Should throw `HttpError(400)`.
+
+3. **Missing `title`** — omit `title`. Should throw `HttpError(400)`.
+
+4. **Non-numeric `categoryId`** — `categoryId: "abc"`. The function parses it with `parseInt`. Test what happens: does it throw, or does the result have `NaN`? Adjust your assertion to match the actual behaviour — then decide if the behaviour is correct.
+
+5. **`isAnonymous` defaults to `false`** — valid input without `isAnonymous`. Assert `result.isAnonymous === false`.
+
+6. **`isAnonymous` set to `true`** — pass `isAnonymous: true`. Assert `result.isAnonymous === true`.
+
+### Step 15: Run Your Tests
+
+```bash
+npm run test
+```
+
+All prior tests should still pass. Fix any failures before continuing.
+
+---
+
+## Part 6 — Reflection Questions
 
 1. What is the difference between `toThrow(HttpError)` and `toThrow("some message string")`? Which is more stable?
 2. Why does the test file define `const d = (iso: string) => new Date(iso + "T00:00:00.000Z")` inside the `describe` block instead of at the top of the file?
 3. What would break if you removed `beforeEach(() => vi.clearAllMocks())` from a service test that uses mocks?
 4. The `parseTransactionsReportParams` function validates `pageSize` to a maximum of 100. But `getContributionTransactionsCsv` passes `pageSize: Number.MAX_SAFE_INTEGER` directly. Does your test cover this? Should it?
 5. Name one scenario in the PrismApp contribution module where a unit test would NOT be sufficient — only an integration test would give confidence. Why?
+6. The CMM module has no service tests yet. `createComplaint` calls `generateTicketId()` which reads from the database. Why is this function harder to unit test than `parseCreateComplaintInput`? What would you need to do to unit test it?
 
 ---
 
@@ -162,5 +220,6 @@ Find `contributions-reports.service.ts` in the coverage report. What percentage 
 - [ ] All existing tests pass before and after your changes (`npm run test` = 0 failures)
 - [ ] New `contributions-reports.params.test.ts` file created with at least 8 tests
 - [ ] At least 5 tests cover `parseTransactionsReportParams`; at least 3 cover `parseMatrixReportParams`
+- [ ] New `complaints.schemas.test.ts` file created with at least 6 tests
 - [ ] Coverage report generated and `parseTransactionsReportParams` / `parseMatrixReportParams` lines are shown as covered
-- [ ] Reflection questions 1–3 answered
+- [ ] Reflection questions 1–4 answered; questions 5 and 6 discussed
