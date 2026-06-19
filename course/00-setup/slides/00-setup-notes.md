@@ -123,7 +123,7 @@ The output ends with "Generated Prisma Client" and a list of applied migrations.
 npm run prisma:seed
 ```
 
-This runs `node prisma/seed.mjs` which creates: Blocks A, B, C; units per block; contribution heads (Maintenance, Water, Sinking Fund, etc.); a contribution period for the current year; app users (admin, manager, read-only); gender types.
+This runs `node prisma/seed.mjs` which creates: Blocks Nalanda, Vaishali, Rajgir; 112 units per block (14 floors × 8 columns, 336 total); contribution heads (Maintenance, Mandir, Gymnasium, Swimming Pool, Holi, Dusshera, SaraswatiPuja, + feast variants); a contribution period for the current year; app users (admin, manager, read-only); gender types.
 
 Demo user passwords are set using `AUTH_SEED_PASSWORD` from `.env` (default: `ChangeMe123!`).
 

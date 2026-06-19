@@ -67,9 +67,9 @@ The seed script creates:
 
 | Category | What is created |
 |----------|----------------|
-| Blocks | A, B, C |
-| Units | Several units per block |
-| Contribution heads | Maintenance, Water, Sinking Fund, etc. |
+| Blocks | Nalanda, Vaishali, Rajgir |
+| Units | 112 per block (14 floors × 8 columns), 336 total |
+| Contribution heads | Maintenance, Mandir, Gymnasium, Swimming Pool, Holi, Dusshera, SaraswatiPuja, + feast variants |
 | Contribution period | Current year |
 | App users | Admin, Manager, and Read-Only accounts |
 | Gender types | Male, Female, Other |

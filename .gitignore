@@ -38,6 +38,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# .env.example is the committed template — must NOT be gitignored
+!.env.example
 
 # database dump files — contain real data, never commit
 /backups/

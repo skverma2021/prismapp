@@ -116,8 +116,8 @@ npx prisma db seed
 ```
 
 The seed creates:
-- Blocks (A, B, C)
-- Contribution heads (Maintenance, Water, etc.)
+- Blocks (Nalanda, Vaishali, Rajgir)
+- Contribution heads (Maintenance, Mandir, Gymnasium, Swimming Pool, Holi, Dusshera, SaraswatiPuja, + feast variants)
 - Contribution periods (current year)
 - Demo app users (admin, manager, read-only)
 
