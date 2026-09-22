@@ -21,7 +21,8 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
-    "backup:db": "node scripts/backup-db.mjs"
+    "backup:db": "node scripts/backup-db.mjs",
+    "cleanup:test-blocks": "node scripts/cleanup-test-blocks.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",

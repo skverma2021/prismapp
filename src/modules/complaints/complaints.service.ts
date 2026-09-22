@@ -338,6 +338,10 @@ export async function updateComplaint(
       assignee: { select: { id: true, fName: true, mName: true, sName: true } },
       category: { select: { id: true, description: true } },
       priority: { select: { id: true, label: true, slaHours: true } },
+      notes: {
+        orderBy: { createdAt: "asc" },
+        select: { id: true, content: true, visibility: true, actorUserId: true, actorRole: true, createdAt: true },
+      },
     },
   });
 

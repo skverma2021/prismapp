@@ -290,24 +290,24 @@ The core complaint ticket entity.
 
 ### Fields
 
-| Field           | Type                              | Notes                                         |
-|-----------------|-----------------------------------|-----------------------------------------------|
-| id              | string (UUID)                     | Primary Key                                   |
-| ticketId        | string                            | Unique, system-generated (e.g., MSH-2026-00127) |
-| unitId          | string (FK → Units.id)            | Complaint location                            |
-| reportedById    | string (FK → Individuals.id)      | Complainant                                   |
-| categoryId      | integer (FK → ComplaintCategories.id) |                                           |
-| priorityId      | integer (FK → ComplaintPriorities.id) |                                           |
-| title           | string                            | Short summary                                 |
-| description     | string                            | Full detail                                   |
-| isAnonymous     | boolean                           | If true, reporter not shown to residents      |
-| status          | enum                              | Open, Assigned, InProgress, Resolved, Closed, Reopened |
-| assignedToId    | string (FK → Individuals.id, nullable) | MC member or staff handling the complaint |
-| resolvedAt      | datetime (nullable)               | Set when status → Resolved                    |
-| closedAt        | datetime (nullable)               | Set when status → Closed                      |
-| reopenDeadline  | datetime (nullable)               | resolvedAt + 48 hours; cleared on Closed      |
-| createdAt       | datetime                          |                                               |
-| updatedAt       | datetime                          |                                               |
+| Field          | Type                                   | Notes                                                  |
+| -------------- | -------------------------------------- | ------------------------------------------------------ |
+| id             | string (UUID)                          | Primary Key                                            |
+| ticketId       | string                                 | Unique, system-generated (e.g., MSH-2026-00127)        |
+| unitId         | string (FK → Units.id)                 | Complaint location                                     |
+| reportedById   | string (FK → Individuals.id)           | Complainant                                            |
+| categoryId     | integer (FK → ComplaintCategories.id)  |                                                        |
+| priorityId     | integer (FK → ComplaintPriorities.id)  |                                                        |
+| title          | string                                 | Short summary                                          |
+| description    | string                                 | Full detail                                            |
+| isAnonymous    | boolean                                | If true, reporter not shown to residents               |
+| status         | enum                                   | Open, Assigned, InProgress, Resolved, Closed, Reopened |
+| assignedToId   | string (FK → Individuals.id, nullable) | MC member or staff handling the complaint              |
+| resolvedAt     | datetime (nullable)                    | Set when status → Resolved                             |
+| closedAt       | datetime (nullable)                    | Set when status → Closed                               |
+| reopenDeadline | datetime (nullable)                    | resolvedAt + 48 hours; cleared on Closed               |
+| createdAt      | datetime                               |                                                        |
+| updatedAt      | datetime                               |                                                        |
 
 ---
 

@@ -282,7 +282,7 @@ export default function ComplaintDetailPage() {
     "rounded-lg px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50";
 
   // Filter notes by role: READ_ONLY sees only Resident notes
-  const visibleNotes = complaint?.notes.filter(
+  const visibleNotes = complaint?.notes?.filter(
     (n) => isAdminOrManager || n.visibility === "Resident"
   ) ?? [];
 

@@ -222,6 +222,7 @@ export default function ComplaintsPage() {
           `Complaint submitted: ${data.ticketId} — ${data.title}`
         );
         browse.setPage(1);
+        browse.reload();
       },
     });
   }
