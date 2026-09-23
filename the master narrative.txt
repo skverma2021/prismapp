@@ -1,0 +1,679 @@
+# From Concept to Commissioning
+
+## Software Engineering in Practice
+
+**Target length:** approximately 8–10 minutes
+
+---
+
+## SCENE 1 — OPENING
+
+**[ON SCREEN]**
+
+Black/simple opening screen.
+
+**From Concept to Commissioning**
+
+*Software Engineering in Practice*
+
+After a few seconds, show a montage of:
+
+* a real-world problem;
+* a simple requirements document;
+* an application screen;
+* code;
+* a database diagram;
+* a running application.
+
+**[NARRATOR]**
+
+When you learn software development, it's very easy to learn technologies one at a time.
+
+You learn a programming language.
+
+Then a framework.
+
+Then a database.
+
+Then APIs, libraries, testing tools, and so on.
+
+And you can become quite good at using each of them.
+
+But there's a problem.
+
+**Real software doesn't start with a programming language.**
+
+It doesn't start with TypeScript.
+
+It doesn't start with PostgreSQL.
+
+It doesn't even start with Next.js.
+
+It starts with a **problem that somebody wants solved.**
+
+And turning that problem into working software involves much more than writing code.
+
+**[PAUSE]**
+
+That's what this channel is about.
+
+---
+
+## SCENE 2 — THE CHANNEL IDEA
+
+**[ON SCREEN]**
+
+Display:
+
+> **From Concept to Commissioning**
+> *Software Engineering in Practice*
+
+Then:
+
+> **Learn software engineering by building real applications.**
+
+**[NARRATOR]**
+
+Welcome to **From Concept to Commissioning — Software Engineering in Practice.**
+
+The idea behind this channel is quite simple:
+
+**We learn software engineering by building real applications.**
+
+Instead of learning technologies in isolation, we'll use applications as our laboratory.
+
+We'll start with a real-world problem.
+
+We'll understand what the application needs to do.
+
+We'll examine the domain.
+
+We'll make engineering decisions.
+
+We'll choose technologies.
+
+We'll implement the solution.
+
+We'll test it.
+
+And eventually, we'll have working software.
+
+---
+
+## SCENE 3 — WHY "CONCEPT TO COMMISSIONING"?
+
+**[ON SCREEN]**
+
+Show an engineering-project style flow:
+
+> Concept → Requirements → Design → Engineering → Construction → Testing → Commissioning → Operation
+
+**[NARRATOR]**
+
+The phrase **"concept to commissioning"** comes naturally from engineering projects.
+
+An engineering project doesn't become a working asset simply because somebody has produced a design.
+
+There is a journey.
+
+You start with a concept.
+
+You understand the requirements.
+
+You design and engineer the system.
+
+You build it.
+
+You test it.
+
+And finally, you commission it.
+
+Commissioning is the point at which the completed system is brought into operation and we establish that it actually works as intended.
+
+Software has a similar journey.
+
+**[ON SCREEN]**
+
+Replace the previous diagram with:
+
+> Problem
+> ↓
+> Requirements
+> ↓
+> Domain
+> ↓
+> Architecture
+> ↓
+> Implementation
+> ↓
+> Testing
+> ↓
+> Deployment
+> ↓
+> Working Software
+
+**[NARRATOR]**
+
+In software, we might describe the journey as:
+
+Problem.
+
+Requirements.
+
+Domain understanding.
+
+Architecture.
+
+Implementation.
+
+Testing.
+
+Deployment.
+
+And finally—
+
+**working software.**
+
+So "From Concept to Commissioning" is our way of looking at software development as an **engineering process**.
+
+The objective isn't merely:
+
+> "Write some code."
+
+The objective is:
+
+> **Take a problem and engineer a working software system.**
+
+---
+
+## SCENE 4 — WHY REAL APPLICATIONS?
+
+**[ON SCREEN]**
+
+Show two contrasting boxes:
+
+**Learning in isolation**
+
+> TypeScript
+> PostgreSQL
+> Next.js
+> Prisma
+
+versus
+
+**Learning in context**
+
+> Real problem
+> → Engineering decision
+> → Technology
+> → Working feature
+
+**[NARRATOR]**
+
+So why build real applications?
+
+Because technology becomes much easier to understand when we have a reason to use it.
+
+Take TypeScript.
+
+We could simply learn a list of TypeScript features.
+
+But suppose our application receives data from a browser.
+
+Can we trust that data?
+
+What should happen if something is missing?
+
+What if the value has the wrong type?
+
+What information should our program be allowed to assume?
+
+Now TypeScript starts to become meaningful.
+
+Or take a database.
+
+We could start with:
+
+> "Today we're going to learn PostgreSQL."
+
+But instead, suppose our application needs to record ownership of a unit over time.
+
+An owner can change.
+
+We need to preserve history.
+
+We need to know who the current owner is.
+
+We need to prevent contradictory data.
+
+Now we have a real problem.
+
+And that problem naturally leads us toward data modeling, relationships, constraints, queries, transactions—and eventually PostgreSQL.
+
+**[PAUSE]**
+
+The technology is no longer an isolated subject.
+
+It has become a **solution to a problem**.
+
+---
+
+## SCENE 5 — OUR FIRST APPLICATION
+
+**[ON SCREEN]**
+
+Title:
+
+> **Our First Application**
+>
+> Society Management System
+
+Then show several actual application screens if available.
+
+**[NARRATOR]**
+
+Our first major application is a **Society Management System**.
+
+At first glance, it might appear to be a fairly ordinary CRUD application.
+
+Blocks.
+
+Units.
+
+People.
+
+Owners.
+
+Residents.
+
+Contributions.
+
+Complaints.
+
+But once we start modeling the real world, things become much more interesting.
+
+**[ON SCREEN — progressively reveal]**
+
+> A unit can have different owners over time.
+
+> Residents can change.
+
+> Contribution rates can change.
+
+> Financial transactions need to remain reliable.
+
+> Complaints have workflows.
+
+> Different users have different permissions.
+
+> Some information must remain restricted.
+
+> Important actions need to be traceable.
+
+**[NARRATOR]**
+
+Suddenly, we're no longer talking about simply adding records to a database.
+
+We're dealing with history.
+
+Business rules.
+
+Financial integrity.
+
+Workflows.
+
+Security.
+
+Authorization.
+
+Validation.
+
+Auditability.
+
+And architectural decisions.
+
+That makes this application a useful **laboratory for software engineering**.
+
+---
+
+## SCENE 6 — THE IMPORTANT DISTINCTION
+
+**[ON SCREEN]**
+
+Large text:
+
+> **Applications are the laboratories.**
+
+Then:
+
+> Architecture
+> SDLC
+> TypeScript
+> PostgreSQL
+> Prisma
+> Next.js
+> AI-assisted development
+
+**[NARRATOR]**
+
+And this leads to an important distinction about how this channel is organized.
+
+The applications are the **laboratories**.
+
+The subjects we study are software engineering and technology.
+
+So the Society Management System is not the ultimate subject of this channel.
+
+It is our first major **case study**.
+
+Later, we may build other applications.
+
+And those applications can become additional laboratories.
+
+This means that when we study architecture, we can use one application as an example.
+
+When we study TypeScript, we can use another part of the application.
+
+When we study databases, we can return to the data problems we've already encountered.
+
+And when we study AI-assisted development, we can use the actual development process as our example.
+
+---
+
+## SCENE 7 — THE SIX PLAYLISTS
+
+**[ON SCREEN]**
+
+Show the six playlists one at a time.
+
+### A
+
+**Real Applications**
+
+### B
+
+**Architecture & SDLC**
+
+### C
+
+**TypeScript**
+
+### D
+
+**PostgreSQL & Prisma**
+
+### E
+
+**Next.js**
+
+### F
+
+**AI-Augmented Development**
+
+**[NARRATOR]**
+
+That's why the channel is organized into six major playlists.
+
+### Playlist A — Real Applications
+
+Here we'll introduce and explore the applications that become our case studies.
+
+Our first one is the Society Management System.
+
+### Playlist B — Architecture & SDLC
+
+Here we'll step back and examine how software systems are engineered.
+
+We'll use the applications as examples.
+
+We'll look at requirements, domain modeling, specifications, architecture, testing, deployment, and the decisions that connect them.
+
+### Playlist C — TypeScript
+
+Here we'll learn TypeScript through real problems encountered in the applications.
+
+We'll repeatedly use a simple pattern:
+
+**Syntax → Context → Use Case.**
+
+First understand the problem.
+
+Then see the code.
+
+Then understand why the syntax exists.
+
+### Playlist D — PostgreSQL & Prisma
+
+Here we'll explore relational data, PostgreSQL and Prisma through the data problems arising in the applications.
+
+We'll move from:
+
+**domain requirement → data model → database → application code.**
+
+### Playlist E — Next.js
+
+Here we'll examine how the web application is actually built.
+
+Rather than learning framework features in isolation, we'll see them as part of real application behavior.
+
+For example:
+
+**Browser → HTTP → Route Handler → Authentication → Authorization → Validation → Service → Database → Response.**
+
+### Playlist F — AI-Augmented Development
+
+And finally, we'll explore how AI can participate in the engineering process.
+
+But the focus won't simply be on clever prompts.
+
+We'll ask a bigger question:
+
+> **How should an engineer work with AI when building real software?**
+
+---
+
+## SCENE 8 — THE AI-ERA CONNECTION
+
+**[ON SCREEN]**
+
+Show:
+
+> AI-assisted development
+
+Then:
+
+> More capable tools
+> ↓
+> Faster implementation
+> ↓
+> Greater need for engineering judgment
+
+**[NARRATOR]**
+
+There is another reason this approach is particularly relevant today.
+
+AI-assisted tools are making many aspects of software implementation easier and faster.
+
+That's good news.
+
+But as implementation becomes more productive, the developer's role doesn't simply disappear.
+
+The emphasis can shift.
+
+From:
+
+> **"How do I write this code?"**
+
+toward:
+
+> "What should we build?"
+
+> "Why should we build it this way?"
+
+> "What assumptions are we making?"
+
+> "What could go wrong?"
+
+> "How do we know the result is correct?"
+
+In other words, developers increasingly benefit from understanding the **problem and the product**, not just the code.
+
+And working on realistic applications is one way to develop that understanding.
+
+So AI will be part of our journey—but **AI is not the identity of this channel**.
+
+The identity is software engineering in practice.
+
+---
+
+## SCENE 9 — THE RECURRING PATTERN
+
+**[ON SCREEN]**
+
+Animate this sequence:
+
+> **Real-world problem**
+>
+> ↓
+>
+> **Concept**
+>
+> ↓
+>
+> **Requirement**
+>
+> ↓
+>
+> **Domain rule**
+>
+> ↓
+>
+> **Engineering decision**
+>
+> ↓
+>
+> **Technology**
+>
+> ↓
+>
+> **Implementation**
+>
+> ↓
+>
+> **Testing**
+>
+> ↓
+>
+> **Working software**
+
+**[NARRATOR]**
+
+Throughout the channel, we'll keep returning to this journey.
+
+We start with a real-world problem.
+
+We understand the concept.
+
+We define the requirement.
+
+We identify the domain rules.
+
+We make engineering decisions.
+
+We choose technology.
+
+We implement.
+
+We test.
+
+And eventually we arrive at working software.
+
+And at every stage, we'll keep asking four questions:
+
+**Why are we doing this?**
+
+**What problem does it solve?**
+
+**How does it fit into the larger system?**
+
+And—
+
+**How do we know it works?**
+
+---
+
+## SCENE 10 — WHAT COMES NEXT?
+
+**[ON SCREEN]**
+
+Show:
+
+> **START HERE**
+>
+> ↓
+>
+> **Playlist A**
+>
+> Building a Real Society Management System
+
+Then display:
+
+> Episode 1 — Meet the Society Management Application
+
+**[NARRATOR]**
+
+So where do we begin?
+
+We begin with the application.
+
+Before diving into TypeScript, PostgreSQL, Prisma or Next.js, let's first understand **what we're actually building**.
+
+Our first application is the Society Management System.
+
+We'll look at the real-world concepts behind it.
+
+We'll see how those concepts relate to one another.
+
+And we'll discover why apparently simple requirements can turn into interesting engineering problems.
+
+Then, as we move through the other playlists, we'll return to those problems and use them to understand the technologies and engineering practices behind the application.
+
+---
+
+## SCENE 11 — CLOSING
+
+**[ON SCREEN]**
+
+Return to channel identity:
+
+> **From Concept to Commissioning**
+>
+> *Software Engineering in Practice*
+>
+> **Learn software engineering by building real applications.**
+
+**[NARRATOR]**
+
+So that's the idea behind **From Concept to Commissioning**.
+
+We're not going to learn software development as a collection of disconnected technologies.
+
+We're going to build applications.
+
+We're going to encounter real problems.
+
+We're going to engineer solutions.
+
+And we'll learn the technologies by seeing them **in context and in action**.
+
+The ultimate goal isn't simply to become better at writing code.
+
+It's to become better at **building software**.
+
+If that sounds useful to you, join me as we take our first application—
+
+the Society Management System—
+
+from **concept to commissioning**.
+
+Let's build something real.

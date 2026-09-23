@@ -3,7 +3,8 @@
 ## Video Metadata
 
 - **Playlist:** A1 — PrismApp: Building a Real Society Management System
-- **Target length:** 6–8 minutes
+- **Target length:** ~5:45 (recorded app-tour footage runs shorter than the
+  original 6–8 minute plan; see Production Notes)
 - **Primary goal:** Give the viewer a full, concrete picture of the application —
   what it is, who uses it, what it does today — before any technical teaching starts.
 - **Title options:**
@@ -17,14 +18,19 @@
 
 ## Cold Open (0:00–0:20)
 
-**Visual:** Straight into a screen recording of the PrismApp login screen — no
-talking head yet.
+**Visual:** Screen recording opens on the login screen (or a brief title card ahead
+of it) — no talking head yet. **Recorded** — this is the opening of
+`youtube/00-start-here-video-script.txt`.
 
 **Narration:**
-> "This is PrismApp — a real Society Management System, built for an actual
-> residential society with three blocks and dozens of units. Before we write a
-> single line of code together, I want you to see what it actually does. Let's take
-> a walk through it."
+> "Here is an introductory tour of the Society Management System, the application
+> used as our case study. The application is built around a society called MSH, or
+> Magadh Signature Homes. Inspired by the heritage of Magadh, the society consists
+> of three blocks: Nalanda for learning, Rajgir for harmony, and Vaishali for
+> Buddhism, Jainism and prosperity. Magadh Signature Homes applies technology to
+> enable community living that is secure, transparent, and well connected."
+> 
+> [login]
 
 ---
 
@@ -43,83 +49,125 @@ Homes — 3 Blocks, dozens of Units, Owners, Residents, Monthly Contributions".
 
 ---
 
-## Scene 2 — Home dashboard (1:00–1:40)
+## Scene 2 — Home dashboard (1:00–1:20)
 
-**Visual:** Screen recording — `/home` dashboard, logged in as Society Admin. Slowly
-pan across the module cards: Master Data, Timelines, Contribution Master Data,
-Operations.
+**Visual:** Screen recording — `/home` dashboard, logged in as Society Admin.
+**Recorded.**
 
 **Narration:**
-> "After logging in, you land here — a role-aware dashboard. An admin sees every
-> module: blocks, units, individuals, ownership and residency timelines, contribution
-> setup, and day-to-day operations. A read-only user would see the same layout but
-> couldn't change anything — the same rule is enforced again on the server, not just
-> hidden in the menu."
+> "After a successful login, the home page is displayed next."
+> 
+> [Home Page]
 
-**On-screen action:** Hover over each card group as it's named.
+**Note:** The richer "role-aware dashboard" explanation (admin vs. read-only,
+server-enforced roles) didn't make it into this take. If it's worth keeping,
+fold it into Scene 1's talking-head bridge or add it as a text overlay here
+rather than re-recording the walkthrough.
 
 ---
 
-## Scene 3 — Blocks and units (1:40–2:30)
+## Scene 3 — Blocks and units (1:20–2:00)
 
-**Visual:** Screen recording — `/blocks` list, then `/units` filtered to one block.
+**Visual:** Screen recording — `/blocks` list, then `/units` filtered to Nalanda.
+**Recorded.**
 
 **Narration:**
-> "Blocks are the top level — a tower or wing. Every unit belongs to exactly one
-> block. Units carry an area in square feet, because that number later drives
-> maintenance billing. This is deliberately the simplest part of the app — it's the
-> foundation everything else is built on."
+> "We will start with the block management page."
+> 
+> [the Blocks page]
+> 
+> "The three blocks are Nalanda, Rajgir, and Vaishali."
+> 
+> [the browse page]
+> 
+> "Now we choose Nalanda and look into the units or flats within this block."
+> 
+> [the page for units belonging to Nalanda block]
+> 
+> "A list of units is shown, with links to define ownership, residency, and
+> contributions for each unit."
 
 ---
 
-## Scene 4 — Individuals, owners, residents (2:30–3:30)
+## Scene 4 — Ownership and residency for one unit (2:00–2:50)
 
-**Visual:** Screen recording — `/individuals` list, then `/ownerships` timeline for
-one unit, then `/residencies` for the same unit.
+**Visual:** Screen recording — `/ownerships` for flat 1001 in Nalanda, then
+`/residencies` for the same unit. **Recorded** — note the recorded take goes
+straight from the units list to this unit's ownership/residency pages; it does not
+include a separate `/individuals` list capture.
 
 **Narration:**
-> "People are modeled separately from units. An individual might own a flat, live in
-> a different one they rent, or just be someone who occasionally makes a payment on
-> someone else's behalf. Ownership and residency aren't just fields on a person —
-> they're their own timelines, because who owned or lived in a unit changes over
-> time, and the app needs to answer 'who was the owner on this exact date' just as
-> easily as 'who owns it today.' We'll go deep on why that matters in the next
-> episode."
+> "We will select ownership for flat 1001 in the Nalanda block."
+> 
+> [ownership page]
+> 
+> "This page allows you to assign the owner and view all details related to
+> ownership, including current and historical records. From here, you can also
+> navigate to residency, contribution, or transaction pages for the selected unit.
+> We will now choose residency."
+> 
+> [residency page]
+> 
+> "Like ownership, this section allows you to record residency details for the
+> selected flat and review its residency history. Ownership and residency
+> represent two different ways in which individuals are linked to a flat."
+
+**Note:** The `/individuals` list and the "owner ≠ resident, timelines not fields"
+teaching point are not in this take. That framing is still worth making — it's a
+good setup for Episode 3 — but it now needs to live in Scene 7's wrap-up talking
+head rather than as an on-screen capture here, unless a short `/individuals`
+clip gets recorded separately and cut in.
 
 ---
 
-## Scene 5 — Contributions (3:30–4:30)
+## Scene 5 — Contributions (2:50–3:45)
 
-**Visual:** Screen recording — `/contribution-heads` list, then a contribution
-payment capture screen, then a paid/unpaid report.
+**Visual:** Screen recording — contribution capture screen reached from the home
+page, then the paid/unpaid matrix report. **Recorded** — note this take does not
+capture a separate `/contribution-heads` list screen.
 
 **Narration:**
-> "This is the financial heart of the app. 'Contribution heads' define what people
-> pay for — maintenance, a gym fee, a one-time event charge. Each has its own rate
-> history and its own billing rhythm, monthly or yearly. When a payment is recorded,
-> it's locked in — no quietly editing a posted transaction later. If something needs
-> correcting, the system creates a new offsetting entry instead, so there's always an
-> honest paper trail. We'll spend a full episode on this engine because it's the most
-> rule-heavy part of the app."
+> "Next is the contribution system for monthly maintenance, gym, swimming pool,
+> annual celebrations, feasts, and similar expenses. We begin from the home page,
+> which contains a link for contribution capture."
+> 
+> [Contribution Capture Page]
+> 
+> "Then we choose the contribution type, the unit making the payment, the payer,
+> the transaction ID, and the months covered by the payment, and the process is
+> complete."
+> 
+> [paid unpaid matrix]
+> 
+> "This matrix allows filtering by year, contribution type, and block. It displays
+> payment amounts across months for all units in the selected block."
+
+**Note:** The immutability/compensating-entry teaching point ("locked in, no
+quietly editing a posted transaction") isn't in this take. It's a strong line —
+worth keeping for Episode 4 (the contributions engine deep dive) where it belongs
+anyway.
 
 ---
 
-## Scene 6 — Complaints (4:30–5:15)
+## Scene 6 — Complaints (3:45–4:30)
 
-**Visual:** Screen recording — complaint list with status badges, then one complaint
-detail page showing status history and notes.
+**Visual:** Screen recording — the complaints summary on the home page, then the
+complaints browse/create page, then a complaint detail page. **Recorded.**
 
 **Narration:**
-> "Residents can also raise complaints — a maintenance issue, a security concern.
-> Each complaint gets a ticket ID and moves through a defined lifecycle: open,
-> assigned, in progress, resolved, closed — with a short reopen window if the
-> resident isn't satisfied. Some complaints can even be filed anonymously, which
-> adds an interesting wrinkle we'll unpack later: how do you hide who reported
-> something from most staff, while still letting managers see it when they need to?"
+> "The home page also shows a summary of complaints, including open complaints,
+> breached deadlines, and the oldest unresolved issues. A view-all option opens a
+> page for creating and browsing all complaints. An authorized user can select any
+> complaint ID to update its status or add relevant notes."
+
+**Note:** The status-lifecycle detail ("open, assigned, in progress, resolved,
+closed") and the anonymous-complaint teaser aren't in this take. Both are good
+hooks for Episode 5 (complaint management workflow) — no need to force them in
+here.
 
 ---
 
-## Scene 7 — What this episode was, and wasn't (5:15–6:00)
+## Scene 7 — What this episode was, and wasn't (4:30–5:15)
 
 **Visual:** Talking head.
 
@@ -132,7 +180,7 @@ detail page showing status history and notes.
 
 ---
 
-## Outro / CTA (6:00–6:30)
+## Outro / CTA (5:15–5:45)
 
 **Visual:** End card pointing to Episode 2.
 
@@ -144,19 +192,22 @@ detail page showing status history and notes.
 
 ## Production Notes
 
-- **Screen recordings needed:** Full app tour — login, `/home`, `/blocks`, `/units`,
-  `/individuals`, `/ownerships` (one unit's timeline), `/residencies` (same unit),
-  `/contribution-heads`, a contribution payment screen, a paid/unpaid report,
-  complaint list, complaint detail. This is the same capture list already scripted
-  in `course/00-intro/app-tour.md` — record once, reuse footage for both the course
-  and this episode where useful, but re-record fresh narration for the tighter
-  YouTube pacing (this script is ~half the word count of the course version).
-- **Source material to reuse:** `course/00-intro/app-tour.md` (capture list and
-  screen order), `vault/00-Core/System-Overview.md` (society name, block names,
-  V1 module list).
+- **Screen recordings — done.** The full app-tour capture and narration for
+  Scenes 2–6 (login through complaints) is recorded, per
+  `youtube/00-start-here-video-script.txt`. That take covers: login, home,
+  blocks, Nalanda's units, ownership for flat 1001, residency for the same unit,
+  contribution capture, the paid/unpaid matrix, and complaints (summary, browse,
+  detail). It does not include separate `/individuals` or `/contribution-heads`
+  list captures — see the per-scene notes above for where those omissions land.
+- **Still to record:** Scene 1 (talking head — "who this app is for") and
+  Scene 7 + Outro (talking head — wrap-up and CTA). These bookend the recorded
+  tour and haven't been shot yet.
+- **Source material:** `youtube/00-start-here-video-script.txt` (recorded
+  narration, authoritative for Scenes 2–6 wording), `course/00-intro/app-tour.md`
+  (original capture-list plan, now superseded by the actual recording),
+  `vault/00-Core/System-Overview.md` (society name, block names, V1 module list).
 - **B-roll:** none required; this episode is 100% product screen capture plus
   talking head.
-- **Fact check before recording:** confirm current seed data still has three named
-  blocks and at least one populated ownership/residency timeline and one complaint
-  in a non-`Open` status, so the capture shows real transitions rather than empty
-  states.
+- **Follow-up consideration:** a short trailer for `youtube/00-start-here.md`
+  (the channel intro) reuses 3–4 silent clips cut from this same recorded
+  footage — see that script's Scene 2 production note.

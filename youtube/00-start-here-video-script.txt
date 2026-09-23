@@ -1,0 +1,27 @@
+Here is an introductory tour of the Society Management System, the application used as our case study. The application is built around a society called MSH, or Magadh Signature Homes. Inspired by the heritage of Magadh, the society consists of three blocks: Nalanda for learning, Rajgir for harmony, and Vaishali for Buddhism, Jainism and prosperity. Magadh Signature Homes applies technology to enable community living that is secure, transparent, and well connected.
+
+Here is the login screen.  
+[login]  
+After a successful login, the home page is displayed next.  
+[Home Page]  
+
+We will start with the block management page.  
+[the Blocks page]  
+The three blocks are Nalanda, Rajgir, and Vaishali.  
+[the browse page]  
+Now we choose Nalanda and look into the units or flats within this block.  
+[the page for units belonging to Nalanda block]  
+A list of units is shown, with links to define ownership, residency, and contributions for each unit. We will select ownership for flat 1001 in the Nalanda block.  
+[ownership page]  
+This page allows you to assign the owner and view all details related to ownership, including current and historical records. From here, you can also navigate to residency, contribution, or transaction pages for the selected unit. We will now choose residency.  
+[residency page]  
+Like ownership, this section allows you to record residency details for the selected flat and review its residency history. Ownership and residency represent two different ways in which individuals are linked to a flat.  
+
+Next is the contribution system for monthly maintenance, gym, swimming pool, annual celebrations, feasts, and similar expenses. We begin from the home page, which contains a link for contribution capture.  
+[Contribution Capture Page]  
+Then we choose the contribution type, the unit making the payment, the payer, the transaction ID, and the months covered by the payment, and the process is complete.  
+[paid unpaid matrix]  
+This matrix allows filtering by year, contribution type, and block. It displays payment amounts across months for all units in the selected block.  
+
+[complaints page]  
+The home page also shows a summary of complaints, including open complaints, breached deadlines, and the oldest unresolved issues. A view-all option opens a page for creating and browsing all complaints. An authorized user can select any complaint ID to update its status or add relevant notes.
