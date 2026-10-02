@@ -63,10 +63,10 @@ Represents a person associated with the society.
 
 ### Sample Data
 
-| id | fName | sName | mobile | genderId |
-|----|------|------|--------|----------|
-| 1  | R    | Singh | 9518... | 0 |
-| 2  | P    | Rai   | 7536... | 1 |
+| id  | fName | sName | mobile  | genderId |
+| --- | ----- | ----- | ------- | -------- |
+| 1   | R     | Singh | 9518... | 0        |
+| 2   | P     | Rai   | 7536... | 1        |
 
 ---
 

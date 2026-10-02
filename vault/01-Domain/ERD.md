@@ -11,23 +11,23 @@ All entities, relationships, and constraints are explicitly defined to enable AI
 ### Blocks
 Represents a physical building block (Nalanda, Vaishali, Rajgir)
 
-| Field | Type | Notes |
-|------|------|------|
-| id | string (UUID) | Primary Key |
-| description | string | Block name |
+| Field       | Type          | Notes       |
+| ----------- | ------------- | ----------- |
+| id          | string (UUID) | Primary Key |
+| description | string        | Block name  |
 
 ---
 
 ### Units
 Represents a flat within a block
 
-| Field | Type | Notes |
-|------|------|------|
-| id | string (UUID) | Primary Key |
-| description | string | Flat number or label |
-| blockId | string (FK → Blocks.id) | |
-| sqFt | integer | Area |
-| inceptionDt | datetime | Ownership continuity starts here |
+| Field       | Type                    | Notes                            |
+| ----------- | ----------------------- | -------------------------------- |
+| id          | string (UUID)           | Primary Key                      |
+| description | string                  | Flat number or label             |
+| blockId     | string (FK → Blocks.id) |                                  |
+| sqFt        | integer                 | Area                             |
+| inceptionDt | datetime                | Ownership continuity starts here |
 
 ---
 

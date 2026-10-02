@@ -275,6 +275,7 @@ All CRUD modules in PrismApp use the same set of components. When you understand
 ## What to Read Next
 
 - **`src/modules/ownerships/`** — same pattern, but with temporal data (date ranges, overlap prevention). The next level of complexity after Units.
-- **`src/hooks/use-browse-state.ts`** — read the full hook to understand URL-state synchronisation.
+- **[use-browse-state.md](use-browse-state.md)** — the browse/read half of the page component, in depth: draft vs. applied state, URL-as-source-of-truth, the stale-response guard.
+- **[use-crud-actions.md](use-crud-actions.md)** — the mutation half: `create`/`update`/`remove`, and why `update` has no loading flag but `remove` does.
 - **`src/lib/api-response.ts`** — the `ok()`, `fail()`, `fromUnknownError()`, and `HttpError` utilities used across every route handler.
 - **`course/walkthrough/ownerships.md`** — the timeline module walkthrough.

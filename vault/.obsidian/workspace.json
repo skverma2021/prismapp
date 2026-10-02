@@ -187,6 +187,8 @@
   },
   "active": "dece9d7ebf3eba31",
   "lastOpenFiles": [
+    "01-Domain/ERD.md",
+    "01-Domain/Entities.md",
     "CMM/CMM-TODO.md",
     "01-Domain/Domain-Rules.md",
     "CMM/cmm-vision.md",
@@ -205,7 +207,6 @@
     "00-Core/ADR-003-Ownership-Continuity-and-Builder-Inventory.md",
     "00-Core/ADR-002-Pricing-Extensions.md",
     "00-Core/System-Overview.md",
-    "01-Domain/Entities.md",
     "03-API/Error-Model.md",
     "05-AI/Sprint-1-Checklist.md",
     "00-Core/Template-Usage-Guide.md",

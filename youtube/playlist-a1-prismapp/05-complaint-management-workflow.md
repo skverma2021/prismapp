@@ -44,9 +44,25 @@
 
 ## Scene 2 — The reopen window (1:30–2:30)
 
-**Visual:** Screen recording — a resolved complaint showing a visible countdown or
-deadline label; then, on a different complaint, an attempt to reopen after the
-window has passed, showing rejection.
+**Visual:** Screen recording — a resolved complaint showing a visible reopen deadline
+label; then, on a different complaint whose window has already passed, cut to
+DevTools console on that same page issuing a direct `PATCH` reopen call and showing
+the rejected JSON response. Note in narration that the Reopen button itself is
+simply absent once the window closes — the API call is there to prove the rule is
+enforced server-side, not just hidden in the UI.
+## Fetch
+***
+To film this shot you need to bypass the UI and call the API directly while logged in (browser session cookie carries auth automatically):
+
+Open the complaint detail page for MSH-2026-00001 so you're authenticated in that tab.
+Open DevTools → Console, and run:
+
+fetch(`/api/complaints/${location.pathname.split("/").pop()}`, {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ status: "Reopened" }),
+}).then(r => r.json()).then(console.log)
+***
 
 **Narration:**
 > "Reopening isn't open-ended. A resident has a 48-hour window from the moment a
@@ -54,7 +70,8 @@ window has passed, showing rejection.
 > and once the complaint is closed, the status is frozen — no more transitions at
 > all. That's a deliberate trade-off: it protects staff from complaints being
 > reopened weeks later for unrelated reasons, while still giving residents a fair,
-> bounded chance to push back."
+> bounded chance to push back. And this isn't just a button that disappears — even
+> a direct API call gets rejected once the window's closed."
 
 ---
 
@@ -147,10 +164,18 @@ tagged, "Internal" and "Resident".
 ## Production Notes
 
 - **Screen recordings needed:** complaint list with status badges, one complaint's
-  full detail/history panel, resolved-complaint reopen countdown, a rejected
-  late-reopen attempt, create-complaint form (category/priority/SLA), anonymous
-  complaint shown from a resident view vs. a manager view, notes panel with
-  Internal vs. Resident tags.
+  full detail/history panel, resolved-complaint reopen countdown, create-complaint
+  form (category/priority/SLA), anonymous complaint shown from a resident view vs. a
+  manager view, notes panel with Internal vs. Resident tags.
+- **Rejected late-reopen shot:** the Reopen button is not disabled, it's absent once
+  `reopenDeadline` has passed (see `app/(dashboard)/complaints/[id]/page.tsx`), so
+  there is no button to click for this shot. Capture it via the browser DevTools
+  console instead, on the detail page of an already-resolved, out-of-window
+  complaint (e.g. one resolved 7+ days ago): run
+  `fetch(`/api/complaints/${location.pathname.split("/").pop()}`, { method: "PATCH",
+  headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status:
+  "Reopened" }) }).then(r => r.json()).then(console.log)` and show the returned
+  `409 PRECONDITION_FAILED` / "Reopen window has elapsed" JSON.
 - **Diagrams needed:** status-chain lifecycle diagram with the Reopened loop-back.
 - **Source material to reuse:** `vault/01-Domain/Domain-Rules.md` "Complaint Rules
   (CMM)" section, rules `CM1`–`CM18`; `vault/00-Core/System-Overview.md` for CMM's

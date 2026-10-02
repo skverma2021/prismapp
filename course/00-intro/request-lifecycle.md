@@ -1,12 +1,32 @@
 # Request Lifecycle
 
 **Audience:** Developers who understand the individual layers but want to see how they connect in motion.  
-**Purpose:** Trace a single user interaction from browser click to rendered UI, touching every architectural layer once.  
-**Example:** The user clicks "Blocks" in the sidebar — `GET /api/blocks?page=1&pageSize=20` is issued.
+**Purpose:** Trace the full journey from an unauthenticated first visit, through login, to a single user interaction rendering data — touching every architectural layer once.  
+**Example:** A fresh browser hits `localhost:3000`, signs in, then clicks "Blocks" in the sidebar — `GET /api/blocks?page=1&pageSize=20` is issued.
 
 ---
 
-## Slide 1 — Browser to route handler
+## Slide 1 — Pre-login: establishing the session
+
+**Headline:** Before any Block ever renders, the server has already decided whether you're logged in — without the browser asking twice.
+
+**Talking points:**
+
+1. **First request, no cookie** — The browser requests `/`. `app/layout.tsx` runs on the server for every request and calls `await getServerAuthSession()` ([auth.ts](../../auth.ts)). With no session cookie present, this resolves to `null`.
+2. **Null session passed down** — The root layout renders `<AppSessionProvider session={null}>{children}</AppSessionProvider>` ([src/lib/auth-session.tsx](../../src/lib/auth-session.tsx)), making `null` available via `useSession()`/`useAuthSession()` to any Client Component without a client-side fetch.
+3. **Public page checks again, renders the form** — `app/(public)/page.tsx` independently calls `getServerAppSession()` ([src/lib/server-auth.ts](../../src/lib/server-auth.ts)). Since it's `null`, there's no `redirect("/home")` — the page falls through and renders `<LoginForm />`.
+4. **Credentials submitted** — The form posts to NextAuth's Credentials provider. `authorize()` in [auth.ts](../../auth.ts) runs: looks up `db.appUser.findUnique({ where: { email } })` (first real use of `DATABASE_URL` in this flow) and checks the password with `bcrypt.compare`.
+5. **Token and session shaped** — On success, the `jwt` callback enriches the token with `userId`, `role`, `displayName`; the `session` callback copies those onto `session.user`. The JWT is signed using `AUTH_SECRET`.
+6. **Cookie set, browser redirected** — NextAuth sets an `httpOnly; SameSite=lax` session cookie and redirects to `/home` (or the original `?next=` target). `NEXTAUTH_URL` governs the callback/cookie origin used in this step.
+7. **Every request after this point is already authenticated** — The dashboard layout ([app/(dashboard)/layout.tsx](../../app/(dashboard)/layout.tsx)) calls `requireServerAppSession({ allowedRoles: [...] })`, which redirects back to `/` if the cookie is missing or the role doesn't qualify. From here on, the cookie — not a fresh login — is what every subsequent request (including the Blocks fetch in Slide 2) relies on.
+
+**Visual:** Browser → `app/layout.tsx` (`getServerAuthSession()` → `null`) → `AppSessionProvider` → `app/(public)/page.tsx` renders `<LoginForm>` → form submit → NextAuth `authorize()` → PostgreSQL (`AppUser` lookup) → signed JWT cookie → redirect to `/home`.
+
+**Key takeaway:** The session is established once, server-side, before login, and again validated server-side after login — the browser never has to "ask if it's logged in"; the cookie it already holds answers that on every later request.
+
+---
+
+## Slide 2 — Browser to route handler
 
 **Headline:** Every data fetch in PrismApp starts with a Client Component calling `fetch`.
 
@@ -18,13 +38,13 @@
 4. **HTTP request leaves the browser** — This is a standard `GET` request. The browser attaches the session cookie automatically because next-auth set it as `httpOnly; SameSite=lax`.
 5. **Next.js routes the request** — The App Router matches `/api/blocks` to `app/api/blocks/route.ts` and calls the exported `GET` function.
 
-**Visual:** Browser box → `app/(dashboard)/blocks/page.tsx` (Client Component) → `fetch()` call → `app/api/blocks/route.ts` (route handler). Session cookie shown as a label on the HTTP arrow.
+**Visual:** Browser box → `app/(dashboard)/blocks/page.tsx` (Client Component) → `fetch()` call → `app/api/blocks/route.ts` (route handler). Session cookie shown as a label on the HTTP arrow — the same cookie set at the end of Slide 1.
 
 **Key takeaway:** Client Components own the fetch trigger. Server Components would use `async/await` directly — but browse pages with filters and pagination must be client-side.
 
 ---
 
-## Slide 2 — Route handler to database
+## Slide 3 — Route handler to database
 
 **Headline:** The route handler authenticates, delegates to the service, and never touches the database itself.
 
@@ -43,7 +63,7 @@
 
 ---
 
-## Slide 3 — Response to rendered table
+## Slide 4 — Response to rendered table
 
 **Headline:** The JSON response flows back through `fetch`, into state, and React re-renders the table.
 
@@ -64,8 +84,26 @@
 ## The full picture in one diagram
 
 ```
+Browser (no session cookie yet)
+  │  GET /
+  ▼
+app/layout.tsx
+  │  getServerAuthSession() → null
+  ▼
+app/(public)/page.tsx
+  │  getServerAppSession() → null → renders <LoginForm>
+  │  user submits credentials
+  ▼
+NextAuth Credentials provider (auth.ts)
+  │  authorize(): db.appUser.findUnique + bcrypt.compare
+  │  jwt/session callbacks shape token → signed with AUTH_SECRET
+  ▼
 Browser
+  │  httpOnly session cookie set, redirected to /home
   │  user navigates to /blocks
+  ▼
+app/(dashboard)/layout.tsx
+  │  requireServerAppSession() ← redirects to / if cookie missing/role insufficient
   ▼
 app/(dashboard)/blocks/page.tsx   ("use client")
   │  useEffect → fetch("/api/blocks?page=1&pageSize=20")
