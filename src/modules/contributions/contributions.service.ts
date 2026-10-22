@@ -7,11 +7,15 @@ import type {
   CreateContributionInput,
 } from "./contributions.schemas";
 import {
+  ACTIVE_CONTRIBUTION_WHERE,
+  CORRECTION_TYPE,
+  EFFECTIVE_CONTRIBUTION_WHERE,
   monthLabel,
   normalizeHeadPeriod,
   parseContributionId,
   parseOptionalDate,
   parseOptionalPositiveInt,
+  planAdjustmentRows,
   roundTo2,
   checkRatePeriodCoverage,
 } from "./contributions.helpers";
@@ -141,6 +145,7 @@ async function ensureNoDuplicateContribution(
       contribution: {
         unitId,
         contributionHeadId,
+        ...EFFECTIVE_CONTRIBUTION_WHERE,
       },
     },
     select: {
@@ -299,6 +304,7 @@ export async function getContributionMonthLedger(searchParams: URLSearchParams) 
       contribution: {
         unitId,
         contributionHeadId,
+        ...EFFECTIVE_CONTRIBUTION_WHERE,
       },
       contributionPeriod: {
         refYear,
@@ -557,29 +563,54 @@ export async function createContributionCorrection(
         );
       }
 
-      // Prevent multiple active corrections of the same original.
-      // REJECTED corrections do not block a fresh attempt — they are treated as if
-      // they were never posted. PENDING and POSTED both block re-correction.
-      const existingCorrection = await tx.contribution.findFirst({
+      const activeCorrections = await tx.contribution.findMany({
         where: {
           correctionOfContributionId: original.id,
-          correctionStatus: { not: CORRECTION_STATUS.REJECTED },
+          ...ACTIVE_CONTRIBUTION_WHERE,
         },
-        select: { id: true, correctionStatus: true },
+        select: {
+          id: true,
+          correctionStatus: true,
+          details: { select: { contributionPeriodId: true, amt: true } },
+        },
       });
 
-      if (existingCorrection) {
-        const statusLabel = existingCorrection.correctionStatus ?? CORRECTION_STATUS.POSTED;
+      // A full reversal must be the only active correction, otherwise it would
+      // reverse amounts that earlier adjustments have already given back.
+      if (input.correctionType === CORRECTION_TYPE.FULL_REVERSAL && activeCorrections.length > 0) {
+        const existing = activeCorrections[0];
         throw new HttpError(
           409,
           "CONFLICT",
-          `This contribution has already been corrected (correction id: ${existingCorrection.id}, status: ${statusLabel}).`
+          `This contribution already has an active correction (correction id: ${existing.id}, status: ${existing.correctionStatus ?? CORRECTION_STATUS.POSTED}).`
         );
       }
 
       if (original.details.length === 0) {
         throw new HttpError(412, "PRECONDITION_FAILED", "Original contribution has no detail rows to reverse.");
       }
+
+      const originalDetailByPeriod = new Map(original.details.map((detail) => [detail.contributionPeriodId, detail]));
+
+      const detailRows =
+        input.correctionType === CORRECTION_TYPE.ADJUSTMENT
+          ? planAdjustmentRows(
+              original.details.map((detail) => ({
+                contributionPeriodId: detail.contributionPeriodId,
+                amt: Number(detail.amt),
+              })),
+              activeCorrections.flatMap((correction) =>
+                correction.details.map((detail) => ({
+                  contributionPeriodId: detail.contributionPeriodId,
+                  amt: Number(detail.amt),
+                }))
+              ),
+              input.adjustments ?? []
+            )
+          : original.details.map((detail) => ({
+              contributionPeriodId: detail.contributionPeriodId,
+              amt: -Number(detail.amt),
+            }));
 
       const depositorId = input.depositedBy ?? original.depositedBy;
       const depositor = await tx.individual.findUnique({
@@ -611,13 +642,20 @@ export async function createContributionCorrection(
           correctionReasonText: input.reasonText,
           correctionStatus: MAKER_CHECKER_ENABLED ? CORRECTION_STATUS.PENDING : CORRECTION_STATUS.POSTED,
           details: {
-            create: original.details.map((detail) => ({
-              contributionPeriodId: detail.contributionPeriodId,
-              contributionRateId: (detail as { contributionRateId?: number | null }).contributionRateId,
-              amt: -Number(detail.amt),
-              appliedRate: detail.appliedRate ? Number(detail.appliedRate) : null,
-              appliedRateReference: (detail as { appliedRateReference?: string | null }).appliedRateReference,
-            })),
+            create: detailRows.map((row) => {
+              const source = originalDetailByPeriod.get(row.contributionPeriodId) as
+                | (typeof original.details)[number]
+                | undefined;
+
+              return {
+                contributionPeriodId: row.contributionPeriodId,
+                contributionRateId: (source as { contributionRateId?: number | null } | undefined)?.contributionRateId,
+                amt: row.amt,
+                appliedRate: source?.appliedRate ? Number(source.appliedRate) : null,
+                appliedRateReference: (source as { appliedRateReference?: string | null } | undefined)
+                  ?.appliedRateReference,
+              };
+            }),
           },
         } as never,
         include: {
@@ -634,7 +672,7 @@ export async function createContributionCorrection(
         },
       });
     },
-    { isolationLevel: "ReadCommitted" }
+    { isolationLevel: "Serializable" }
   );
 
   await writeAuditLog(db, {
@@ -645,6 +683,8 @@ export async function createContributionCorrection(
     entityId: String(result.id),
     payload: {
       originalContributionId: input.originalContributionId,
+      correctionType: input.correctionType,
+      adjustedAmount: result.details.reduce((sum, detail) => roundTo2(sum + Number(detail.amt)), 0),
       reasonCode: input.reasonCode,
       transactionId: input.transactionId,
     },

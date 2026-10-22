@@ -137,7 +137,7 @@ Posting rules:
   - total payable = per-period amount x periodCount
 - Applicable rate means effective as on transactionDateTime
 - Duplicate guard on unit + head + period
-- Net-zero unlock: repost for same unit + head + period is allowed only when prior net amount for that period is zero after compensation
+- Net-zero unlock: repost for same unit + head + period is allowed only when prior net amount for that period is zero after compensation. Only originals and POSTED corrections count; PENDING and REJECTED corrections do not release the lock, and a partial adjustment never does.
 - Posted entries are immutable
 
 Endpoint: GET /api/contributions/{id}
@@ -161,10 +161,19 @@ Endpoint: POST /api/contributions/corrections
   - reasonCode
   - reasonText
 - Body optional: depositedBy
+- Body optional: correctionType = FULL_REVERSAL (default) | ADJUSTMENT
+- Body required when correctionType = ADJUSTMENT (and forbidden otherwise):
+  - adjustments: array of { contributionPeriodId, amount }
+  - amount is the positive value to give back for that period (max 2 decimals, unique per period)
 
 Correction rules:
 - Compensating entry only (no in-place update)
 - Correction-of-correction not allowed
+- ADJUSTMENT amount must not exceed the remaining correctable amount for the period (original + POSTED + PENDING corrections); otherwise 412 PRECONDITION_FAILED
+- FULL_REVERSAL is refused with 409 CONFLICT when the original already has an active (POSTED or PENDING) correction
+- With maker-checker enabled the correction is PENDING until a different admin approves it; PENDING corrections do not release the duplicate lock
+- Corrections are created at Serializable isolation; a concurrent conflict returns a retryable 503
+- Decision record: vault/00-Core/ADR-004-Partial-Adjustment-Corrections.md
 
 ### 5.6 Month Ledger Helper (Capture UX)
 Endpoint: GET /api/contributions/month-ledger
@@ -225,7 +234,7 @@ UI fields:
 - transaction ID
 - transaction datetime
 - optional deposited by
-
+- correction type (full reversal or partial adjustment); for adjustment, an "adjust by" amount per period
 Payload mapping to POST /api/contributions/corrections:
 - field names must match API exactly
 
@@ -260,6 +269,7 @@ Paid/Unpaid Matrix:
 
 - Corrections create
   - compensating behavior and correction-of-correction guard verified
+  - partial adjustment limits, full-reversal conflict, and PENDING-does-not-release-lock verified
 
 - Month ledger helper
   - returns 12 rows for monthly head, correct statuses, transaction refs, and latestPaidMonth verified

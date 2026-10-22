@@ -71,6 +71,29 @@ Enable maker-checker when one or more of the following is true:
 3. Persist maker/checker identity and timestamps.
 4. Reports should show approval status for transparency.
 
+## Known Gap: PENDING Corrections Release the Duplicate Lock (Resolved by ADR-004)
+
+Observed: 2026-10-22 (Nalanda / unit 1001, maintenance). Resolved: 2026-10-23, see [ADR-004](ADR-004-Partial-Adjustment-Corrections.md).
+
+Behavior (before the fix):
+1. A correction is created with its negative detail rows immediately, even when `correctionStatus = PENDING`.
+2. `ensureNoDuplicateContribution` netted all detail rows for unit + head + period without looking at `correctionStatus`.
+3. Result: a PENDING (not yet approved) correction already made the net zero, so the same periods could be re-posted before a checker approved the reversal.
+
+Risks:
+1. If the correction is later REJECTED, the original and the re-post both remain, so the period is double-charged.
+2. The maker can reverse and re-post without the checker's approval, which defeats the purpose of maker-checker.
+
+Reporting had the same exposure: net/paid-unpaid aggregations treated PENDING reversals as effective.
+
+Decision (implemented in ADR-004):
+1. Duplicate check, month ledger, paid/unpaid matrix and transaction-report totals count a correction's detail rows only when `correctionStatus` is `POSTED` (originals have a null status).
+2. PENDING corrections do not release the lock; REJECTED corrections never count.
+3. The transactions report still lists PENDING and REJECTED corrections and shows their status.
+4. Tests: PENDING correction on period X, then re-post of X returns `409 CONFLICT`; after approval, re-post succeeds (`scripts/test-contributions-api.mjs`).
+
+Partial `ADJUSTMENT` corrections are also allowed; see ADR-004. In the Correction Model above, "Allowed" therefore includes both full reversal and partial adjustment.
+
 ## Consequences
 
 ### Positive

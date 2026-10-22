@@ -138,6 +138,7 @@ type ContributionLookup = {
   };
   details: Array<{
     id: number;
+    contributionPeriodId: number;
     amt: string | number;
     contributionPeriod: {
       refYear: number;
@@ -303,6 +304,8 @@ export default function ContributionCapturePage() {
   );
   const [correctionReasonCode, setCorrectionReasonCode] = useState("");
   const [correctionReasonText, setCorrectionReasonText] = useState("");
+  const [correctionType, setCorrectionType] = useState<"FULL_REVERSAL" | "ADJUSTMENT">("FULL_REVERSAL");
+  const [adjustmentAmounts, setAdjustmentAmounts] = useState<Record<number, string>>({});
   const [correctionDepositedBy, setCorrectionDepositedBy] = useState("");
   const [correctionSubmitLoading, setCorrectionSubmitLoading] = useState(false);
   const [correctionSubmitError, setCorrectionSubmitError] = useState("");
@@ -455,9 +458,16 @@ export default function ContributionCapturePage() {
     correctionBase?.correctionOfContributionId !== null || Boolean(correctionBase?.correctionOf);
   const actorUserId = session.userId;
   const actorRole = session.role;
+  const adjustmentEntries = Object.entries(adjustmentAmounts)
+    .map(([periodId, raw]) => ({ contributionPeriodId: Number(periodId), amount: Number(raw) }))
+    .filter((entry) => Number.isFinite(entry.amount) && entry.amount > 0);
+  const hasInvalidAdjustment = Object.values(adjustmentAmounts).some(
+    (raw) => raw.trim().length > 0 && !(Number(raw) > 0 && /^\d+(\.\d{1,2})?$/.test(raw.trim()))
+  );
   const canSubmitCorrection =
     correctionBase !== null &&
     !isCorrectionOfCorrection &&
+    (correctionType === "FULL_REVERSAL" || (adjustmentEntries.length > 0 && !hasInvalidAdjustment)) &&
     correctionTransactionId.trim().length > 0 &&
     correctionTransactionDateTime.trim().length > 0 &&
     correctionReasonCode.trim().length > 0 &&
@@ -937,6 +947,7 @@ export default function ContributionCapturePage() {
     setCorrectionLookupError("");
     setCorrectionSubmitError("");
     setCorrectionSubmitSuccess(null);
+    setAdjustmentAmounts({});
 
     const parsedId = overrideId ?? Number(correctionLookupId);
     if (!Number.isInteger(parsedId) || parsedId <= 0) {
@@ -998,7 +1009,12 @@ export default function ContributionCapturePage() {
         transactionDateTime: new Date(correctionTransactionDateTime).toISOString(),
         reasonCode: correctionReasonCode.trim(),
         reasonText: correctionReasonText.trim(),
+        correctionType,
       };
+
+      if (correctionType === "ADJUSTMENT") {
+        payload.adjustments = adjustmentEntries;
+      }
 
       if (correctionDepositedBy.trim()) {
         payload.depositedBy = correctionDepositedBy.trim();
@@ -1036,6 +1052,7 @@ export default function ContributionCapturePage() {
       setCorrectionTransactionId("");
       setCorrectionReasonCode("");
       setCorrectionReasonText("");
+      setAdjustmentAmounts({});
       setCorrectionTransactionDateTime(new Date().toISOString().slice(0, 16));
       await lookupCorrectionBase();
     } catch (error) {
@@ -1643,6 +1660,7 @@ export default function ContributionCapturePage() {
                       <tr>
                         <th className="px-3 py-2 text-left">Period</th>
                         <th className="px-3 py-2 text-left">Amount</th>
+                        {correctionType === "ADJUSTMENT" && <th className="px-3 py-2 text-left">Give back (adjust by)</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -1652,6 +1670,22 @@ export default function ContributionCapturePage() {
                             {detail.contributionPeriod.refYear}-{String(detail.contributionPeriod.refMonth).padStart(2, "0")}
                           </td>
                           <td className="px-3 py-2">{detail.amt}</td>
+                          {correctionType === "ADJUSTMENT" && (
+                            <td className="px-3 py-2">
+                              <input
+                                inputMode="decimal"
+                                value={adjustmentAmounts[detail.contributionPeriodId] ?? ""}
+                                onChange={(event) =>
+                                  setAdjustmentAmounts((current) => ({
+                                    ...current,
+                                    [detail.contributionPeriodId]: event.target.value,
+                                  }))
+                                }
+                                className="w-32 rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm"
+                                placeholder="0.00"
+                              />
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -1668,6 +1702,23 @@ export default function ContributionCapturePage() {
               )}
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <label className="flex flex-col gap-2 md:col-span-2">
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Correction Type</span>
+                  <select
+                    value={correctionType}
+                    onChange={(event) => setCorrectionType(event.target.value as "FULL_REVERSAL" | "ADJUSTMENT")}
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+                  >
+                    <option value="FULL_REVERSAL">Full reversal (reverse every period of this contribution)</option>
+                    <option value="ADJUSTMENT">Partial adjustment (give back part of the amount)</option>
+                  </select>
+                  {correctionType === "ADJUSTMENT" && (
+                    <span className="text-xs text-slate-500">
+                      Enter the positive amount to give back per period. It cannot exceed what is still correctable. The
+                      period stays paid for the remaining amount.
+                    </span>
+                  )}
+                </label>
                 <label className="flex flex-col gap-2">
                   <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Correction Transaction ID</span>
                   <input
@@ -1694,7 +1745,7 @@ export default function ContributionCapturePage() {
                     value={correctionReasonCode}
                     onChange={(event) => setCorrectionReasonCode(event.target.value)}
                     className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
-                    placeholder="e.g. DUPLICATE, REVERSAL, WRONG_HEAD"
+                    placeholder="e.g. DUPLICATE, REVERSAL, WRONG_HEAD, RATE_CONCESSION"
                   />
                 </label>
 

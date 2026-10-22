@@ -64,6 +64,7 @@ type TransactionsItem = {
   correctionOfContributionId: number | null;
   correctionReasonCode: string | null;
   correctionReasonText: string | null;
+  correctionStatus: string | null;
 };
 
 type TransactionsResponse = {
@@ -645,7 +646,7 @@ export default function ContributionTransactionsReportPage() {
               <p className="mt-1 text-xl font-semibold text-slate-900">{report?.totals.rowCount ?? 0}</p>
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Sum Amount</p>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Sum Amount (posted only)</p>
               <p className="mt-1 text-xl font-semibold text-slate-900">
                 {(report?.totals.sumAmount ?? 0).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -704,7 +705,14 @@ export default function ContributionTransactionsReportPage() {
                       <td className="border-b border-slate-100 px-3 py-2">
                         {row.appliedRate === null ? "-" : Number(row.appliedRate).toFixed(2)}
                       </td>
-                      <td className="border-b border-slate-100 px-3 py-2">{Number(row.amount).toFixed(2)}</td>
+                      <td className="border-b border-slate-100 px-3 py-2">
+                        {Number(row.amount).toFixed(2)}
+                        {row.correctionOfContributionId !== null && (
+                          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                            Correction of #{row.correctionOfContributionId} · {row.correctionStatus ?? "POSTED"}
+                          </span>
+                        )}
+                      </td>
                       <td className="border-b border-slate-100 px-3 py-2">{row.depositedBy}</td>
                       <td className="border-b border-slate-100 px-3 py-2">
                         {row.recordedBy ?? "-"} ({row.recordedRole ?? "-"})

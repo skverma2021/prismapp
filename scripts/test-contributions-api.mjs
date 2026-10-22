@@ -34,6 +34,7 @@ async function run() {
   const unique = Date.now();
   const authHeaders = await createSessionHeaders(BASE_URL, "manager@prismapp.local");
   const readOnlyHeaders = await createSessionHeaders(BASE_URL, "readonly@prismapp.local");
+  const adminHeaders = await createSessionHeaders(BASE_URL, "admin@prismapp.local");
 
   const block = await requestJson(
     "POST",
@@ -330,6 +331,34 @@ async function run() {
   assert.equal(correction.payload.data.details[0].contributionRateId, rate.payload.data.id);
   assert.equal(correction.payload.data.details[0].appliedRateReference, `rate-${unique}`);
 
+  const repostWhilePending = await requestJson(
+    "POST",
+    "/api/contributions",
+    {
+      unitId,
+      contributionHeadId,
+      contributionPeriodIds: [periodId],
+      transactionId: `txn-${unique}-repost-while-pending`,
+      transactionDateTime: txDateIso,
+      depositedBy,
+    },
+    authHeaders
+  );
+  assertStatus(
+    repostWhilePending,
+    409,
+    "Repost must stay blocked while the full reversal is still PENDING approval"
+  );
+  assert.equal(repostWhilePending.payload?.error?.code, "CONFLICT");
+
+  const approval = await requestJson(
+    "POST",
+    `/api/contributions/corrections/${correction.payload.data.id}/approve`,
+    undefined,
+    adminHeaders
+  );
+  assertStatus(approval, 200, "Admin approval of the pending correction should succeed");
+
   const repostAfterFullReversal = await requestJson(
     "POST",
     "/api/contributions",
@@ -346,9 +375,67 @@ async function run() {
   assertStatus(
     repostAfterFullReversal,
     201,
-    "Repost for same period should succeed after full reversal brings period net to zero"
+    "Repost for same period should succeed after an approved full reversal brings period net to zero"
   );
   assert.equal(Number(repostAfterFullReversal.payload.data.details[0].amt), 150);
+
+  const reposted = repostAfterFullReversal.payload.data;
+  const adjustPayload = (suffix, amount) => ({
+    originalContributionId: reposted.id,
+    transactionId: `txn-${unique}-${suffix}`,
+    transactionDateTime: txDateIso,
+    reasonCode: "RATE_CONCESSION",
+    reasonText: "Partial give-back after committee decision.",
+    depositedBy,
+    correctionType: "ADJUSTMENT",
+    adjustments: [{ contributionPeriodId: periodId, amount }],
+  });
+
+  const adjustment = await requestJson("POST", "/api/contributions/corrections", adjustPayload("adj1", 50), authHeaders);
+  assertStatus(adjustment, 201, "Partial adjustment should succeed");
+  assert.equal(adjustment.payload.data.details.length, 1);
+  assert.equal(Number(adjustment.payload.data.details[0].amt), -50, "Adjustment should post only the requested amount");
+  assert.equal(adjustment.payload.data.details[0].appliedRateReference, `rate-${unique}`);
+
+  const adjustmentTooLarge = await requestJson(
+    "POST",
+    "/api/contributions/corrections",
+    adjustPayload("adj2", 100.01),
+    authHeaders
+  );
+  assertStatus(adjustmentTooLarge, 412, "Adjustment above the remaining correctable amount should fail precondition");
+  assert.equal(adjustmentTooLarge.payload?.error?.code, "PRECONDITION_FAILED");
+
+  const reversalAfterAdjustment = await requestJson(
+    "POST",
+    "/api/contributions/corrections",
+    {
+      originalContributionId: reposted.id,
+      transactionId: `txn-${unique}-rev-after-adj`,
+      transactionDateTime: txDateIso,
+      reasonCode: "REVERSAL",
+      reasonText: "Full reversal must be refused while an adjustment is active.",
+      depositedBy,
+    },
+    authHeaders
+  );
+  assertStatus(reversalAfterAdjustment, 409, "Full reversal should conflict with an active adjustment");
+  assert.equal(reversalAfterAdjustment.payload?.error?.code, "CONFLICT");
+
+  const repostAfterAdjustment = await requestJson(
+    "POST",
+    "/api/contributions",
+    {
+      unitId,
+      contributionHeadId,
+      contributionPeriodIds: [periodId],
+      transactionId: `txn-${unique}-repost-after-adj`,
+      transactionDateTime: txDateIso,
+      depositedBy,
+    },
+    authHeaders
+  );
+  assertStatus(repostAfterAdjustment, 409, "A partial adjustment must not release the duplicate lock");
 
   const correctionOfCorrection = await requestJson(
     "POST",

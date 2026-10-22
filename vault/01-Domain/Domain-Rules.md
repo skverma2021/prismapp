@@ -69,7 +69,7 @@
 
 1. A Unit cannot have duplicate contribution entries for the same contributionHead and contributionPeriod.
 2. The system must prevent double payment for the same period.
-3. Net-zero unlock policy: if all entries for a unit + head + period are fully compensated (net amount = 0), reposting for that period is allowed.
+3. Net-zero unlock policy: if all entries for a unit + head + period are fully compensated (net amount = 0), reposting for that period is allowed. Only originals and `POSTED` corrections count toward the net; a `PENDING` (unapproved) or `REJECTED` correction never releases the lock. A partial adjustment (net still above zero) never releases it.
 4. UI helper: for monthly heads, app should provide a month ledger per unit + head + year showing Paid/Unpaid status, transaction references, and amount by month.
 5. UI convenience: show latestPaidMonth derived from ledger rows (highest month with net paid amount > 0).
 
@@ -85,7 +85,7 @@
 
 1. Contributions are immutable once recorded.
 2. ContributionDetails cannot be modified after creation.
-3. Any correction must be done via a new compensating transaction.
+3. Any correction must be done via a new compensating transaction. A correction is either a `FULL_REVERSAL` (negates every period of the original) or an `ADJUSTMENT` (negates an explicit positive amount per period, never more than the remaining correctable amount; see ADR-004). A full reversal is allowed only when the original has no other active correction.
 
 4. **Amount Consistency Rule**: The sum of all rows in contributionDetails for a contributionId must equal the total payable amount for that contribution.
 

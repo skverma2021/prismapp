@@ -1,4 +1,5 @@
 import { HttpError, parseOptionalString, requireString } from "@/src/lib/api-response";
+import { CORRECTION_TYPE, type AdjustmentRequest, type CorrectionType } from "./contributions.helpers";
 
 export type CreateContributionInput = {
   unitId: string;
@@ -19,7 +20,43 @@ export type CreateContributionCorrectionInput = {
   reasonCode: string;
   reasonText: string;
   depositedBy?: string;
+  correctionType: CorrectionType;
+  adjustments?: AdjustmentRequest[];
 };
+
+function parseAdjustments(value: unknown): AdjustmentRequest[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new HttpError(400, "VALIDATION_ERROR", "adjustments must be a non-empty array for ADJUSTMENT corrections.");
+  }
+
+  const parsed = value.map((entry, index) => {
+    if (typeof entry !== "object" || entry === null) {
+      throw new HttpError(400, "VALIDATION_ERROR", `adjustments[${index}] must be an object.`);
+    }
+
+    const record = entry as Record<string, unknown>;
+    const amount = record.amount;
+
+    if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+      throw new HttpError(400, "VALIDATION_ERROR", `adjustments[${index}].amount must be a positive number.`);
+    }
+
+    if (Math.round(amount * 100) !== Number((amount * 100).toFixed(6))) {
+      throw new HttpError(400, "VALIDATION_ERROR", `adjustments[${index}].amount must have at most 2 decimal places.`);
+    }
+
+    return {
+      contributionPeriodId: parsePositiveInt(record.contributionPeriodId, `adjustments[${index}].contributionPeriodId`),
+      amount,
+    };
+  });
+
+  if (new Set(parsed.map((entry) => entry.contributionPeriodId)).size !== parsed.length) {
+    throw new HttpError(400, "VALIDATION_ERROR", "adjustments must not contain duplicate contributionPeriodId values.");
+  }
+
+  return parsed;
+}
 
 function parsePositiveInt(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
@@ -87,6 +124,15 @@ export function parseCreateContributionCorrectionInput(
 
   const record = payload as Record<string, unknown>;
 
+  const rawType = record.correctionType ?? CORRECTION_TYPE.FULL_REVERSAL;
+  if (rawType !== CORRECTION_TYPE.FULL_REVERSAL && rawType !== CORRECTION_TYPE.ADJUSTMENT) {
+    throw new HttpError(400, "VALIDATION_ERROR", "correctionType must be FULL_REVERSAL or ADJUSTMENT.");
+  }
+
+  if (rawType === CORRECTION_TYPE.FULL_REVERSAL && record.adjustments !== undefined) {
+    throw new HttpError(400, "VALIDATION_ERROR", "adjustments is only allowed for ADJUSTMENT corrections.");
+  }
+
   return {
     originalContributionId: parsePositiveInt(record.originalContributionId, "originalContributionId"),
     transactionId: requireString(record.transactionId, "transactionId"),
@@ -94,5 +140,7 @@ export function parseCreateContributionCorrectionInput(
     reasonCode: requireString(record.reasonCode, "reasonCode"),
     reasonText: requireString(record.reasonText, "reasonText"),
     depositedBy: parseOptionalString(record.depositedBy),
+    correctionType: rawType,
+    adjustments: rawType === CORRECTION_TYPE.ADJUSTMENT ? parseAdjustments(record.adjustments) : undefined,
   };
 }

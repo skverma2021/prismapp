@@ -151,4 +151,64 @@ describe("parseCreateContributionCorrectionInput", () => {
   it("throws HttpError 400 for non-object payload", () => {
     expect(() => parseCreateContributionCorrectionInput(null)).toThrow(HttpError);
   });
+
+  it("defaults correctionType to FULL_REVERSAL", () => {
+    const result = parseCreateContributionCorrectionInput(VALID_CORRECTION);
+    expect(result.correctionType).toBe("FULL_REVERSAL");
+    expect(result.adjustments).toBeUndefined();
+  });
+
+  it("parses an ADJUSTMENT payload", () => {
+    const result = parseCreateContributionCorrectionInput({
+      ...VALID_CORRECTION,
+      correctionType: "ADJUSTMENT",
+      adjustments: [{ contributionPeriodId: 7, amount: 450 }],
+    });
+    expect(result.correctionType).toBe("ADJUSTMENT");
+    expect(result.adjustments).toEqual([{ contributionPeriodId: 7, amount: 450 }]);
+  });
+
+  it("rejects ADJUSTMENT without adjustments", () => {
+    expect(() =>
+      parseCreateContributionCorrectionInput({ ...VALID_CORRECTION, correctionType: "ADJUSTMENT" })
+    ).toThrow(HttpError);
+  });
+
+  it("rejects adjustments on a FULL_REVERSAL", () => {
+    expect(() =>
+      parseCreateContributionCorrectionInput({
+        ...VALID_CORRECTION,
+        adjustments: [{ contributionPeriodId: 7, amount: 450 }],
+      })
+    ).toThrow(HttpError);
+  });
+
+  it("rejects unknown correctionType", () => {
+    expect(() =>
+      parseCreateContributionCorrectionInput({ ...VALID_CORRECTION, correctionType: "PARTIAL" })
+    ).toThrow(HttpError);
+  });
+
+  it.each([0, -5, 10.123, Number.NaN])("rejects adjustment amount %s", (amount) => {
+    expect(() =>
+      parseCreateContributionCorrectionInput({
+        ...VALID_CORRECTION,
+        correctionType: "ADJUSTMENT",
+        adjustments: [{ contributionPeriodId: 7, amount }],
+      })
+    ).toThrow(HttpError);
+  });
+
+  it("rejects duplicate adjustment periods", () => {
+    expect(() =>
+      parseCreateContributionCorrectionInput({
+        ...VALID_CORRECTION,
+        correctionType: "ADJUSTMENT",
+        adjustments: [
+          { contributionPeriodId: 7, amount: 10 },
+          { contributionPeriodId: 7, amount: 20 },
+        ],
+      })
+    ).toThrow(HttpError);
+  });
 });

@@ -8,7 +8,44 @@ import {
   parseOptionalPositiveInt,
   parseOptionalDate,
   checkRatePeriodCoverage,
+  planAdjustmentRows,
 } from "../contributions.helpers";
+
+// ---------------------------------------------------------------------------
+// planAdjustmentRows
+// ---------------------------------------------------------------------------
+describe("planAdjustmentRows", () => {
+  const original = [{ contributionPeriodId: 2, amt: 2700 }];
+
+  it("returns a negative detail row for a partial adjustment", () => {
+    const rows = planAdjustmentRows(original, [], [{ contributionPeriodId: 2, amount: 450 }]);
+    expect(rows).toEqual([{ contributionPeriodId: 2, amt: -450 }]);
+  });
+
+  it("allows an adjustment equal to the remaining amount", () => {
+    expect(planAdjustmentRows(original, [], [{ contributionPeriodId: 2, amount: 2700 }])).toHaveLength(1);
+  });
+
+  it("rejects an adjustment above the remaining amount", () => {
+    expect(() => planAdjustmentRows(original, [], [{ contributionPeriodId: 2, amount: 2700.01 }])).toThrow(HttpError);
+  });
+
+  it("counts earlier active corrections against the remaining amount", () => {
+    const earlier = [{ contributionPeriodId: 2, amt: -450 }];
+    expect(() => planAdjustmentRows(original, earlier, [{ contributionPeriodId: 2, amount: 2300 }])).toThrow(HttpError);
+    expect(planAdjustmentRows(original, earlier, [{ contributionPeriodId: 2, amount: 2250 }])).toEqual([
+      { contributionPeriodId: 2, amt: -2250 },
+    ]);
+  });
+
+  it("rejects a period that is not part of the original", () => {
+    expect(() => planAdjustmentRows(original, [], [{ contributionPeriodId: 3, amount: 10 }])).toThrow(HttpError);
+  });
+
+  it("rejects an empty request", () => {
+    expect(() => planAdjustmentRows(original, [], [])).toThrow(HttpError);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // roundTo2

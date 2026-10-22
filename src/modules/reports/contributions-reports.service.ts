@@ -1,6 +1,7 @@
 import { db } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
 import type { AuthContext } from "@/src/lib/user-role";
+import { EFFECTIVE_CONTRIBUTION_WHERE } from "@/src/modules/contributions/contributions.helpers";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 20;
@@ -244,7 +245,10 @@ export async function getContributionTransactionsReport(params: TransactionsRepo
       take: params.pageSize,
     }),
     db.contributionDetail.count({ where }),
-    db.contributionDetail.aggregate({ where, _sum: { amt: true } }),
+    db.contributionDetail.aggregate({
+      where: { ...where, contribution: { ...where.contribution, ...EFFECTIVE_CONTRIBUTION_WHERE } },
+      _sum: { amt: true },
+    }),
     db.contribution.findMany({
       where: {
         ...(params.headId ? { contributionHeadId: params.headId } : {}),
@@ -305,6 +309,7 @@ export async function getContributionTransactionsReport(params: TransactionsRepo
     const contributionWithReason = detail.contribution as typeof detail.contribution & {
       correctionReasonCode?: string | null;
       correctionReasonText?: string | null;
+      correctionStatus?: string | null;
     };
     const detailWithRate = detail as typeof detail & {
       contributionRateId?: number | null;
@@ -337,6 +342,7 @@ export async function getContributionTransactionsReport(params: TransactionsRepo
       correctionOfContributionId: detail.contribution.correctionOfContributionId,
       correctionReasonCode: contributionWithReason.correctionReasonCode ?? null,
       correctionReasonText: contributionWithReason.correctionReasonText ?? null,
+      correctionStatus: contributionWithReason.correctionStatus ?? null,
     };
   });
 
@@ -406,6 +412,7 @@ export async function getContributionTransactionsCsv(
     "correctionOfContributionId",
     "correctionReasonCode",
     "correctionReasonText",
+    "correctionStatus",
   ];
   lines.push(header.join(","));
 
@@ -430,6 +437,7 @@ export async function getContributionTransactionsCsv(
         item.correctionOfContributionId ?? "",
         item.correctionReasonCode ?? "",
         item.correctionReasonText ?? "",
+        item.correctionStatus ?? "",
       ]
         .map((value) => formatCsvValue(value))
         .join(",")
@@ -532,6 +540,7 @@ export async function getPaidUnpaidMatrixReport(params: MatrixReportParams) {
         contribution: {
           contributionHeadId: params.headId,
           ...(params.blockId ? { unit: { blockId: params.blockId } } : {}),
+          ...EFFECTIVE_CONTRIBUTION_WHERE,
         },
         contributionPeriod: {
           refYear: params.refYear,

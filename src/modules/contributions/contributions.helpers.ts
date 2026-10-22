@@ -1,7 +1,74 @@
 // Pure, side-effect-free helpers extracted from contributions.service.ts.
 // Exported so they can be unit-tested without mocking the database or HTTP layer.
 
+import type { Prisma } from "@prisma/client";
+
 import { HttpError } from "@/src/lib/api-response";
+
+export const CORRECTION_TYPE = {
+  FULL_REVERSAL: "FULL_REVERSAL",
+  ADJUSTMENT: "ADJUSTMENT",
+} as const;
+export type CorrectionType = (typeof CORRECTION_TYPE)[keyof typeof CORRECTION_TYPE];
+
+// Rows that count as money actually paid: originals (null status) and POSTED
+// corrections. PENDING and REJECTED corrections never release the duplicate
+// lock and never reduce paid totals (ADR-001, "PENDING corrections" section).
+export const EFFECTIVE_CONTRIBUTION_WHERE: Prisma.ContributionWhereInput = {
+  OR: [{ correctionStatus: null }, { correctionStatus: "POSTED" }],
+};
+
+// Rows that reserve part of an original: effective rows plus PENDING
+// corrections. Used to stop two concurrent corrections over-reversing.
+export const ACTIVE_CONTRIBUTION_WHERE: Prisma.ContributionWhereInput = {
+  OR: [{ correctionStatus: null }, { correctionStatus: { in: ["POSTED", "PENDING"] } }],
+};
+
+export type AdjustmentRequest = { contributionPeriodId: number; amount: number };
+export type SignedPeriodAmount = { contributionPeriodId: number; amt: number };
+
+// Validates adjustment requests against what is still correctable and returns
+// the negative detail amounts to post. `amount` is the positive value to give back.
+export function planAdjustmentRows(
+  originalDetails: SignedPeriodAmount[],
+  activeCorrectionDetails: SignedPeriodAmount[],
+  requested: AdjustmentRequest[]
+): SignedPeriodAmount[] {
+  if (requested.length === 0) {
+    throw new HttpError(400, "VALIDATION_ERROR", "adjustments must contain at least one period amount.");
+  }
+
+  const remaining = new Map<number, number>();
+  for (const detail of [...originalDetails, ...activeCorrectionDetails]) {
+    remaining.set(
+      detail.contributionPeriodId,
+      roundTo2((remaining.get(detail.contributionPeriodId) ?? 0) + detail.amt)
+    );
+  }
+
+  const originalPeriodIds = new Set(originalDetails.map((detail) => detail.contributionPeriodId));
+
+  return requested.map((entry) => {
+    if (!originalPeriodIds.has(entry.contributionPeriodId)) {
+      throw new HttpError(
+        412,
+        "PRECONDITION_FAILED",
+        `Period id ${entry.contributionPeriodId} is not part of the original contribution.`
+      );
+    }
+
+    const available = remaining.get(entry.contributionPeriodId) ?? 0;
+    if (roundTo2(entry.amount) > available) {
+      throw new HttpError(
+        412,
+        "PRECONDITION_FAILED",
+        `Adjustment ${entry.amount.toFixed(2)} for period id ${entry.contributionPeriodId} exceeds the remaining correctable amount ${available.toFixed(2)}.`
+      );
+    }
+
+    return { contributionPeriodId: entry.contributionPeriodId, amt: -roundTo2(entry.amount) };
+  });
+}
 
 export function parseContributionId(id: string): number {
   const parsed = Number(id);
