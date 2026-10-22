@@ -166,8 +166,8 @@ Individuals are referenced by:
 |---|---|---|
 | `UnitOwner` | `indId` | The person who owns the unit |
 | `UnitResident` | `indId` | The person who lives in the unit |
-| `ContributionEntry` | `depositedBy` | The person who physically paid |
-| `ContributionCorrection` | (via entry) | The person who paid the corrected record |
+| `Contribution` | `depositedBy` | The person who physically paid |
+| `Contribution` (correction rows) | `depositedBy` | Defaults to the original depositor; can be overridden on a correction |
 | `AppUser` | (separate table) | The system login identity (not the same as Individual) |
 
 Note that `AppUser` (a system login) and `Individual` (a real person) are intentionally separate tables. An `AppUser` is a login credential with a role. An `Individual` is a person entity with contact details. A society admin is both — but a resident who never logs in is only an `Individual`.

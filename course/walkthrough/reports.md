@@ -70,7 +70,9 @@ const paidDetails = await db.contributionDetail.findMany({
   where: {
     contribution: {
       contributionHeadId: headId,
-      // corrections with negative amounts are included — they net against positive entries
+      // originals and POSTED corrections only (EFFECTIVE_CONTRIBUTION_WHERE);
+      // POSTED corrections carry negative amounts and net against the originals
+      ...EFFECTIVE_CONTRIBUTION_WHERE,
     },
     contributionPeriod: {
       refYear,
@@ -238,12 +240,13 @@ Report queries aggregate across potentially thousands of rows. The following ind
 
 ```prisma
 model ContributionDetail {
+  @@unique([contributionId, contributionPeriodId])
   @@index([contributionPeriodId])
-  @@index([contributionEntryId])
+  @@index([contributionRateId])
 }
 
-model ContributionEntry {
-  @@index([unitId])
+model Contribution {
+  @@index([unitId, contributionHeadId])
   @@index([contributionHeadId])
   @@index([transactionDateTime])
 }
@@ -259,7 +262,7 @@ When you add a new filter option to a report, check whether an index supports it
 
 **No `useCrudActions` on report pages.** If you find yourself importing `useCrudActions` on a reporting page, you are in the wrong pattern.
 
-**Corrections net automatically.** The matrix uses `SUM(amt)` — positive entries add, correction reversal entries subtract. No special handling is needed for corrections in the report query. This is why immutable append-only financial records pay off: the report logic stays simple.
+**Corrections net automatically.** The matrix sums `amt` over originals and `POSTED` corrections — positive entries add, correction entries (negative) subtract. A `PENDING` or `REJECTED` correction is excluded by the same effective-rows filter used in the duplicate check, so an unapproved reversal never changes a "paid" cell. This is why immutable append-only financial records pay off: the report logic stays simple.
 
 **Required filters protect the database.** The matrix requires `refYear` and `headId`. Without this, a single request could trigger a full table scan across all contribution data. Required filters are not a UX decision — they are a performance boundary.
 

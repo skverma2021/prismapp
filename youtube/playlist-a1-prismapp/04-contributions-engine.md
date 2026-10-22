@@ -21,8 +21,8 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Every society has the same money problem: some units pay per square foot, some
-> pay a flat fee, some pay per person using a service — and once someone's paid, that
+> "Every society has the same money problem: a per square foot per month payment for maintenance, 
+> a flat fee for an annual event, or a per person per month payment for using a service — and once someone's paid, that
 > record has to be trustworthy forever. Today, the engine that makes that true."
 
 ---
@@ -90,7 +90,9 @@ entry.
 > not through the API, not ever. If a mistake needs fixing, the system creates a
 > compensating transaction — a new entry that offsets the original — so the ledger
 > always tells the true story of what happened, including the mistake and its
-> correction. This is exactly how real accounting systems behave, and for the same
+> correction. A correction can reverse the whole payment, or give back just part of
+> it — say a rate concession — as long as it never exceeds what is still correctable.
+> This is exactly how real accounting systems behave, and for the same
 > reason: an editable financial record isn't trustworthy, no matter how good your
 > intentions are."
 
@@ -106,9 +108,11 @@ twice; show the rejection.
 > same period. That sounds obvious, but it has to be enforced at the data layer, not
 > just in the UI — otherwise a double-click, a network retry, or two operators
 > working at once could double-charge a resident. There's one deliberate exception:
-> if every entry for a unit-head-period combination nets out to zero — because a
-> correction fully offset the original — the system allows a fresh entry for that
-> same period. Net zero really means nothing was ever actually paid."
+> if every entry for a unit-head-period combination nets out to zero — because an
+> approved correction fully offset the original — the system allows a fresh entry for
+> that same period. A correction still waiting for approval doesn't count, and neither
+> does a partial adjustment, because the period is still partly paid. Net zero really
+> means nothing was ever actually paid."
 
 ---
 
@@ -143,7 +147,9 @@ units down the side, colored cells for paid vs. unpaid.
   a superseded rate with a `toDt` and a current rate with none), `/contribution-periods`,
   a per-sqft payment capture (auto-filled quantity), a per-person payment capture
   (with an eligibility check), an attempted edit of a posted contribution (showing
-  none exists), a compensating-correction flow, a duplicate-payment rejection, and a
+  none exists), a compensating-correction flow (full reversal, and a partial
+  adjustment such as giving back part of a payment), a duplicate-payment rejection
+  (including a re-post blocked while a correction is still pending), and a
   paid/unpaid matrix report.
 - **Diagrams needed:** three-box Head/Rate/Period stack; payable formula card;
   rate-resolution-at-payment-date timeline; net-zero unlock illustration (optional,

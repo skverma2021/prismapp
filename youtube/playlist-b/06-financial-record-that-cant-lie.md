@@ -50,8 +50,9 @@ title, status, and "Context" section.
 ## Scene 2 — Anatomy of an ADR (1:30–2:50)
 
 **Visual:** Screen recording scrolling through the document's actual section
-headers: Context → Decision → Why → Correction Model → Invariants → Consequences →
-Alternatives Considered → Follow-up Tasks.
+headers: Context → Decision → Why → Correction Model → Invariants → Approval Model →
+Known Gap (resolved by ADR-004) → Consequences → Alternatives Considered → Follow-up
+Tasks.
 
 **Narration:**
 > "Notice the shape of this document — it's a template, not a one-off essay.
@@ -106,7 +107,11 @@ then successfully posting a compensating transaction referencing the original.
 > hidden, not disabled, genuinely absent. A correction instead creates a new record
 > that references the original, with a reason code and full audit metadata. Anyone
 > reading the ledger later sees both the mistake and its correction, which is exactly
-> the point: the system's history stays honest, including its own errors."
+> the point: the system's history stays honest, including its own errors. And the
+> ADR itself stays honest too: a gap found later in live use — a pending correction
+> that released the duplicate lock too early — was written into the same ADR as a
+> known gap, then closed by a follow-up ADR that extended it with partial
+> adjustments."
 
 ---
 

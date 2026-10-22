@@ -296,7 +296,7 @@ Only after all five pass does `tx.contribution.create` run, writing both the par
 const matchedDetails = await tx.contributionDetail.findMany({
   where: {
     contributionPeriodId: { in: contributionPeriodIds },
-    contribution: { unitId, contributionHeadId },
+    contribution: { unitId, contributionHeadId, ...EFFECTIVE_CONTRIBUTION_WHERE },
   },
   select: { contributionPeriodId: true, amt: true },
 });
@@ -313,7 +313,9 @@ const lockedPeriodId = contributionPeriodIds.find(
 if (lockedPeriodId) throw new HttpError(409, "CONFLICT", `Duplicate contribution...`);
 ```
 
-**Why sum the amounts, not just count rows?** Because a correction row has negative amounts. A paid-then-corrected period has net zero — and should be payable again. A simple `findFirst` would wrongly block re-payment after a correction.
+**Why sum the amounts, not just count rows?** Because a correction row has negative amounts. A paid-then-fully-reversed period has net zero — and should be payable again. A simple `findFirst` would wrongly block re-payment after a correction. And a partial adjustment leaves the net above zero, so the period correctly stays locked.
+
+**Why `EFFECTIVE_CONTRIBUTION_WHERE`?** It keeps only originals (null `correctionStatus`) and `POSTED` corrections. A `PENDING` correction is not yet approved, so it must not free the period; a `REJECTED` one never counted.
 
 **Rate locking:**
 ```typescript
@@ -357,15 +359,15 @@ export async function POST(request: Request) {
 
 A posted contribution record is **never edited or deleted**. If it was wrong, a correction is created: a new contribution row with negative amounts, pointing back to the original via `correctionOfContributionId`.
 
-The correction service function (`createContributionCorrection`) checks:
+The correction service function (`createContributionCorrection`) takes a `correctionType` (`FULL_REVERSAL` by default, or `ADJUSTMENT` for a partial give-back) and checks:
 1. The original exists.
 2. The original is not itself a correction (you correct originals, not corrections).
-3. No active correction already exists (PENDING or POSTED status — REJECTED does not block).
+3. For a full reversal, no active correction already exists (PENDING or POSTED status — REJECTED does not block). For an adjustment, each requested amount must not exceed what is still correctable for that period.
 4. The depositor is a valid, non-system individual.
 
-Then it creates the correction row with `amt: -Number(detail.amt)` for each detail row — a precise mirror reversal of the original amounts.
+Then it creates the correction row with negative detail amounts: `-Number(detail.amt)` per period for a full reversal, or `-amount` for each requested period of an adjustment. See `vault/00-Core/ADR-004-Partial-Adjustment-Corrections.md`.
 
-The `MAKER_CHECKER_ENABLED` flag (line 26 of `contributions.service.ts`) controls whether corrections post immediately (`POSTED`) or require a checker approval (`PENDING`). Flip the flag to activate the two-person approval workflow without changing the data model or API shape.
+The `MAKER_CHECKER_ENABLED` flag (near the top of `contributions.service.ts`) controls whether corrections post immediately (`POSTED`) or require a checker approval (`PENDING`). Flip the flag to activate the two-person approval workflow without changing the data model or API shape.
 
 ---
 

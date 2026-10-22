@@ -65,7 +65,7 @@ if (role) {
 ## Scene 2 — Deriving a union from an object's own keys (1:45–3:15)
 
 **Visual:** Open `src/modules/contributions/contributions.service.ts`,
-~lines 29–34.
+~lines 33–37.
 
 **Code shown:**
 ```ts
@@ -138,7 +138,7 @@ export type UpdateAppUserInput = {
 
 - **Screen recordings needed:** `src/modules/app-users/app-users.service.ts`
   (~line 30), `src/hooks/use-browse-state.ts` (`filters: Record<string, string>`),
-  `src/modules/contributions/contributions.service.ts` (~lines 29–34),
+  `src/modules/contributions/contributions.service.ts` (~lines 33–37),
   `src/modules/app-users/app-users.schemas.ts` (`CreateAppUserInput` /
   `UpdateAppUserInput`).
 - **Source material:** the files above, read directly from the running codebase.

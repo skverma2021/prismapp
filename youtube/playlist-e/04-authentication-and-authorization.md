@@ -94,12 +94,12 @@ one to `getServerAuthSession()` (used by layouts/pages), one to `getToken()` (us
 by route handlers).
 
 **Narration:**
-> "Both checks ultimately read the same signed session cookie the browser sends
+> "Both checks ultimately read the same encrypted session cookie the browser sends
 > with every request — there's exactly one source of truth for 'who is this.'
 > `getServerAuthSession()` is next-auth's higher-level helper, convenient for
 > Server Components that just want a session object. `getToken()` is the
 > lower-level JWT decode, used inside route handlers because it doesn't assume a
-> React rendering context. Same cookie, same signature, two APIs suited to two
+> React rendering context. Same cookie, same secret, two APIs suited to two
 > different callers."
 
 ---

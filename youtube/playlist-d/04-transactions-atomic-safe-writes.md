@@ -91,14 +91,16 @@ export async function createOwnership(input: CreateOwnershipInput, actor: AuthCo
 ## Scene 3 — The same shape, protecting money instead of dates (3:00–4:30)
 
 **Visual:** Open `src/modules/contributions/contributions.service.ts`,
-`ensureNoDuplicateContribution` (~lines 132–160) and the surrounding
-`createContribution` transaction (~lines 413+).
+`ensureNoDuplicateContribution` (~lines 136–171) and the surrounding
+`createContribution` transaction (~lines 419+).
 
 **Narration:**
 > "The identical pattern protects contributions. `ensureNoDuplicateContribution`
-> reads every existing `ContributionDetail` row for this unit, head, and period,
-> and refuses to proceed if any of them already carries a positive amount — you
-> can't pay the same maintenance head for the same unit and period twice. That
+> reads the existing `ContributionDetail` rows for this unit, head, and period —
+> counting only original payments and approved corrections — adds up their signed
+> amounts, and refuses to proceed if the net is still positive. You can't pay the
+> same maintenance head for the same unit and period twice, but a period that an
+> approved correction has fully offset can be billed again. That
 > check, the rate lookup, and the final `contribution.create` all run inside one
 > `db.$transaction` callback in `createContribution`, for the exact same reason as
 > ownership: reading 'has this already been paid?' and writing 'record this
@@ -139,9 +141,9 @@ versus the array form used elsewhere for reads
 
 - **Screen recordings needed:** `src/modules/ownerships/ownerships.service.ts`
   (`createOwnership`, ~lines 257–280), `src/modules/contributions/contributions.service.ts`
-  (`ensureNoDuplicateContribution`, ~lines 132–160, and the `createContribution`
-  transaction, ~lines 413+), a quick side-by-side of the array-form `$transaction`
-  in `contributions.service.ts` line 227.
+  (`ensureNoDuplicateContribution`, ~lines 136–171, and the `createContribution`
+  transaction, ~lines 419+), a quick side-by-side of the array-form `$transaction`
+  in `contributions.service.ts` line 232.
 - **Source material:** the files above, read directly from the repository.
 - **B-roll:** the race-condition diagram in Scene 1 should be a simple animated
   slide (two parallel timelines), not real footage.
