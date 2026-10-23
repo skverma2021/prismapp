@@ -1,4 +1,4 @@
-import { db } from "@/src/lib/db";
+import { db, runSerializable } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
 import { writeAuditLog } from "@/src/lib/audit-log";
 import type { AuthContext } from "@/src/lib/user-role";
@@ -254,7 +254,7 @@ export async function getOwnershipById(id: string) {
 }
 
 export async function createOwnership(input: CreateOwnershipInput, actor: AuthContext) {
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership start date");
@@ -272,8 +272,7 @@ export async function createOwnership(input: CreateOwnershipInput, actor: AuthCo
           toDt: input.toDt ?? null,
         },
       });
-    },
-    { isolationLevel: "ReadCommitted" }
+    }
   );
   await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "OWNERSHIP_CREATED", entityType: "UnitOwner", entityId: result.id, payload: { unitId: input.unitId, indId: input.indId } });
   return result;
@@ -397,7 +396,7 @@ async function applyOwnershipTransfer(
 }
 
 export async function transferOwnership(input: TransferOwnershipInput, actor: AuthContext) {
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Ownership transfer date");
@@ -421,8 +420,7 @@ export async function transferOwnership(input: TransferOwnershipInput, actor: Au
       validateTransferDateAgainstCurrentOwner(current, input);
 
       return applyOwnershipTransfer(tx, current, input, unit);
-    },
-    { isolationLevel: "ReadCommitted" }
+    }
   );
   await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "OWNERSHIP_TRANSFERRED", entityType: "UnitOwner", entityId: result.id, payload: { unitId: input.unitId, indId: input.indId } });
   return result;

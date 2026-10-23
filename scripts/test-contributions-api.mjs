@@ -48,7 +48,7 @@ async function run() {
   const unit = await requestJson(
     "POST",
     "/api/units",
-    { description: `CONTR-U-${unique}`, blockId, sqFt: 1000 },
+    { description: `CONTR-U-${unique}`, blockId, sqFt: 1000, inceptionDt: `${new Date().getUTCFullYear()}-01-01` },
     authHeaders
   );
   assertStatus(unit, 201, "Creating unit should succeed");
@@ -85,6 +85,16 @@ async function run() {
   const residentId = resident.payload.data.id;
 
   const todayIso = new Date().toISOString().slice(0, 10);
+
+  // A unit starts in builder inventory; residents need a real owner first.
+  const ownershipTransfer = await requestJson(
+    "POST",
+    "/api/ownerships/transfer",
+    { unitId, indId: depositedBy, fromDt: `${new Date().getUTCFullYear()}-01-02` },
+    authHeaders
+  );
+  assertStatus(ownershipTransfer, 201, "Transferring the unit to a real owner should succeed");
+
   const residency = await requestJson(
     "POST",
     "/api/residencies",
@@ -456,6 +466,62 @@ async function run() {
     "Correction of correction should fail as precondition"
   );
   assert.equal(correctionOfCorrection.payload?.error?.code, "PRECONDITION_FAILED");
+
+  // Concurrency: two simultaneous payments for the same unit + head + period must
+  // end with exactly one posted entry (Serializable transaction + duplicate check).
+  const periodsListMonth3 = await requestJson(
+    "GET",
+    `/api/contribution-periods?refYear=${txDate.getUTCFullYear()}&refMonth=3&page=1&pageSize=1`,
+    undefined,
+    readOnlyHeaders
+  );
+  assertStatus(periodsListMonth3, 200, "Listing month-3 contribution periods should succeed");
+  const periodIdMonth3 = periodsListMonth3.payload.data.items[0].id;
+
+  const racingPayments = await Promise.all(
+    ["a", "b"].map((suffix) =>
+      requestJson(
+        "POST",
+        "/api/contributions",
+        {
+          unitId,
+          contributionHeadId,
+          contributionPeriodIds: [periodIdMonth3],
+          transactionId: `txn-${unique}-race-${suffix}`,
+          transactionDateTime: txDateIso,
+          depositedBy,
+        },
+        authHeaders
+      )
+    )
+  );
+  assert.deepEqual(
+    racingPayments.map((result) => result.response.status).sort(),
+    [201, 409],
+    "Concurrent duplicate payments must produce exactly one 201 and one 409"
+  );
+
+  // Concurrency: two simultaneous overlapping residencies for one unit must not both succeed.
+  const racingResidencies = await Promise.all(
+    [residentId, depositedBy].map((indId) =>
+      requestJson(
+        "POST",
+        "/api/residencies",
+        {
+          unitId,
+          indId,
+          fromDt: `${txDate.getUTCFullYear()}-01-10`,
+          toDt: `${txDate.getUTCFullYear()}-01-20`,
+        },
+        authHeaders
+      )
+    )
+  );
+  assert.deepEqual(
+    racingResidencies.map((result) => result.response.status).sort(),
+    [201, 409],
+    "Concurrent overlapping residencies must produce exactly one 201 and one 409"
+  );
 }
 
 async function main() {

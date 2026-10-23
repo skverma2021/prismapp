@@ -1,4 +1,4 @@
-import { db } from "@/src/lib/db";
+import { db, runSerializable } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
 import { writeAuditLog } from "@/src/lib/audit-log";
 import type { AuthContext } from "@/src/lib/user-role";
@@ -147,7 +147,7 @@ export async function getContributionRateById(id: string) {
 }
 
 export async function createContributionRate(input: CreateContributionRateInput, actor: AuthContext) {
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       const head = await tx.contributionHead.findUnique({
         where: { id: input.contributionHeadId },
@@ -172,8 +172,7 @@ export async function createContributionRate(input: CreateContributionRateInput,
           contributionHead: true,
         },
       });
-    },
-    { isolationLevel: "ReadCommitted" }
+    }
   );
   await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_RATE_CREATED", entityType: "ContributionRate", entityId: String(result.id), payload: { contributionHeadId: input.contributionHeadId, amt: Number(input.amt) } });
   return result;
@@ -187,7 +186,7 @@ export async function updateContributionRate(id: string, input: UpdateContributi
     select: { reference: true, toDt: true },
   });
 
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       const current = await tx.contributionRate.findUnique({
         where: { id: parsedId },
@@ -222,8 +221,7 @@ export async function updateContributionRate(id: string, input: UpdateContributi
           contributionHead: true,
         },
       });
-    },
-    { isolationLevel: "ReadCommitted" }
+    }
   );
   await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "CONTRIBUTION_RATE_UPDATED", entityType: "ContributionRate", entityId: id, payload: { before: { reference: before?.reference, toDt: before?.toDt }, after: { reference: result.reference, toDt: result.toDt } } });
   return result;

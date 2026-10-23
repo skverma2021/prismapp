@@ -1,4 +1,4 @@
-import { db } from "@/src/lib/db";
+import { db, runSerializable } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
 import { writeAuditLog } from "@/src/lib/audit-log";
 import type { AuthContext } from "@/src/lib/user-role";
@@ -219,7 +219,7 @@ export async function getResidencyById(id: string) {
 }
 
 export async function createResidency(input: CreateResidencyInput, actor: AuthContext) {
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       const unit = await ensureResidencyReferencesExist(tx, input.unitId, input.indId);
       ensureNotBeforeUnitInception(unit.inceptionDt, input.fromDt, "Residency start date");
@@ -234,8 +234,7 @@ export async function createResidency(input: CreateResidencyInput, actor: AuthCo
           toDt: input.toDt ?? null,
         },
       });
-    },
-    { isolationLevel: "ReadCommitted" }
+    }
   );
   await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "RESIDENCY_CREATED", entityType: "UnitResident", entityId: result.id, payload: { unitId: input.unitId, indId: input.indId } });
   return result;
@@ -244,7 +243,7 @@ export async function createResidency(input: CreateResidencyInput, actor: AuthCo
 export async function updateResidency(id: string, input: UpdateResidencyInput, actor: AuthContext) {
   const before = await db.unitResident.findUnique({ where: { id }, select: { toDt: true } });
 
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       const current = await tx.unitResident.findUnique({
         where: { id },
@@ -274,8 +273,7 @@ export async function updateResidency(id: string, input: UpdateResidencyInput, a
         where: { id },
         data: { toDt: nextToDt },
       });
-    },
-    { isolationLevel: "ReadCommitted" }
+    }
   );
   await writeAuditLog(db, { actorUserId: actor.userId, actorRole: actor.role, action: "RESIDENCY_UPDATED", entityType: "UnitResident", entityId: id, payload: { before: { toDt: before?.toDt }, after: { toDt: result.toDt } } });
   return result;

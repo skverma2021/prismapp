@@ -111,7 +111,7 @@ Items that prevent future breakage when adding modules.
 | 6.4 | Ownership transfer decomposed into focused policy steps | ✅      | Refactor Hotspot 2. Extracted 6 named helpers from `transferOwnership` in `ownerships.service.ts`: `loadScheduledOwnershipRows`, `classifyFutureOwnershipRows`, `repairRedundantBuilderRows`, `loadActiveOwnershipAtDate`, `validateTransferDateAgainstCurrentOwner`, `applyOwnershipTransfer`. Pure structural refactor — no behavior change. |
 | 6.5 | Timeline overlap helpers shared between ownerships and residencies | ⬜ | Refactor Hotspot 3. Low priority until a third timeline entity appears. |
 | 6.6 | Eligibility function names made domain-explicit | ⬜ | Refactor Hotspot 4. `listResidencyEligibleUnitIds` → `listUnitsEligibleForResidencyCreation()` etc. |
-| 6.7 | `ReadCommitted` isolation on all interactive transactions | ✅ | All 9 transactions aligned |
+| 6.7 | Interactive transactions use an explicit isolation level | ✅ | Superseded by ADR-005 (2026-10-23): overlap and duplicate-payment transactions run `Serializable` via `runSerializable` with retry; `createUnit` stays `ReadCommitted`. The earlier "all 9 on `ReadCommitted`" alignment is recorded in Week-6-Hardening-Complete.md. |
 | 6.8 | Audit writes placed outside `$transaction` (driver-adapter limitation documented) | ✅ | ADR-001 extended; risk note in sprint board |
 
 ---

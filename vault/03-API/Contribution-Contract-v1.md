@@ -172,7 +172,7 @@ Correction rules:
 - ADJUSTMENT amount must not exceed the remaining correctable amount for the period (original + POSTED + PENDING corrections); otherwise 412 PRECONDITION_FAILED
 - FULL_REVERSAL is refused with 409 CONFLICT when the original already has an active (POSTED or PENDING) correction
 - With maker-checker enabled the correction is PENDING until a different admin approves it; PENDING corrections do not release the duplicate lock
-- Corrections are created at Serializable isolation; a concurrent conflict returns a retryable 503
+- Corrections are created at Serializable isolation (as are contribution create, ownership, residency and rate writes, see ADR-005); a concurrent conflict is retried automatically and, if it persists, returns a retryable 503
 - Decision record: vault/00-Core/ADR-004-Partial-Adjustment-Corrections.md
 
 ### 5.6 Month Ledger Helper (Capture UX)

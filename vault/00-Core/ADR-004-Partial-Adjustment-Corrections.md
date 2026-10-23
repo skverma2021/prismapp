@@ -24,7 +24,7 @@ Extends: [ADR-001](ADR-001-Data-Immutability-and-Corrections.md)
    - Effective (duplicate lock, paid/unpaid matrix, month ledger, report totals): originals and `POSTED` corrections only.
    - Reserved (correction limit): effective plus `PENDING`. `REJECTED` never counts.
 5. A PENDING correction does not release the duplicate lock. Only an approved (POSTED) correction that brings the period net to zero allows a re-post. A partial adjustment never releases the lock because the period stays paid for the remaining amount.
-6. The correction transaction runs at `Serializable` isolation so two concurrent corrections cannot over-reserve the same amount. A conflict surfaces as the existing retryable `503 SERVICE_UNAVAILABLE`.
+6. The correction transaction and the other overlap/duplicate writes run at Serializable isolation through `runSerializable` (ADR-005); the loser of a concurrent conflict is retried automatically and, if conflicts persist, receives a retryable 503.
 7. Transaction report: rows still list PENDING and REJECTED corrections (with `correctionStatus`), but `sumAmount` counts effective rows only.
 
 ## Why

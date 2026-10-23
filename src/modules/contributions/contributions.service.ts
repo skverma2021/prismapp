@@ -1,4 +1,4 @@
-import { db } from "@/src/lib/db";
+import { db, runSerializable } from "@/src/lib/db";
 import { HttpError, parseQueryInt } from "@/src/lib/api-response";
 import { writeAuditLog } from "@/src/lib/audit-log";
 import type { UserRole } from "@/src/lib/user-role";
@@ -417,7 +417,7 @@ export async function getContributionById(id: string) {
 }
 
 export async function createContribution(input: CreateContributionInput, actor: ContributionActor) {
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       const head = await tx.contributionHead.findUnique({
         where: { id: input.contributionHeadId },
@@ -512,8 +512,7 @@ export async function createContribution(input: CreateContributionInput, actor: 
       });
 
       return { contribution: created, ratePeriodWarning };
-    },
-    { isolationLevel: "ReadCommitted" }
+    }
   );
 
   await writeAuditLog(db, {
@@ -537,7 +536,7 @@ export async function createContributionCorrection(
   input: CreateContributionCorrectionInput,
   actor: ContributionActor
 ) {
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       const original = await tx.contribution.findUnique({
         where: { id: input.originalContributionId },
@@ -671,8 +670,7 @@ export async function createContributionCorrection(
           },
         },
       });
-    },
-    { isolationLevel: "Serializable" }
+    }
   );
 
   await writeAuditLog(db, {

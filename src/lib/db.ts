@@ -1,5 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+
+import { retryOnSerializationConflict } from "./serialization";
 
 declare global {
   var prisma: PrismaClient | undefined;
@@ -40,4 +42,12 @@ export const db =
 
 if (process.env.NODE_ENV !== "production") {
   global.prisma = db;
+}
+
+// Runs a read-check-write unit of work as a Serializable transaction. Use it
+// where correctness depends on what other transactions are doing at the same
+// time (temporal overlap checks, duplicate-payment checks, correction limits).
+// Conflicts are retried a few times; domain errors are never retried.
+export function runSerializable<T>(work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
+  return retryOnSerializationConflict(() => db.$transaction(work, { isolationLevel: "Serializable" }));
 }
