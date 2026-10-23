@@ -63,12 +63,12 @@ await writeAuditLog(db, {
 
 export async function createOwnership(input, actor) {
   // Business write — inside the transaction
-  const result = await db.$transaction(async (tx) => {
+  const result = await runSerializable(async (tx) => {
     await ensureOwnershipReferencesExist(tx, ...);
     await ensureNoOwnershipOverlap(tx, ...);
     await ensureOwnershipContinuity(tx, ...);
     return await tx.unitOwner.create({ data: ... });
-  }, { isolationLevel: "ReadCommitted" });
+  });
 
   // Audit write — OUTSIDE the transaction, using db not tx
   await writeAuditLog(db, {

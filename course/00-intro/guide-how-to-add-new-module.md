@@ -275,7 +275,7 @@ This file exists because some functions have no database dependency and can be f
 
 File: `src/modules/contributions/contributions.service.ts`
 
-The `createContribution` function is the most complex write in the system. It runs inside `db.$transaction` with `isolationLevel: "ReadCommitted"` and performs five checks before writing anything:
+The `createContribution` function is the most complex write in the system. It runs inside `runSerializable` (a `Serializable` transaction with automatic retry on conflict, see ADR-005) and performs five checks before writing anything:
 
 ```
 1. validatePeriodRules()       — periods exist, belong to current year, match head period type
@@ -404,7 +404,7 @@ To add a new module — say, `ParkingSpace` — follow this checklist in order:
 | Schema tables | 1 | 2+ (parent + detail children) |
 | Pre-write checks | 0 | 5 |
 | Amount derivation | None | `rate × quantity` locked at write time |
-| Transaction isolation | Default | Explicit `ReadCommitted` |
+| Transaction isolation | Default | Explicit `Serializable` via `runSerializable` (overlap and duplicate checks) |
 | Helpers file | Not needed | Yes — pure functions, unit-tested independently |
 | Corrections / reversal | No | Yes — negative detail rows, self-referential FK |
 | Maker-checker | No | Flag-gated on/off |

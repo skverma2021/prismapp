@@ -151,7 +151,7 @@ Three consequences:
 - **Partial adjustment:** the net is still above zero, so the period stays locked.
 - **Pending correction:** a `PENDING` correction is not counted, so it does **not** free the period until a checker approves it.
 
-The check runs inside the write transaction. That transaction uses `ReadCommitted` isolation and there is no database unique constraint on unit + head + period (the only unique key on details is contribution + period), so two truly simultaneous submissions could both pass the check. This is a known limitation worth knowing about; closing it would need a stricter isolation level or a locking strategy.
+The check runs inside the write transaction, which `createContribution` runs through `runSerializable` (`Serializable` isolation with automatic retry, see ADR-005). That is what makes the check-then-write safe: if two submissions for the same unit + head + period arrive at the same moment, PostgreSQL aborts one of them, the retry re-runs the check, sees the first payment and answers `409 CONFLICT`. There is still no database unique constraint on unit + head + period (the only unique key on details is contribution + period), so the isolation level is what protects this rule; adding a constraint would be a possible extra layer.
 
 The error code `409 CONFLICT` is deliberate — it maps to "the state you are trying to create already exists", which is the correct HTTP semantics.
 
@@ -215,7 +215,7 @@ If a payment was recorded incorrectly (wrong head, duplicate payment, wrong amou
 }
 ```
 
-The service (in one `Serializable` transaction):
+The service (in one `Serializable` transaction, via `runSerializable`):
 1. Fetches the original `Contribution` with its details (a correction of a correction is refused)
 2. Loads the active (POSTED or PENDING) corrections of that original
 3. For `FULL_REVERSAL`: refuses if any active correction exists; otherwise negates every detail row

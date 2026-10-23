@@ -39,7 +39,7 @@ Request A:                              Request B (concurrent):
 
 ```typescript
 export async function createOwnership(input: CreateOwnershipInput, actor: AuthContext) {
-  const result = await db.$transaction(
+  const result = await runSerializable(
     async (tx) => {
       // All three checks and the write use the SAME tx
       const unit = await ensureOwnershipReferencesExist(tx, input.unitId, input.indId);
@@ -50,8 +50,7 @@ export async function createOwnership(input: CreateOwnershipInput, actor: AuthCo
         toDt: input.toDt ?? null,
       });
       return tx.unitOwner.create({ data: { ... } });
-    },
-    { isolationLevel: "ReadCommitted" }
+    }
   );
 
   await writeAuditLog(db, { ... });
@@ -60,10 +59,12 @@ export async function createOwnership(input: CreateOwnershipInput, actor: AuthCo
 ```
 
 - Everything inside the `async (tx) => {}` callback shares the same database transaction. The `tx` object is a Prisma client scoped to the transaction — it is passed into every helper function that needs to query.
-- `ensureNoOwnershipOverlap(tx, ...)` reads `tx.unitOwner.findMany(...)`. Because this uses `tx` (not `db`), it reads within the transaction boundary. The subsequent `tx.unitOwner.create(...)` also runs within the same boundary. No other request can insert between them.
+- `runSerializable` (in `src/lib/db.ts`) is a thin wrapper around `db.$transaction(callback, { isolationLevel: "Serializable" })` that also retries the callback a few times when PostgreSQL aborts it because of a conflict with a concurrent transaction.
+- `ensureNoOwnershipOverlap(tx, ...)` reads `tx.unitOwner.findMany(...)`. Because this uses `tx` (not `db`), it reads within the transaction boundary.
 - If any operation inside the callback throws, the entire transaction is rolled back — the row is never created, the check result is discarded, and nothing is written to the database.
-- `isolationLevel: "ReadCommitted"` is the default PostgreSQL isolation level. For PrismApp's overlap checks, this is sufficient — the check and write are in the same transaction, so no concurrent write can sneak in between them.
-- Note that `writeAuditLog` is called **after** the transaction, using `db` (not `tx`). The audit log is written after the business transaction commits. This is intentional — if the audit log write fails, the business data is already committed. Audit log failures are logged but do not roll back the business operation.
+- **Why `Serializable` and not the default?** At PostgreSQL's default `ReadCommitted` level, two concurrent requests can both read "no overlap" and both insert — being inside a transaction is not enough. `Serializable` makes PostgreSQL abort one of them, and the retry then re-runs the checks, sees the winner's row and fails with the normal 409. We measured this on the real database: two simultaneous check-then-insert transactions produced two rows at `ReadCommitted`, and one row plus one aborted transaction at `Serializable`. See `vault/00-Core/ADR-005-Serializable-Isolation-for-Overlap-and-Duplicate-Writes.md`.
+- Because the callback can run more than once, keep it to database work only — no emails, no external calls.
+- Note that `writeAuditLog` is called **after** the transaction, using `db` (not `tx`). The audit log is written after the business transaction commits, so a retry never duplicates an audit entry. This is intentional — if the audit log write fails, the business data is already committed. Audit log failures are logged but do not roll back the business operation.
 
 **Contrast the two `$transaction` forms:**
 
