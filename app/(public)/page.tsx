@@ -62,9 +62,9 @@ export default async function PublicLandingPage({
         <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="rounded-[1.75rem] border border-(--border) bg-(--surface-strong)/95 p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-(--accent-strong)">Current Workspace</p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">Contribution module is live and the shell now accepts authenticated sign-in.</h2>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">Sign-in is live: the contribution module and role-based access are ready to use.</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-              Sign in to reach the protected dashboard, contribution capture, and report routes. UI sessions now carry real role claims while the underlying APIs continue using the existing header-based authorization contract.
+              Sign in to reach the protected dashboard, contribution capture, and report routes. Your session carries your role, and every page and API request is checked against it on the server.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">

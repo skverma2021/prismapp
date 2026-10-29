@@ -154,10 +154,11 @@ checks the cookie at both. A small label: "no cookie, or wrong role → turned a
   - the form navigates itself after sign-in (`redirect: false` plus
     `window.location.assign`), so "the form takes you to the home page" is
     accurate for the app's own code;
-  - the public page's descriptive text mentions a "header-based authorization
-    contract" for the APIs, which is stale (the APIs read the session token).
-    Either update that copy on `app/(public)/page.tsx` before recording the login
-    screen, or avoid lingering on it.
+  - the login page copy on `app/(public)/page.tsx` was updated (the old text
+    described a "header-based authorization contract" that no longer exists); it
+    now says the session carries the role and every page and API request is
+    checked on the server, which matches Scene 4. Record the login screen after
+    this change so the on-screen text and the narration agree.
 - **Link back to Episode 1:** the login screen and the home page appear in
   Episode 1's Scene 2; reuse that footage as a quick recap if the cold open needs
   it.
