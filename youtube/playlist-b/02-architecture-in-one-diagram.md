@@ -9,7 +9,7 @@
 - **Target length:** 6–7 minutes
 - **Primary goal:** Explain *why* the application is structured as a layered,
   modular monolith — the engineering reasoning, not just the request trace already
-  shown in Playlist A1 Episode 6.
+  shown in Playlist A1 Episode 7.
 - **Title options:**
   1. The Architecture in One Diagram
   2. Why This App Is a "Modular Monolith" and Not Six Microservices

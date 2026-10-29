@@ -19,7 +19,8 @@ punchier, camera/voice-first instead of slide-first.
 | [playlist-a1-prismapp/03-ownership-residency-history.md](playlist-a1-prismapp/03-ownership-residency-history.md) | Ownership & Residency: Why History Matters | A1 — PrismApp |
 | [playlist-a1-prismapp/04-contributions-engine.md](playlist-a1-prismapp/04-contributions-engine.md) | The Contributions Engine | A1 — PrismApp |
 | [playlist-a1-prismapp/05-complaint-management-workflow.md](playlist-a1-prismapp/05-complaint-management-workflow.md) | Complaint Management as a Workflow System | A1 — PrismApp |
-| [playlist-a1-prismapp/06-browser-to-database.md](playlist-a1-prismapp/06-browser-to-database.md) | From Browser Click to Database | A1 — PrismApp |
+| [playlist-a1-prismapp/06-login-and-the-session.md](playlist-a1-prismapp/06-login-and-the-session.md) | What Happens Before the First Click? Logging In | A1 — PrismApp |
+| [playlist-a1-prismapp/07-browser-to-database.md](playlist-a1-prismapp/07-browser-to-database.md) | From Browser Click to Database | A1 — PrismApp |
 | [playlist-b/01-vague-ask-to-domain-rules.md](playlist-b/01-vague-ask-to-domain-rules.md) | From Vague Ask to Domain Rules | B |
 | [playlist-b/02-architecture-in-one-diagram.md](playlist-b/02-architecture-in-one-diagram.md) | The Architecture in One Diagram | B |
 | [playlist-b/03-designing-the-api-contract.md](playlist-b/03-designing-the-api-contract.md) | Designing the API Contract Before Writing Code | B |
@@ -61,7 +62,7 @@ punchier, camera/voice-first instead of slide-first.
 | [playlist-f/07-what-stays-under-human-control.md](playlist-f/07-what-stays-under-human-control.md) | What Stays Under Human Control | F |
 | [playlist-f/08-ai-without-surrendering-judgment.md](playlist-f/08-ai-without-surrendering-judgment.md) | AI Without Surrendering Engineering Judgment | F |
 
-That is **47 videos** — the Start Here trailer, all six episodes of Playlist A1
+That is **48 videos** — the Start Here trailer, all seven episodes of Playlist A1
 ("PrismApp: Building a Real Society Management System"), and all eight episodes
 each of Playlist B ("Architecture & SDLC"), Playlist C ("TypeScript Through the
 Real Application"), Playlist D ("PostgreSQL & Prisma Through the Real
@@ -202,7 +203,8 @@ The "story" playlist is now app-specific and numbered: **Playlist A1 = PrismApp*
 When a second case-study application joins the channel, it gets its own **Playlist
 A2** (folder `youtube/playlist-a2-<appname>/`) with its own 6-ish episode arc,
 following the same shape as A1 (meet the app → core model → the app's hardest
-domain rule → its most rule-heavy engine → a workflow module → request lifecycle).
+domain rule → its most rule-heavy engine → a workflow module → login and session →
+request lifecycle).
 A1 is never renumbered or renamed once published — new apps only ever add a new
 A-series playlist, they never replace this one.
 
@@ -236,7 +238,9 @@ Narration word counts target roughly 130–150 words per minute of spoken video.
 ## Observations from reviewing the codebase and the blueprint
 
 1. **The blueprint only concretely defined 7 videos at the start.** Start Here +
-   Playlist A1's six episodes had real titles and scope from day one. Playlists B
+   Playlist A1's six episodes had real titles and scope from day one (a seventh,
+   "What Happens Before the First Click? Logging In", was added later as Episode 6,
+   so the request-lifecycle episode became Episode 7). Playlists B
    (Architecture & SDLC), C (TypeScript), D (PostgreSQL & Prisma), E (Next.js), and F
    (AI-Augmented Development) were described only as topic lists ("likely
    subjects"), not episodes — the blueprint's section 10 deliberately defers

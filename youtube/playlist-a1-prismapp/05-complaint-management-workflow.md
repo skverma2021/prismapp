@@ -146,8 +146,8 @@ tagged, "Internal" and "Resident".
 > What makes it engineering is deciding, deliberately, what's allowed to change, who's
 > allowed to see what, and how long a decision stays open before it's final. Get
 > those decisions right, and the code that enforces them is almost the easy part.
-> Next episode, we trace one of these actions — a single click — all the way from the
-> browser to the database and back."
+> Next episode, we go back to the very first step we skipped: how the application
+> knows who you are, before any of these actions can happen at all."
 
 ---
 
@@ -157,7 +157,8 @@ tagged, "Internal" and "Resident".
 
 **Narration:**
 > "If you've enjoyed seeing how business rules shape a real system, subscribe — next
-> time we go one level deeper into the architecture itself."
+> time we follow the login, and then go one level deeper into the architecture
+> itself."
 
 ---
 

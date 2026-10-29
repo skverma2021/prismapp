@@ -1,4 +1,4 @@
-# Playlist A1 · PrismApp — Episode 6 — "From Browser Click to Database"
+# Playlist A1 · PrismApp — Episode 7 — "From Browser Click to Database"
 
 ## Video Metadata
 
@@ -22,9 +22,10 @@
 frozen/zoomed at the moment of the click.
 
 **Narration:**
-> "You just clicked a link. Before the table of blocks appears on screen, that one
-> click passes through about half a dozen distinct layers of this application. Let's
-> follow it, one layer at a time."
+> "You just clicked a link. You are already logged in — Episode 6 showed how that
+> cookie got into your browser. Before the table of blocks appears on screen, that
+> one click passes through about half a dozen distinct layers of this application.
+> Let's follow it, one layer at a time."
 
 ---
 
@@ -37,7 +38,8 @@ Handler box, with a small cookie icon labeled on the arrow.
 > "The page you land on, `/blocks`, is a client component — it manages its own
 > filter and pagination state in the browser. The moment it mounts, it fires a
 > `fetch` request to `/api/blocks`. That request automatically carries your session
-> cookie — the browser attaches it, you never touch it in code. This is a genuinely
+> cookie — the one created when you logged in, in the previous episode — because the
+> browser attaches it, you never touch it in code. This is a genuinely
 > ordinary HTTP GET request; nothing exotic happens yet."
 
 **On-screen action:** Browser dev tools network tab, showing the outgoing request
@@ -150,7 +152,8 @@ TypeScript, PostgreSQL & Prisma, Next.js, AI-Augmented Development.
   reusable animated diagram that assembles piece by piece across Scenes 1–5, then
   shows fully assembled in Scene 6. Reuse is efficient here: one asset, six reveals.
 - **Source material to reuse:** `course/00-intro/request-lifecycle.md` is the exact
-  source for this episode — it already contains the full diagram (browser → route
+  source for this episode (Slides 2 onward; Slide 1, the login and session, is the
+  source for Episode 6) — it already contains the full diagram (browser → route
   handler → service → Prisma → PostgreSQL → response) and slide-by-slide talking
   points for the same `/blocks` example. This script is a condensed, spoken-word
   adaptation of that document; keep both in sync if the request path ever changes
