@@ -20,7 +20,8 @@
  *   node scripts/cleanup-test-blocks.mjs                 # dry run (default) — reports counts only
  *   node scripts/cleanup-test-blocks.mjs --execute        # actually deletes
  *
- * Always run `npm run backup:db` before using --execute.
+ * --execute first writes a JSON snapshot of every affected row to backups/, which
+ * serves as the backup. `npm run backup:db` (needs pg_dump) is optional.
  */
 
 import "dotenv/config";
@@ -85,7 +86,7 @@ async function main() {
 
   if (!execute) {
     console.log("\n[cleanup] Dry run only — no rows were deleted. Re-run with --execute to apply.");
-    console.log("[cleanup] Recommended: run `npm run backup:db` first.");
+    console.log("[cleanup] --execute saves a JSON snapshot of the affected rows to backups/ before deleting.");
     return;
   }
 
