@@ -25,10 +25,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "A good specification doesn't just get implemented once. It gets used to
-> generate candidates — options a human can compare, before any of them
-> becomes real code. Here's a real one, sitting in this project's vault right
-> now, deliberately not built."
+> "A good specification does not get implemented only once. It is also used to generate candidates.
+>
+> Candidates are options that a human can compare, before any of them becomes real code.
+>
+> Here is a real one. It sits in this project's vault right now, and it is deliberately not built."
 
 ---
 
@@ -51,12 +52,11 @@ additions" section.
 ```
 
 **Narration:**
-> "This is a genuine implementation candidate — specific column names, specific
-> types, specific allowed values for `pricingMode`. Someone worked with AI to
-> take the earlier ADR-001-style specification and turn 'we might need
-> non-linear pricing someday' into something concrete enough to actually
-> evaluate. And notice: it's still just a candidate. Nothing here has become a
-> Prisma migration."
+> "This is a genuine implementation candidate. It has specific column names, specific types, and specific allowed values for `pricingMode`.
+>
+> Someone worked with AI to take the earlier ADR-001-style specification. They turned 'we might need non-linear pricing someday' into something concrete enough to evaluate.
+>
+> And notice, it is still just a candidate. Nothing here has become a Prisma migration."
 
 ---
 
@@ -76,12 +76,11 @@ amt = netAmount
 ```
 
 **Narration:**
-> "This is what turns a candidate from 'a plausible-looking list of columns'
-> into something you can actually test. A generated design that can't state
-> its own invariant this precisely isn't ready to be evaluated yet — it's still
-> a sketch. This formula is exactly the kind of thing a reviewer checks first,
-> and exactly the kind of thing a generated test suite would assert on every
-> row."
+> "This turns a candidate from 'a plausible-looking list of columns' into something you can test.
+>
+> A generated design that cannot state its own invariant this precisely is not ready to be evaluated. It is still a sketch.
+>
+> This formula is exactly what a reviewer checks first. And it is exactly what a generated test suite would assert on every row."
 
 ---
 
@@ -103,12 +102,13 @@ amt = netAmount
 ```
 
 **Narration:**
-> "The hardest part of this candidate isn't the simple decimal columns — it's
-> the free-form part, the breakdown that has to explain *how* a non-linear
-> price was actually computed. Generating a worked example like this one, with
-> real sample values, is exactly where AI is genuinely useful: it's tedious to
-> hand-write a realistic sample by hand, and having one makes the whole
-   candidate concrete enough for a domain expert to react to."
+> "The hardest part of this candidate is not the simple decimal columns.
+>
+> It is the free-form part. The breakdown has to explain *how* a non-linear price was actually computed.
+>
+> Generating a worked example like this one, with real sample values, is where AI is genuinely useful. It is tedious to write a realistic sample by hand.
+>
+> And having one makes the whole candidate concrete enough for a domain expert to react to."
 
 ---
 
@@ -125,13 +125,13 @@ amt = netAmount
 ```
 
 **Narration:**
-> "And here's the check every candidate has to pass that a first draft often
-> misses: does it break anything that already works? This candidate explicitly
-> keeps the existing `amt` field authoritative during any transition, so every
-> report and every piece of reporting code written in Playlist D keeps working
-> unchanged. A candidate that quietly renamed or removed `amt` might look
-> cleaner — and would be wrong, because it ignores everything already built on
-> top of it."
+> "Here is the check every candidate must pass, and a first draft often misses it.
+>
+> Does it break anything that already works?
+>
+> This candidate explicitly keeps the existing `amt` field authoritative during any transition. So every report, and all the reporting code written in Playlist D, keeps working unchanged.
+>
+> A candidate that quietly renamed or removed `amt` might look cleaner. But it would be wrong, because it ignores everything already built on top of it."
 
 ---
 
@@ -140,8 +140,9 @@ amt = netAmount
 **Visual:** End card, next-episode pointer.
 
 **Narration:**
-> "A candidate this concrete is ready for the next stage: real review — the
-> stage where you go looking specifically for what it got wrong."
+> "A candidate this concrete is ready for the next stage. Real review.
+>
+> That is the stage where you look specifically for what it got wrong."
 
 ---
 

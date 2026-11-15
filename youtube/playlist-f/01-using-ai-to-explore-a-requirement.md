@@ -26,11 +26,12 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "This channel's Playlist F isn't about clever prompts. It's about where AI
-> actually earns its place in a real engineering process. And the very first
-> place it earns that place isn't writing code — it's reading what you already
-> have, and telling you honestly what's still missing before anyone writes a
-> line."
+> "This channel's Playlist F is not about clever prompts.
+>
+> It is about where AI becomes useful in a real engineering process.
+>
+> And the first place it becomes useful is not writing code. It is reading what you already have.
+> Then it tells you honestly what is still missing, before anyone writes a line."
 
 ---
 
@@ -64,13 +65,15 @@ captured during sprint 0 and sprint 1.
 ```
 
 **Narration:**
-> "This is a real section from this project's own AI operating document. Notice
-> the shape of it: not 'here's the plan,' but an honest, two-column list — what's
-> already solid, and what's genuinely missing. And then a conclusion that
-> resists the urge to treat the gaps as blockers: 'enough to start... but missing
-> details must be captured.' That's the actual value AI brings at this stage —
-> not filling every gap with a guess, but surfacing the gaps clearly enough that
-> a human can decide which ones matter *now*."
+> "This is a real section from this project's own AI operating document.
+>
+> Notice its shape. It does not say 'here is the plan.' It gives an honest, two-column list. What is already solid, and what is genuinely missing.
+>
+> Then it ends with a conclusion that does not treat the gaps as blockers: 'enough to start... but missing details must be captured.'
+>
+> That is the real value AI brings at this stage. It does not fill every gap with a guess. It shows the gaps clearly.
+>
+> Then a human can decide which ones matter *now*."
 
 ---
 
@@ -102,13 +105,13 @@ immutability.
 ```
 
 **Narration:**
-> "Here's a second real example, and it's a good one because of its status
-> line: 'Proposed, Phase-2, not implemented.' Someone — a person working with
-> AI — explored a future requirement, 'what if pricing needs to get more
-> complex,' far enough to write down the constraints it would have to respect,
-> without committing a single line of production code to it. That's exploration
-> done right: it produces a document the team can argue with, not a feature
-> the team now has to maintain."
+> "Here is a second real example. It is a good one because of its status line: 'Proposed, Phase-2, not implemented.'
+>
+> Someone, a person working with AI, explored a future requirement. The question was: 'what if pricing needs to get more complex?'
+>
+> They explored it far enough to write down the constraints it would have to respect. And they did not commit a single line of production code.
+>
+> That is exploration done well. It produces a document the team can discuss. It does not produce a feature the team must now maintain."
 
 ---
 
@@ -119,14 +122,15 @@ proposal), right: "build first" (a crossed-out sketch of jumping straight to
 schema changes).
 
 **Narration:**
-> "It's tempting to ask AI to just build the feature. But look at what exploring
-> first actually bought this project: the pricing ADR could reject two
-> alternative designs — reverse-allocating discounts after the fact, or storing
-> only a final number with no breakdown — before either one became a migration
-> that had to be undone. Exploration is cheap. A shipped, wrong data model is
-> not. AI is genuinely good at rapidly listing 'here's what this decision
-> would need to handle' — and that list is exactly what a domain expert needs
-> to see before they say yes."
+> "It is tempting to ask AI to just build the feature.
+>
+> But look at what exploring first gave this project. The pricing ADR could reject two alternative designs. One was reverse-allocating discounts after the fact. The other was storing only a final number with no breakdown.
+>
+> It rejected both before either one became a migration that had to be undone.
+>
+> Exploration is cheap. A shipped, wrong data model is not.
+>
+> AI is genuinely good at quickly listing what a decision would need to handle. And that list is exactly what a domain expert needs to see before they say yes."
 
 ---
 
@@ -141,12 +145,11 @@ proceed with the smallest reversible decision.
 ```
 
 **Narration:**
-> "And this is the rule that keeps exploration from turning into paralysis: if
-> something's still ambiguous after you've explored it, you don't wait for
-> perfect certainty — you write down the ambiguity, and you make the smallest
-> decision you can still walk back later. AI can help you explore a
-> requirement almost indefinitely. This rule is what stops that exploration
-> from becoming its own kind of procrastination."
+> "This is the rule that keeps exploration from turning into paralysis.
+>
+> If something is still ambiguous after you have explored it, you do not wait for perfect certainty. You write down the ambiguity. Then you make the smallest decision that you can still walk back later.
+>
+> AI can help you explore a requirement almost forever. This rule stops that exploration from becoming its own kind of procrastination."
 
 ---
 
@@ -155,9 +158,11 @@ proceed with the smallest reversible decision.
 **Visual:** End card, next-episode pointer.
 
 **Narration:**
-> "Once you've explored a requirement honestly, the next step is turning what
-> you found into something AI can actually build from — a specification. That's
-> next."
+> "Once you have explored a requirement honestly, the next step is to turn what you found into a specification.
+>
+> A specification is something AI can actually build from.
+>
+> That is next."
 
 ---
 

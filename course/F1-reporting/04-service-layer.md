@@ -13,11 +13,11 @@
 Side-by-side: `parseTransactionsReportParams` vs `parseMatrixReportParams`. Arrows showing which params each accepts. A callout: "Throws 400 HttpError — never reaches query".
 
 **Narration:**
-Both service functions are preceded by a param-parser that takes raw `URLSearchParams` (strings from the URL) and returns a typed params object.
+Both service functions are preceded by a param-parser. It takes raw `URLSearchParams`, which are strings from the URL. It returns a typed params object.
 
-`parseTransactionsReportParams` is larger — it handles nine parameters including date range and sort controls.
+`parseTransactionsReportParams` is larger. It handles nine parameters, including date range and sort controls.
 
-`parseMatrixReportParams` is smaller — only `refYear`, `headId`, `blockId`, and pagination.
+`parseMatrixReportParams` is smaller. It handles only `refYear`, `headId`, `blockId`, and pagination.
 
 Both follow the same pattern:
 
@@ -36,10 +36,10 @@ export function parseTransactionsReportParams(
 }
 ```
 
-Key validation decisions:
-- Numbers are parsed with `parseInt` and validated for range — not trusted raw.
-- Dates are parsed with `new Date(...)` — then checked for `isNaN`.
-- Sort fields are validated against an explicit allowlist (`["transactionDateTime", "createdAt", "amount", "id"]`). Any other value returns a `400` — this prevents injection into the `orderBy` clause.
+These are the key validation decisions:
+- Numbers are parsed with `parseInt` and validated for range. They are not trusted raw.
+- Dates are parsed with `new Date(...)`. Then they are checked for `isNaN`.
+- Sort fields are validated against an explicit allowlist (`["transactionDateTime", "createdAt", "amount", "id"]`). Any other value returns a `400`. This prevents injection into the `orderBy` clause.
 - `pageSize` is capped at 100. Clients cannot request unlimited pages through the normal API.
 
 The route handler is then reduced to:
@@ -76,12 +76,16 @@ Diagram: Prisma `$transaction` array → Database (5 arrows going to 5 tables in
 **Narration:**
 Prisma supports two forms of `$transaction`:
 
-1. **Sequential** — `await db.$transaction(async (tx) => { ... })` — runs operations one after another in the same transaction.
-2. **Parallel** — `await db.$transaction([...])` — runs all operations in parallel and waits for all to complete.
+1. **Sequential.** `await db.$transaction(async (tx) => { ... })` runs operations one after another in the same transaction.
+2. **Parallel.** `await db.$transaction([...])` runs all operations in parallel and waits for all to complete.
 
-The transactions report uses the **parallel** form because the five queries are independent — they don't need each other's results to proceed. Prisma submits all five to the database simultaneously, which typically reduces total latency to the slowest single query rather than the sum of all five.
+The transactions report uses the **parallel** form. The five queries are independent. They do not need each other's results to proceed.
 
-The consistency guarantee: all five queries see the same database snapshot. If a payment is recorded between when the first query starts and the last query ends, the transaction ensures either all five see it or none do.
+Prisma submits all five to the database together. This typically reduces total latency to the slowest single query, rather than the sum of all five.
+
+Here is the consistency guarantee. All five queries see the same database snapshot.
+
+Suppose a payment is recorded between the start of the first query and the end of the last query. The transaction ensures that either all five see it or none do.
 
 ```ts
 const [items, totalItems, totalAmountAggregate, unitRows, payerRows] =
@@ -94,7 +98,9 @@ const [items, totalItems, totalAmountAggregate, unitRows, payerRows] =
   ]);
 ```
 
-Note that `unitRows` and `payerRows` use a different `where` clause from `items` and `totalItems`. The unit/payer distinct counts apply the contribution-level filters but not the pagination, to get correct full-dataset distinct counts.
+Note that `unitRows` and `payerRows` use a different `where` clause from `items` and `totalItems`.
+
+The unit and payer distinct counts apply the contribution-level filters but not the pagination. This gives correct full-dataset distinct counts.
 
 **On-screen action / demo:**
 Open the service. Show the `db.$transaction([...])` block. Expand one of the `where` clauses to show filter application. Point out the difference between the `items` query (has `skip`/`take`) and the total queries (no `skip`/`take`).
@@ -115,13 +121,19 @@ Open the service. Show the `db.$transaction([...])` block. Expand one of the `wh
 JavaScript console screenshot (or code block) showing: `0.1 + 0.2 === 0.30000000000000004`. Then `roundTo2(0.1 + 0.2) === 0.3`. Below: the function definition.
 
 **Narration:**
-This is a classic JavaScript pitfall. Decimal fractions like 0.1 cannot be represented exactly in binary floating-point. Accumulate enough of them and rounding errors compound into visible discrepancies.
+This is a classic JavaScript pitfall.
 
-For contribution amounts, this matters because:
+Decimal fractions like 0.1 cannot be represented exactly in binary floating-point. Accumulate enough of them, and the rounding errors compound into visible discrepancies.
+
+For contribution amounts, this matters for two reasons:
 - `amount = quantity × rateValue`
 - `expectedAmount = Σ (quantity × rateValue) per unit per period`
 
-If `rateValue = 2.50` and a unit has 1400 sqft, the amount is `3500.00`. That's exact. But if `rateValue = 1.75`, the amount is `2450.00` — also exact. But if rateValue involved a fractional rate that doesn't convert cleanly to binary, accumulated sums would drift.
+Suppose `rateValue = 2.50` and a unit has 1400 sqft. The amount is `3500.00`. That is exact.
+
+With `rateValue = 1.75`, the amount is `2450.00`. That is also exact.
+
+But suppose the rateValue were a fractional rate that does not convert cleanly to binary. Then accumulated sums would drift.
 
 PrismApp takes the safe path:
 
@@ -131,9 +143,11 @@ function roundTo2(n: number): number {
 }
 ```
 
-Every multiplication is immediately rounded to 2 decimal places before being accumulated. This ensures totals are deterministic regardless of the number of units or the rate value.
+Every multiplication is rounded to 2 decimal places immediately, before it is accumulated. This ensures totals are deterministic, whatever the number of units or the rate value.
 
-The same function is used in the contributions write path (when recording a payment) and in the reports read path (when computing expected amounts). Consistent rounding = consistent numbers between payment time and report time.
+The same function is used in the contributions write path, when recording a payment. It is also used in the reports read path, when computing expected amounts.
+
+Consistent rounding gives consistent numbers between payment time and report time.
 
 **On-screen action / demo:**
 Open the service. Show `roundTo2` at the top. Then show where it is called inside the matrix loop: `roundTo2(quantity * activeRate.rateValue)`.

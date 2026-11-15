@@ -15,19 +15,31 @@ A stylised map. The destination is labelled "Full CMM". A route is marked throug
 **Narration:**
 Open `vault/CMM/cmm-vision.md`.
 
-The first thing to notice is that this document was written *before a single line of CMM code existed*. It describes photo attachments, WhatsApp bot intake, OTP-based closure, automatic assignment by category, SLA escalation cron jobs, a vendor rating system, and a GBM export.
+The first thing to notice is this. The document was written *before a single line of CMM code existed*.
+
+It describes photo attachments and WhatsApp bot intake. It describes OTP-based closure and automatic assignment by category. It also describes SLA escalation cron jobs, a vendor rating system, and a GBM export.
 
 None of those are in the current implementation. The implementation has a complaint list, a create form, and a status badge. That is Sprint 0.
 
-This is not failure. This is the document doing its job correctly. A vision document maps the full possibility space so that every smaller decision — what to build this sprint, what to defer, what to simplify — can be made against a known destination.
+This is not failure. This is the document doing its job correctly.
+
+A vision document maps the full possibility space. Then every smaller decision can be made against a known destination. That includes what to build this sprint, what to defer, and what to simplify.
 
 Without the vision, every sprint becomes a negotiation about direction. With the vision, sprints are negotiations about sequence.
 
-Now open `vault/V1/master-data-vision.md`. The very first line after the header says: *"written retrospectively after delivery."* Same structure. Same deferred-items table. But written after the code, not before it.
+Now open `vault/V1/master-data-vision.md`. The first line after the header says: *"written retrospectively after delivery."*
 
-The master data module was the foundation of PrismApp — blocks, units, individuals, ownership timelines. It was built first, before the project had settled into the habit of writing vision documents ahead of implementation. The V1 vision documents were created afterwards to preserve the reasoning before institutional memory fades.
+It has the same structure. It has the same deferred-items table. But it was written after the code, not before it.
 
-CMM was the first module where the vision came first. That is the difference. A retrospective document explains decisions already made. A prospective one shapes them. Both have value. But if you are starting a new module, write the vision first.
+The master data module was the foundation of PrismApp. It covers blocks, units, individuals, and ownership timelines.
+
+It was built first, before the project had the habit of writing vision documents ahead of implementation. The V1 vision documents were created afterwards. They preserve the reasoning before institutional memory fades.
+
+CMM was the first module where the vision came first. That is the difference.
+
+A retrospective document explains decisions already made. A prospective one shapes them. Both have value.
+
+But if you are starting a new module, write the vision first.
 
 **On-screen action / demo:**
 Open `vault/CMM/cmm-vision.md`. Read the first paragraph of the Purpose section aloud.
@@ -55,19 +67,29 @@ Five labelled boxes in a vertical list, each with a one-line description:
 5. **Deferred Items** — What is explicitly out of scope and why?
 
 **Narration:**
-A vision document that only answers "what features do we want" is incomplete. The CMM vision is structured to answer five distinct questions.
+A vision document that only answers "what features do we want" is incomplete. The CMM vision answers five distinct questions.
 
-Purpose: why does this module exist? For CMM, it is accountability — residents need a record that a complaint was logged and the MC needs SLA visibility.
+Purpose. Why does this module exist? For CMM, the answer is accountability.
 
-Core flow: what is the non-negotiable baseline? For CMM it is the lifecycle — Open to Assigned to In Progress to Resolved to Closed. Without that lifecycle, the module cannot function.
+Residents need a record that a complaint was logged. The MC needs SLA visibility.
 
-User experience: what does a resident actually do? Submit a complaint, track its status, reopen it if the issue persists. Simple and specific.
+Core flow. What is the non-negotiable baseline? For CMM, it is the lifecycle. A complaint moves from Open to Assigned to In Progress to Resolved to Closed.
 
-Admin features: what does the MC need on top of that? Assignment, notes, bulk operations, export. These are the features that typically get built in sprints two and three.
+Without that lifecycle, the module cannot function.
 
-Deferred items: this section is the most valuable and most often skipped. What is explicitly not in scope right now? For CMM it is photo storage, the WhatsApp bot, OTP closure, and festival event suppression. Writing these down prevents scope creep from pulling them into sprint one.
+User experience. What does a resident actually do? They submit a complaint, track its status, and reopen it if the issue persists. It is simple and specific.
 
-Now notice: this five-section anatomy is not CMM-specific. Open `vault/V1/contribution-vision.md`. The same structure: Purpose, domain sections A through F, a *What Was Delivered* table, a *What Was Deferred* table, and Open Questions. This is a reusable template. Once you internalise it, writing a vision document for any new module takes an afternoon, not a sprint.
+Admin features. What does the MC need on top of that? Assignment, notes, bulk operations, and export. These features are typically built in sprints two and three.
+
+Deferred items. This section is the most valuable, and it is often skipped. What is explicitly not in scope right now?
+
+For CMM, it is photo storage, the WhatsApp bot, OTP closure, and festival event suppression. Writing these down stops scope creep from pulling them into sprint one.
+
+Now notice that this five-section anatomy is not specific to CMM.
+
+Open `vault/V1/contribution-vision.md`. It has the same structure. It has Purpose, domain sections A through F, a *What Was Delivered* table, a *What Was Deferred* table, and Open Questions.
+
+This is a reusable template. Once you understand it well, writing a vision document for any new module takes an afternoon, not a sprint.
 
 **On-screen action / demo:**
 Open `vault/CMM/cmm-vision.md`. Scroll through and name each major section (A through E and Implementation Notes) as you describe the five questions.
@@ -94,15 +116,25 @@ Three columns:
 Arrows flow left-to-right showing traceability.
 
 **Narration:**
-Here is what a single sprint looks like when anchored to a vision document.
+Here is what a single sprint looks like when it is anchored to a vision document.
 
-The CMM vision describes everything from photo attachments to WhatsApp bot intake. Sprint 0 committed to four things only: schema, seed data, API routes, and a basic list page.
+The CMM vision describes everything from photo attachments to WhatsApp bot intake. Sprint 0 committed to four things only. They are schema, seed data, API routes, and a basic list page.
 
-Every item the sprint committed to is traceable to a specific file in the codebase. The migration at `prisma/migrations/20260520_cmm_entities` corresponds to the schema decision. The seed at `prisma/seed.mjs` corresponds to the categories and priorities in vision section A.1 and A.4. The service at `src/modules/complaints/complaints.service.ts` corresponds to the lifecycle rules CM1–CM13.
+Every item the sprint committed to is traceable to a specific file in the codebase.
 
-This traceability is not accidental. It is the result of writing the domain rules document first, then the vision, then the sprint scope, then the code — in that order. When you do it this way, you always know why a line of code exists.
+The migration at `prisma/migrations/20260520_cmm_entities` corresponds to the schema decision. The seed at `prisma/seed.mjs` corresponds to the categories and priorities in vision section A.1 and A.4. The service at `src/modules/complaints/complaints.service.ts` corresponds to the lifecycle rules CM1–CM13.
 
-The same chain exists for the master data module, even though that vision was written retrospectively. Open `vault/V1/master-data-vision.md` section A.3 — Builder Inventory. It explains why every unit creation immediately creates an ownership row assigned to a system identity. Trace it: vision → domain rules O4/O5 → `prisma/schema.prisma` (Unit + UnitOwners) → `src/modules/units/units.service.ts` `createUnit()`. The code follows the reasoning whether the document was written before or after.
+This traceability is not accidental. We wrote the domain rules document first. Then the vision. Then the sprint scope. Then the code.
+
+When you work in this order, you always know why a line of code exists.
+
+The same chain exists for the master data module, even though that vision was written retrospectively.
+
+Open `vault/V1/master-data-vision.md` section A.3, Builder Inventory. It explains why every unit creation immediately creates an ownership row assigned to a system identity.
+
+Trace it step by step. Start with the vision. Then domain rules O4/O5. Then `prisma/schema.prisma` (Unit + UnitOwners). Then `src/modules/units/units.service.ts` `createUnit()`.
+
+The code follows the reasoning, whether the document was written before or after.
 
 **On-screen action / demo:**
 Open the file tree in VS Code. Navigate chain 1 (CMM):

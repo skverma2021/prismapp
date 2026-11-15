@@ -16,13 +16,25 @@ A tall stacked rectangle, divided into three horizontal bands (bottom to top):
 - **Top band (light, airy):** FEATURE VISION — "vault/CMM/cmm-vision.md" — label: *What we build now. Changes every sprint.*
 
 **Narration:**
-Here is the structure we use in PrismApp. Three layers, each with its own document, its own owner, and its own tolerance for change.
+Here is the structure we use in PrismApp. It has three layers.
 
-The bottom layer is domain rules. These are non-negotiable. They come from the nature of the problem — from how society management actually works, from legal requirements, from the consequences of getting it wrong. "A unit cannot have two active owners at the same time" is not a product decision. It is a fact about property ownership. The code must enforce it.
+Each layer has its own document, its own owner, and its own tolerance for change.
 
-The middle layer is the entity model — what data exists and how it connects. This layer is driven by the rules below it. If you have an ownership rule about time periods, you need a data model that can represent time periods. The entity model serves the rules; it does not define them.
+The bottom layer is domain rules. These are non-negotiable.
 
-The top layer is the feature vision — the living backlog of things the product will do for users. This is where product decisions live, where priorities shift, where "we'll do that in V2" is written down.
+They come from the nature of the problem. They come from how society management actually works, from legal requirements, and from the cost of getting it wrong.
+
+"A unit cannot have two active owners at the same time" is not a product decision. It is a fact about property ownership. The code must enforce it.
+
+The middle layer is the entity model. It describes what data exists and how it connects.
+
+The rules below drive this layer. Suppose you have an ownership rule about time periods. Then you need a data model that can represent time periods.
+
+The entity model serves the rules. It does not define them.
+
+The top layer is the feature vision. It is the living backlog of things the product will do for users.
+
+This is where product decisions live. Priorities shift here. This is where "we will do that in V2" is written down.
 
 **On-screen action / demo:**
 Open VS Code. Show the `vault/` folder structure:
@@ -49,13 +61,19 @@ Split screen. Left: the text of rule O3 from `Domain-Rules.md`. Right: a simplif
 **Narration:**
 Let us look at a concrete example. Open `vault/01-Domain/Domain-Rules.md`.
 
-Rule O3: "A Unit cannot have more than one active owner at any given time."
+Rule O3 says: "A Unit cannot have more than one active owner at any given time."
 
-Read that sentence carefully. It does not say "a unit should probably not have two owners." It says *cannot*. That word signals a domain rule — something the system must enforce without exception.
+Read that sentence carefully. It does not say "a unit should probably not have two owners." It says *cannot*.
 
-Now, how do you enforce it in code? You might think a `UNIQUE` constraint on `unitId` in the ownership table would work. But it would not. A unit can have many ownership records over time — one after another. The rule is specifically about *active* ownership: two periods that overlap. A database index cannot check for overlapping date ranges. The enforcement must happen in application code, inside a transaction that checks for overlaps before writing.
+That word signals a domain rule. The system must enforce it without exception.
 
-This is why domain rules need their own layer. They shape not just your schema but your service logic.
+Now, how do you enforce it in code? You might think a `UNIQUE` constraint on `unitId` in the ownership table would work. But it would not.
+
+A unit can have many ownership records over time, one after another. The rule is about *active* ownership. That means two periods that overlap.
+
+A database index cannot check for overlapping date ranges. So the enforcement must happen in application code. It runs inside a transaction that checks for overlaps before writing.
+
+This is why domain rules need their own layer. They shape your schema, and they also shape your service logic.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md`. Scroll to Ownership Rules, highlight O3.
@@ -80,13 +98,21 @@ A road stretching into the distance. Milestones along the road labelled V1, V2, 
 **Narration:**
 Now look at the top layer. Open `vault/CMM/cmm-vision.md`.
 
-This document describes a Complaint Management Module with photo attachments, automatic routing, SLA escalation, a WhatsApp bot, and OTP-based physical closure. It is a compelling vision.
+This document describes a Complaint Management Module. It includes photo attachments, automatic routing, SLA escalation, a WhatsApp bot, and OTP-based physical closure.
 
-But look closely at the last section. "Deferred to Later Phases" lists photo storage, WhatsApp bot, OTP closure, festival event suppression, and authority letter generation. These are explicitly *not* in the first sprint.
+It is a compelling vision.
 
-This is the crucial discipline. A vision document that does not have a deferred list is not a vision document — it is a wishlist. The deferred list is what allows the team to ship something real in sprint one instead of spending six months designing infrastructure for features that may never be needed in their original form.
+Now look closely at the last section. "Deferred to Later Phases" lists photo storage, WhatsApp bot, OTP closure, festival event suppression, and authority letter generation.
 
-Students often treat every feature in a vision document as a requirement. It is not. The vision is a direction. The sprint backlog is the commitment.
+These are explicitly *not* in the first sprint.
+
+This is the crucial discipline. A vision document without a deferred list is not a vision document. It is a wishlist.
+
+The deferred list lets the team ship something real in sprint one. Without it, the team might spend six months designing infrastructure. That infrastructure may never be needed in its original form.
+
+Students often treat every feature in a vision document as a requirement. It is not.
+
+The vision is a direction. The sprint backlog is the commitment.
 
 **On-screen action / demo:**
 Open `vault/CMM/cmm-vision.md`. Scroll to "Deferred to Later Phases" at the bottom of the Implementation Notes section.

@@ -13,19 +13,29 @@
 A two-column layout. Left column: four labelled rule types (Cardinality, Temporal, Immutability, Controlled Vocabulary). Right column: the schema implication of each (FK / join table, timeline model, append-only table, pre-seeded lookup). Arrows connect each pair.
 
 **Narration:**
-In Section A we said that domain rules shape not just your service logic but your schema. In this module we are going to prove that claim with five concrete tables from PrismApp.
+In Section A, we said that domain rules shape not just your service logic but your schema.
 
-Before we look at specific tables, we need a decision framework. Not every domain rule leads to the same schema structure. There are four rule types that appear repeatedly in this project, and each one leads to a different table design pattern.
+In this module, we will prove that claim with five concrete tables from PrismApp.
 
-Cardinality rules — rules that say "exactly one," "at most one," "zero or more" — lead to foreign keys or join tables. These are the rules most developers already know how to handle.
+Before we look at specific tables, we need a decision framework. Not every domain rule leads to the same schema structure.
 
-Temporal rules — rules that say "at any given time," "once recorded," "from this date" — are different. They require you to model time explicitly in the data, not just in your service logic. A foreign key alone cannot represent a time-bounded relationship.
+Four rule types appear repeatedly in this project. Each one leads to a different table design pattern.
 
-Immutability rules — rules that say "cannot be modified after," "must not change" — lead to append-only table patterns. The instinct to reach for an UPDATE statement is exactly wrong.
+Cardinality rules say "exactly one," "at most one," or "zero or more." They lead to foreign keys or join tables. Most developers already know how to handle these.
 
-Controlled vocabulary rules — rules that constrain the valid values for a field to a finite, pre-defined set — lead to lookup tables. When that vocabulary also has business constraints attached (like "current year only"), the lookup table may be pre-seeded rather than user-managed.
+Temporal rules say "at any given time," "once recorded," or "from this date." These are different.
 
-The rest of this module is one example per pattern.
+They require you to model time explicitly in the data, not just in your service logic. A foreign key alone cannot represent a time-bounded relationship.
+
+Immutability rules say "cannot be modified after" or "must not change." They lead to append-only table patterns.
+
+The instinct to reach for an UPDATE statement is exactly wrong.
+
+Controlled vocabulary rules limit the valid values of a field to a finite, pre-defined set. They lead to lookup tables.
+
+Sometimes that vocabulary also has business constraints, like "current year only." Then the lookup table may be pre-seeded rather than user-managed.
+
+The rest of this module gives one example for each pattern.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md`. Scroll slowly through the headings: Ownership Rules, Temporal Integrity Rules, Financial Integrity Rules, Contribution Period Constraints. As each heading appears, name the rule type it represents without reading the rules yet.
@@ -52,11 +62,21 @@ A four-row table with columns: Rule Type | Signal words | Schema pattern | Prism
 **Narration:**
 Here is the matrix. Print it. Keep it next to your schema editor.
 
-The signal words are your cues. If a domain rule contains the phrase "at any given time," you are looking at a temporal rule. If it says "cannot be modified after creation," you are looking at an immutability rule. If it constrains a value to a small, known set, you are looking at a controlled vocabulary rule.
+The signal words are your cues.
+
+Suppose a domain rule contains the phrase "at any given time." Then you are looking at a temporal rule.
+
+Suppose it says "cannot be modified after creation." Then you are looking at an immutability rule.
+
+Suppose it limits a value to a small, known set. Then you are looking at a controlled vocabulary rule.
 
 PrismApp has examples of all four. The next four topics cover one example each in depth.
 
-One important note before we continue: these rule types are not mutually exclusive. A single table can be both temporal and immutable. `ContributionRates` is exactly that — it models a time-bounded rate (temporal) that cannot be modified once set (immutable). That double classification is what forces the append-only design, which we will see in topic 4.
+One important note before we continue. These rule types are not mutually exclusive.
+
+A single table can be both temporal and immutable. `ContributionRates` is exactly that. It models a time-bounded rate, which is temporal. And the rate cannot be modified once set, which is immutable.
+
+That double classification forces the append-only design. We will see it in topic 4.
 
 **On-screen action / demo:**
 Static slide. Point to each row as you name the signal words. Pause on row 4 and circle the PrismApp example (`ContributionPeriods`) — this is the one that surprises most students.
@@ -77,19 +97,29 @@ Signal words in domain rules are your schema design vocabulary. Learn to read th
 Split screen. Left: `vault/01-Domain/Domain-Rules.md` open in VS Code. Right: a simple two-column note: Rule | Type.
 
 **Narration:**
-Let us do this live. Open `vault/01-Domain/Domain-Rules.md` and classify five rules in real time.
+Let us do this live. Open `vault/01-Domain/Domain-Rules.md`. We will classify five rules in real time.
 
-O3: "A Unit cannot have more than one active owner at any given time." — Temporal. "At any given time" is the signal. This leads to a timeline model.
+O3 says: "A Unit cannot have more than one active owner at any given time." This is a temporal rule. "At any given time" is the signal. It leads to a timeline model.
 
-O7: "Ownership periods for a Unit must not have gaps." — Temporal with a continuity constraint. A simple date range is not enough — a gapless check must also run on every write.
+O7 says: "Ownership periods for a Unit must not have gaps." This is temporal, with a continuity constraint.
 
-Financial Integrity 1: "Contributions are immutable once recorded." — Immutability. This one word — immutable — closes the door on UPDATE and DELETE for this table.
+A simple date range is not enough. A gapless check must also run on every write.
 
-Financial Integrity 5: "Contribution rate must be determined at the time of payment using contributionRates." — Immutability. The rate row must be resolved at write time and the resolved value must be persisted.
+Financial Integrity 1 says: "Contributions are immutable once recorded." This is an immutability rule.
 
-Contribution Period Constraints 1: "Payments can only be made for periods within the current year." — Controlled vocabulary. "Within the current year" means the valid values are a finite, calculable set. That set should be stored as rows, not computed at runtime.
+One word closes the door. The word is immutable. It rules out UPDATE and DELETE for this table.
 
-Five rules, five minutes, five design decisions already made. The rest of the module shows you what those decisions look like in the actual schema.
+Financial Integrity 5 says: "Contribution rate must be determined at the time of payment using contributionRates." This is also an immutability rule.
+
+The rate row must be resolved at write time. The resolved value must be persisted.
+
+Contribution Period Constraints 1 says: "Payments can only be made for periods within the current year." This is a controlled vocabulary rule.
+
+"Within the current year" means the valid values are a finite, calculable set. That set should be stored as rows, not computed at runtime.
+
+That is five rules, five minutes, and five design decisions already made.
+
+The rest of the module shows what those decisions look like in the actual schema.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md`. Navigate to Ownership Rules → O3, O7. Then scroll to Financial Integrity → rules 1 and 5. Then scroll to Contribution Period Constraints → rule 1. Read each rule aloud and state its type.

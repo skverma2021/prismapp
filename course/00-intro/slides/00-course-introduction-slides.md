@@ -21,11 +21,15 @@
 Full-width slide. Project name ("PrismApp") as the title in large type. Subtitle: "From domain rules to deployed application." Below the subtitle, three technology logos in a horizontal row: Next.js · Prisma · PostgreSQL. Bottom-right corner: instructor name and course level ("Intermediate — React background assumed").
 
 **Narration:**
-"Welcome. In this course, you will build a real, working society management application — from the very first domain requirement document all the way to a deployed URL on Vercel.
+"Welcome. In this course, you will build a real, working society management application.
 
-The application manages a residential society. It handles blocks, units, residents, owners, monthly contributions, and complaints. Every decision in the codebase is deliberate and documented — you will understand not just how things work, but why they were built that way.
+You will start with the very first domain requirement document. You will finish with a deployed URL on Vercel.
 
-Let me show you what you'll have by the end."
+The application manages a residential society. It handles blocks, units, residents, owners, monthly contributions, and complaints.
+
+Every decision in the codebase is deliberate and documented. You will understand not just how things work, but why they were built that way.
+
+Let me show you what you will have by the end."
 
 **On-screen action / demo:**
 No action. Static title slide.
@@ -46,11 +50,15 @@ This course builds a complete, deployed application — not a tutorial toy.
 Browser screenshot at 1280×800. Show the PrismApp home dashboard — the role-aware launchpad with module cards grouped under Master Data, Timelines, Contribution Master Data, and Operations. Nav sidebar visible on the left with the user's name and role badge.
 
 **Narration:**
-"This is the finished application running in production on Vercel with a real PostgreSQL database.
+"This is the finished application. It runs in production on Vercel with a real PostgreSQL database.
 
-On the left: the navigation sidebar. Your name and role are shown at all times. Role-based access control is built in — a Society Admin sees every module, a Read-Only user can browse but cannot modify data.
+On the left is the navigation sidebar. Your name and role are shown at all times.
 
-The home page groups modules by domain area. Let me click through the key screens so you know what we are building before we write a single line of code."
+Role-based access control is built in. A Society Admin sees every module. A Read-Only user can browse but cannot modify data.
+
+The home page groups modules by domain area.
+
+Let me click through the key screens. Then you will know what we are building before we write a single line of code."
 
 **On-screen action / demo:**
 1. Start on the home page `/home`.
@@ -76,11 +84,17 @@ The finished product is a multi-module, role-aware, deployed application — not
 Clean two-column layout. Left column: a simple building diagram with three labelled blocks (Nalanda · Vaishali · Rajgir), each block containing several unit rectangles. Right column: a short bulleted list — "Three blocks · 336 units (14 floors × 8 columns per block) · Owners and residents · Monthly maintenance contributions · Complaints and service requests." Above the diagram, a small note: "All names and data in the course are anonymised."
 
 **Narration:**
-"The project is based on a real residential society — Magadh Signature Homes, or MSH — with three blocks: Nalanda, Vaishali, and Rajgir, each containing a number of flats.
+"The project is based on a real residential society. It is called Magadh Signature Homes, or MSH.
 
-In a society like this, a small managing committee handles collections, complaints, and records on behalf of all residents. Before this app, that meant spreadsheets, WhatsApp messages, and disputed records.
+It has three blocks: Nalanda, Vaishali, and Rajgir. Each block contains a number of flats.
 
-This application gives the managing committee a single source of truth. Everything we build has a direct, real user behind it — not a made-up business case."
+In a society like this, a small managing committee handles collections, complaints, and records for all residents.
+
+Before this app, the committee used spreadsheets and WhatsApp messages. Records were often disputed.
+
+This application gives the managing committee a single source of truth.
+
+Everything we build has a real user behind it. It is not a made-up business case."
 
 **On-screen action / demo:**
 No action. Static concept slide.
@@ -101,11 +115,13 @@ The domain is real, the constraints are real, and the data rules come from how s
 Single-column. One sentence: "PrismApp is the codebase name. It is not tied to MSH — the same codebase can manage any residential society." Below: a three-column table with three columns: "Domain concept", "MSH example", "Another society example." Rows: Block → Nalanda/Vaishali/Rajgir → Tower A / Tower B; Unit → Flat number → Apartment number; Contribution Head → Maintenance / Gym → Maintenance / Club.
 
 **Narration:**
-"We call the codebase PrismApp throughout the course — keeping a clean separation between the software and the specific society it was first deployed for.
+"We call the codebase PrismApp throughout the course. This keeps the software separate from the specific society it was first deployed for.
 
-Why does this matter? Because one of the things you will learn is how to design software that is domain-aware without being domain-hardcoded. The names in the database — blocks, contribution heads, periods — are all data, not code. Any society could use the same application by changing seed data, not source code.
+Why does this matter? One thing you will learn is how to design software that is domain-aware without being domain-hardcoded.
 
-This is a design principle we will encounter early and return to often."
+The names in the database are all data, not code. Blocks, contribution heads, and periods are examples. Any society could use the same application by changing seed data, not source code.
+
+This is a design principle we will meet early and return to often."
 
 **On-screen action / demo:**
 No action. Static concept slide.
@@ -142,9 +158,15 @@ Small note below both cards: "Both modules are live in production and covered in
 **Narration:**
 "Version 1 of the application delivers two complete modules.
 
-Master Data is the foundation — every other module depends on knowing which units exist, who owns them, and who lives in them. This sounds simple, but it is not — ownership and residency are temporal. A unit can change owners. The system must record who owned what and when, without destroying history.
+Master Data is the foundation. Every other module depends on knowing which units exist, who owns them, and who lives in them.
 
-Contributions is the financial engine — recording monthly payments against each unit, preventing duplicate entries, and producing audit-grade reports. Financial records are immutable. There is no edit or delete. Corrections are handled through a compensating transaction — a deliberate design choice that we will study in depth."
+This sounds simple, but it is not. Ownership and residency are temporal. A unit can change owners. The system must record who owned what and when, without destroying history.
+
+Contributions is the financial engine. It records monthly payments against each unit. It prevents duplicate entries. It produces audit-grade reports.
+
+Financial records are immutable. There is no edit or delete. Corrections are handled through a compensating transaction.
+
+This is a deliberate design choice. We will study it in depth."
 
 **On-screen action / demo:**
 No action. Static concept slide.
@@ -179,17 +201,19 @@ A numbered roadmap — a vertical or horizontal progression bar with eight stops
 Highlight the full arc: from a blank project to a deployed, tested, production application.
 
 **Narration:**
-"Here is the full course structure — eight sections plus setup.
+"Here is the full course structure. There are eight sections plus setup.
 
-We start with setup: getting your local environment running, database migrated, and seed data loaded. Then Section A dives into requirements — not code, but thinking — how to separate domain rules from feature lists, and how to write constraints that code can enforce.
+We start with setup. You get your local environment running, the database migrated, and the seed data loaded.
 
-Section B is database design. We will model the domain in an Entity-Relationship Diagram and translate it directly to a Prisma schema.
+Then Section A covers requirements. This is not code. It is thinking. You learn how to separate domain rules from feature lists. You also learn how to write constraints that code can enforce.
 
-Section C covers technology choices — Next.js App Router, authentication with next-auth, and session management.
+Section B is database design. We model the domain in an Entity-Relationship Diagram. Then we translate it directly to a Prisma schema.
 
-Section D is where we build: all master data modules, end-to-end, from schema to UI.
+Section C covers technology choices. These are Next.js App Router, authentication with next-auth, and session management.
 
-Sections E through H take the working application to production quality: hardening, reporting, testing, and deployment.
+Section D is where we build. We build all master data modules, end to end, from schema to UI.
+
+Sections E through H take the working application to production quality. They cover hardening, reporting, testing, and deployment.
 
 Each section has slide content, live demos, and hands-on exercises."
 
@@ -222,11 +246,19 @@ Inside the card:
 Below the card, a note in a callout box: "CMM Sprints 0–2 are complete and included in the course. Sprint 3 (photo attachment, notifications, SLA cron) requires external service infrastructure and is documented in the vault for live deployments."
 
 **Narration:**
-"After V1, the highest-priority backlog module is CMM — the Complaint Management Module. Residents can log complaints. The system assigns a ticket number automatically, sets a priority, and tracks progress through a defined lifecycle until the issue is closed.
+"After V1, the highest-priority backlog module is CMM. CMM is the Complaint Management Module.
 
-CMM is not theoretical — it is partially built. Sprints zero through two are complete: the schema, the APIs, the complaint list, the detail page, the lifecycle transitions, and the SLA visibility dashboard card.
+Residents can log complaints. The system assigns a ticket number automatically. It sets a priority. Then it tracks progress through a defined lifecycle until the issue is closed.
 
-In this course, you will watch CMM being built in real time. You will see the design decisions as they happen — not just the finished result. Sprint three — photo attachment, push notifications, and SLA escalation automation — requires external services that go beyond the software design patterns this course focuses on. Those steps are fully documented in the project vault for anyone deploying this to a live society."
+CMM is not theoretical. It is partially built. Sprints zero through two are complete.
+
+They include the schema, the APIs, the complaint list, and the detail page. They also include the lifecycle transitions and the SLA visibility dashboard card.
+
+In this course, you will watch CMM being built in real time. You will see the design decisions as they happen, not just the finished result.
+
+Sprint three covers photo attachment, push notifications, and SLA escalation automation. It needs external services. These go beyond the software design patterns this course focuses on.
+
+Those steps are fully documented in the project vault. They are there for anyone who deploys this to a live society."
 
 **On-screen action / demo:**
 1. Switch to browser on the CMM complaints list page.
@@ -255,13 +287,17 @@ Card styled differently from V1 and CMM — an "Exercise" badge. Card content:
 A callout below: "The core engineering challenge — slot conflict prevention — is identical in structure to the ownership/residency timeline problem you will master in Section D."
 
 **Narration:**
-"Module I is your exercise module. After completing Section D, you will have all the skills to build Events and Common-Space Bookings from scratch.
+"Module I is your exercise module. After you complete Section D, you will have all the skills to build Events and Common-Space Bookings from scratch.
 
-The central engineering problem — preventing two bookings from overlapping on the same resource — is structurally identical to the ownership timeline problem in the core course. A unit cannot have two active owners simultaneously. A common hall cannot have two bookings in the same time slot. Same invariant, new domain.
+The central engineering problem is preventing two bookings from overlapping on the same resource. This is structurally identical to the ownership timeline problem in the core course.
 
-There is no external hardware dependency, no third-party service. It is a pure software problem — exactly the right scope for a course exercise.
+A unit cannot have two active owners at the same time. A common hall cannot have two bookings in the same time slot. It is the same invariant in a new domain.
 
-Full vault documentation and a starter scaffold are provided. How you implement it is up to you."
+There is no external hardware dependency. There is no third-party service. It is a pure software problem. That is exactly the right scope for a course exercise.
+
+Full vault documentation and a starter scaffold are provided.
+
+How you implement it is up to you."
 
 **On-screen action / demo:**
 No action. Static concept slide.
@@ -294,13 +330,17 @@ A two-column table — "Technology" and "Why this, not something else."
 | Vitest | Fast unit tests; compatible with the ESM module setup |
 
 **Narration:**
-"Here is the full stack. Every choice has a reason — and you will hear the reason at the point in the course where you encounter each tool.
+"Here is the full stack. Every choice has a reason. You will hear the reason at the point in the course where you meet each tool.
 
-The most important pairing is Next.js App Router with Prisma and PostgreSQL. The App Router changes where you write logic — directly in the component tree on the server, not in a separate Express API. Once that mental shift clicks, everything else follows.
+The most important pairing is Next.js App Router with Prisma and PostgreSQL.
 
-PostgreSQL is non-negotiable for a financial module. We need ACID transactions: the guarantee that a payment record and its audit log are either both written or both rolled back. SQLite is fine for a tutorial; it is not fine for money.
+The App Router changes where you write logic. You write it directly in the component tree on the server. You do not write it in a separate Express API. Once that mental shift is clear, everything else follows.
 
-We cover each of these in depth during the course. This slide is your reference for why the stack was chosen."
+PostgreSQL is non-negotiable for a financial module. We need ACID transactions. This is the guarantee that a payment record and its audit log are either both written or both rolled back.
+
+SQLite is fine for a tutorial. It is not fine for money.
+
+We cover each of these in depth during the course. This slide is your reference for why we chose the stack."
 
 **On-screen action / demo:**
 No action. Static table slide.
@@ -329,11 +369,19 @@ Below the three columns: a callout box — "Questions and Discussions: Use the Q
 **Narration:**
 "A word on how to use this course.
 
-Each section has three types of content: lectures, live demos, and exercises. Watch the lecture to understand the concept. Watch the demo to see it in context. Then pause and do the exercise before watching the solution.
+Each section has three types of content: lectures, live demos, and exercises.
 
-Resist the temptation to copy-paste code without understanding it. Every piece of code in this course traces back to a decision in the vault documents. If you can explain why the code is written the way it is, you have understood it. If you can only say what it does, you have not.
+Watch the lecture to understand the concept. Watch the demo to see it in context. Then pause and do the exercise before you watch the solution.
 
-Use the Q&A tab on Udemy for questions. The project has a vault folder — a set of specification documents — that defines the domain rules, the API contracts, and the data model. The answers to most questions are in there. I will show you how to read it in the orientation section."
+Do not copy and paste code without understanding it. Every piece of code in this course traces back to a decision in the vault documents.
+
+If you can explain why the code is written the way it is, you have understood it. If you can only say what it does, you have not.
+
+Use the Q&A tab on Udemy for questions.
+
+The project has a vault folder. It is a set of specification documents. They define the domain rules, the API contracts, and the data model.
+
+The answers to most questions are in there. I will show you how to read it in the orientation section."
 
 **On-screen action / demo:**
 No action. Static advice slide.
@@ -368,13 +416,15 @@ Two-column checklist. Left column: "You must have." Right column: "Nice to have 
 - [ ] Any ORM experience (Sequelize, TypeORM, etc.)
 
 **Narration:**
-"You need a working React background — hooks, props, component state. You do not need to know Next.js before starting; we cover the mental model shift from React in the orientation section.
+"You need a working React background. That means hooks, props, and component state.
 
-You need a basic understanding of REST and SQL. Not deep expertise — just enough to know what a database table is and what a GET request does.
+You do not need to know Next.js before you start. We cover the mental model shift from React in the orientation section.
 
-TypeScript experience helps but is not a prerequisite. We write TypeScript throughout, and the types are explained in context as we go.
+You need a basic understanding of REST and SQL. You do not need deep expertise. You only need to know what a database table is and what a GET request does.
 
-Everything else — Next.js, Prisma, PostgreSQL, Vercel — is taught from first principles."
+TypeScript experience helps, but it is not a prerequisite. We write TypeScript throughout. We explain the types in context as we go.
+
+Everything else is taught from first principles. That includes Next.js, Prisma, PostgreSQL, and Vercel."
 
 **On-screen action / demo:**
 No action. Static checklist slide.
@@ -404,13 +454,17 @@ An ordered list styled as a numbered checklist — the reading sequence from `co
 | 6 | `request-lifecycle.md` | One click traced through the full stack |
 
 **Narration:**
-"Before you start Section A, go through the orientation folder. It has six short documents — about an hour of reading total.
+"Before you start Section A, go through the orientation folder. It has six short documents. They take about an hour of reading in total.
 
-The most important one is the first: React to Next.js mental model shifts. If you skip that and go straight to the code, you will be confused. The Next.js App Router behaves differently from a React app in ways that catch experienced React developers off guard. Read that document first.
+The most important one is the first: React to Next.js mental model shifts. If you skip it and go straight to the code, you will be confused.
 
-Then set up your local environment using the terminal commands guide in the setup folder. Once you have a running local instance, the app tour — document five — will show you what you are building in context.
+The Next.js App Router behaves differently from a React app. Even experienced React developers are surprised by it. Read that document first.
 
-The orientation is not mandatory. But students who do it progress significantly faster through the technical sections."
+Then set up your local environment. Use the terminal commands guide in the setup folder.
+
+Once you have a running local instance, the app tour will show you what you are building in context. The app tour is document five.
+
+The orientation is not mandatory. But students who do it progress much faster through the technical sections."
 
 **On-screen action / demo:**
 1. Open VS Code — show `course/00-intro/00-index.md` briefly.
@@ -437,13 +491,15 @@ Clean closing title slide. Three action items in large numbered format:
 Bottom: a single line in smaller type — "The vault is your spec. The codebase is your implementation. The course connects the two."
 
 **Narration:**
-"That is the full picture. You know what you are building, who it is for, why the technology choices were made, and how the course is structured.
+"That is the full picture. You know what you are building and who it is for. You know why we made the technology choices. You also know how the course is structured.
 
-Start with setup — get the project running on your machine. Then read through the orientation. Then open Section A.
+Start with setup. Get the project running on your machine. Then read through the orientation. Then open Section A.
 
-Everything from this point on is deliberate. Every rule has a reason. Every design decision traces back to a domain constraint or a documented tradeoff. Your job — as a developer — is to understand the connection between the spec and the code.
+Everything from this point on is deliberate. Every rule has a reason. Every design decision traces back to a domain constraint or a documented tradeoff.
 
-Let's build."
+Your job as a developer is to understand the connection between the spec and the code.
+
+Let us build."
 
 **On-screen action / demo:**
 No action. Static closing slide.

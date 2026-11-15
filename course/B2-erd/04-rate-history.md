@@ -28,13 +28,21 @@ After (labelled "After append-only INSERT"):
 Callout: "Payment in February 2024 → rate id=1 → 3.50. Unambiguous."
 
 **Narration:**
-The financial integrity rules state: contribution rates must be determined at the time of payment, and once applied, the rate must not change even if future rates are updated.
+The financial integrity rules state two things. Contribution rates must be determined at the time of payment. And once applied, the rate must not change, even if future rates are updated.
 
-If you store rates with a single `amt` field and UPDATE it when the MC votes for a new rate, the previous value is gone. Any payment recorded before the update now points to a rate row that shows the new amount, not the amount that was in effect when the payment was made.
+Suppose you store rates with a single `amt` field. Then the MC votes for a new rate, and you UPDATE it. The previous value is gone.
 
-This is not a hypothetical edge case. It happens the first time the MC raises the maintenance rate — and it happens silently. The reports will show incorrect historical amounts with no error message. You will only discover the problem when a resident disputes their payment.
+Any payment recorded before the update now points to a rate row that shows the new amount. It does not show the amount that was in effect when the payment was made.
 
-The fix is to never use UPDATE on a rate row. Instead, close the old row by setting its `toDt` to yesterday and insert a new row with the new amount and `fromDt` set to today. The old row is preserved. Every historical payment has an unambiguous rate reference.
+This is not a hypothetical edge case. It happens the first time the MC raises the maintenance rate. And it happens silently.
+
+The reports will show incorrect historical amounts with no error message. You will only discover the problem when a resident disputes their payment.
+
+The fix is to never use UPDATE on a rate row.
+
+Instead, close the old row. Set its `toDt` to yesterday. Then insert a new row with the new amount and `fromDt` set to today.
+
+The old row is preserved. Every historical payment has an unambiguous rate reference.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md`. Navigate to Financial Integrity Rules 5 — "Rate Locking Rule." Read both bullet points aloud. Then navigate to Contribution Rules 2 — "revised rates are forward effective only; historical posted entries are not recalculated."
@@ -61,15 +69,21 @@ A sequence diagram showing the MC decision flow:
 Below: rate resolution query: `WHERE contributionHeadId = X AND fromDt <= transactionDt AND (toDt IS NULL OR toDt >= transactionDt)` — labelled "resolves to exactly one row."
 
 **Narration:**
-Here is the concrete operation. When the MC votes to raise the maintenance rate on April 1st, the service executes exactly two writes — atomically, in a transaction.
+Here is the concrete operation. The MC votes to raise the maintenance rate on April 1st.
 
-First: close the existing active row. Set `toDt` to March 31st. This is the one and only UPDATE ever permitted on a rate row — closing it.
+The service then executes exactly two writes. They run atomically, in a transaction.
 
-Second: insert a new row with the new amount and `fromDt` set to April 1st. Leave `toDt` NULL.
+First, close the existing active row. Set `toDt` to March 31st. This is the one and only UPDATE ever permitted on a rate row.
 
-The rate resolution query is deterministic: find the one row for this head where `fromDt` is on or before the transaction date and `toDt` is either NULL or on or after the transaction date. Because the closing-and-opening writes are atomic, exactly one row will always match for any transaction date.
+Second, insert a new row with the new amount and `fromDt` set to April 1st. Leave `toDt` NULL.
 
-Notice that this is the same timeline pattern we saw in topic 2 for ownership. The rows are different, the domain is different, but the structure is identical: fromDt + nullable toDt, NULL = current, append only.
+The rate resolution query is deterministic. It finds the one row for this head where `fromDt` is on or before the transaction date. And `toDt` must be either NULL or on or after the transaction date.
+
+The closing and opening writes are atomic. So exactly one row will always match for any transaction date.
+
+Notice that this is the same timeline pattern we saw in topic 2 for ownership. The rows are different, and the domain is different.
+
+But the structure is identical. It uses fromDt and a nullable toDt. NULL means current. And the table is append only.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/ERD.md` → ContributionRates table. Read the field list. Then open `prisma/schema.prisma` → find the `ContributionRate` model. Point to `fromDt`, `toDt` (nullable), and `amt`. Then open `src/modules/contribution-rates/contribution-rates.service.ts` — show the rate-resolution query.
@@ -97,17 +111,27 @@ Two paths marked with question marks: "Rate at period start (₹3.50)?" vs "Rate
 Callout box: "PrismApp policy: rate at transactionDateTime applies. Non-blocking warning shown if rate.fromDt > period.start. Contribution is posted normally."
 
 **Narration:**
-Here is a policy decision that is easy to miss. A resident pays for January in April. Two rates existed — ₹3.50 was in effect in January, ₹4.00 became effective in February.
+Here is a policy decision that is easy to miss.
+
+A resident pays for January in April. Two rates existed. ₹3.50 was in effect in January. ₹4.00 became effective in February.
 
 Which rate should apply?
 
-You might expect: the rate active when the period started. But that requires the system to look back at what the rate was on January 1st. For periods far in the past, this adds complexity and can produce surprising results when a previous rate row has been audited or corrected.
+You might expect the rate that was active when the period started. But that requires the system to look back at the rate on January 1st.
 
-PrismApp chooses: the rate at `transactionDateTime`. The rate in effect when the operator records the payment is the rate that applies. This is accepted policy, documented in `vault/01-Domain/Domain-Rules.md` as the rate-period coverage policy.
+For periods far in the past, this adds complexity. It can also produce surprising results when a previous rate row has been audited or corrected.
 
-The trade-off: a late payment incurs the current rate, not the historical one. When this happens — when the resolved rate's `fromDt` is later than the selected period's start — the API returns a non-blocking warning and the UI shows an amber notice. The operator is informed; the contribution is posted normally.
+PrismApp chooses the rate at `transactionDateTime`. The rate in effect when the operator records the payment is the rate that applies.
 
-The schema design consequence: there is no field on `ContributionDetails` storing "the rate that was in effect at period start." There is only the resolved rate, determined at `transactionDateTime`. The rate is locked at write time.
+This is accepted policy. It is documented in `vault/01-Domain/Domain-Rules.md` as the rate-period coverage policy.
+
+There is a trade-off. A late payment incurs the current rate, not the historical one.
+
+Sometimes the resolved rate's `fromDt` is later than the selected period's start. Then the API returns a non-blocking warning, and the UI shows an amber notice. The operator is informed. The contribution is posted normally.
+
+There is also a schema design consequence. No field on `ContributionDetails` stores "the rate that was in effect at period start."
+
+There is only the resolved rate, determined at `transactionDateTime`. The rate is locked at write time.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md` → Contribution Rules 2. Read the "rate-period coverage policy (Track-A 1.9)" bullet. Then open `src/modules/contributions/contributions.service.ts` — find the warning logic for late rate application (the check of `rate.fromDt` against `period.start`).

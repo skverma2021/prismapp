@@ -24,9 +24,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Getting code to run on your machine is the easy 90%. Getting it to run correctly,
-> repeatably, on infrastructure you don't control, for users who aren't you — that's
-> the last 10%, and it's where a surprising number of projects quietly fall apart."
+> "Getting code to run on your machine is the easy 90%.
+>
+> The last 10% is harder. The code must run correctly and repeatably, on infrastructure you do not control, for users who are not you.
+>
+> That is where a surprising number of projects quietly fail."
 
 ---
 
@@ -36,10 +38,11 @@
 next build"`) and `package.json` `postinstall: "prisma generate"`.
 
 **Narration:**
-> "The entire build is one deterministic command: generate the Prisma client, then
-> build the Next.js app. No manual 'don't forget to run this script first' step that
-> only lives in someone's memory. If a deploy can only succeed because a human
-> remembered an unwritten step, that's not a deployment process — it's a hope."
+> "The entire build is one deterministic command. It generates the Prisma client, then builds the Next.js app.
+>
+> There is no manual step like 'do not forget to run this script first.' Such a step lives only in someone's memory.
+>
+> If a deploy can only succeed because a human remembered an unwritten step, it is not a deployment process. It is a hope."
 
 ---
 
@@ -49,12 +52,13 @@ next build"`) and `package.json` `postinstall: "prisma generate"`.
 `package.json` scripts `prisma:migrate:deploy` and `prisma:seed`.
 
 **Narration:**
-> "Schema changes are captured as migration files, checked into the same repository
-> as the code that depends on them — never a manual `ALTER TABLE` run once against
-> production and never written down. And a fresh environment needs to be able to
-> stand itself up from nothing: run migrations, then run the seed script, and get a
-> working baseline — blocks, contribution heads, reference periods. If that path
-> ever breaks, you find out on your own machine, not during an actual incident."
+> "Schema changes are captured as migration files. They are checked into the same repository as the code that depends on them.
+>
+> We never run a manual `ALTER TABLE` once against production and leave it unwritten.
+>
+> A fresh environment must be able to stand itself up from nothing. You run migrations. Then you run the seed script. And you get a working baseline, with blocks, contribution heads, and reference periods.
+>
+> If that path ever breaks, you find out on your own machine, not during an actual incident."
 
 ---
 
@@ -64,13 +68,13 @@ next build"`) and `package.json` `postinstall: "prisma generate"`.
 instances, no shared memory, one shared Postgres.
 
 **Narration:**
-> "We touched this in the architecture episode, but it's worth restating here
-> because it's specifically a deployment constraint: on Vercel, your code runs as
-> serverless functions that can scale to many instances and don't share memory
-> between requests. Anything that assumed 'the same server will still have this in
-> memory next time' breaks the moment traffic scales past one instance. Designing
-> for statelessness from day one is what makes this kind of deployment target
-> possible without a rewrite."
+> "We touched on this in the architecture episode. It is worth restating, because it is a deployment constraint.
+>
+> On Vercel, your code runs as serverless functions. They can scale to many instances, and they do not share memory between requests.
+>
+> Suppose your code assumed 'the same server will still have this in memory next time.' It breaks the moment traffic scales past one instance.
+>
+> Designing for statelessness from day one makes this kind of deployment target possible without a rewrite."
 
 ---
 
@@ -81,12 +85,11 @@ build, migration applies cleanly to an empty database, seed runs successfully,
 manual smoke test.
 
 **Narration:**
-> "Before any change is considered done, there's a short, explicit checklist: lint
-> passes, the build passes, a migration applies cleanly to a genuinely empty
-> database, the seed script runs, and there's been a manual smoke test of whatever
-> changed. None of these are exotic. What makes them valuable is that they're
-> written down as a gate, not left as an assumption that 'someone probably checked
-> this.'"
+> "Before any change is considered done, there is a short, explicit checklist.
+>
+> Lint passes. The build passes. A migration applies cleanly to a genuinely empty database. The seed script runs. And there has been a manual smoke test of whatever changed.
+>
+> None of these checks are exotic. They are valuable because they are written down as a gate. They are not left as an assumption that 'someone probably checked this.'"
 
 ---
 
@@ -97,13 +100,15 @@ Modules" section: CMM next, Events/Bookings after that, Safety/Security explicit
 deferred as hardware-dependent and course-deferred.
 
 **Narration:**
-> "The last engineering skill in this playlist isn't a technical one at all: knowing
-> what not to build yet, and saying so in writing. This project has real backlog —
-> safety checklists, security workflows, event bookings — and it's ranked, with
-> reasons. Security and safety modules are explicitly deferred because they need
-> hardware — scanners, cameras, access control — that doesn't belong in this phase
-> of the project. That's not laziness. That's scope control: a feature list without
-> priorities and reasons is just a wish list."
+> "The last engineering skill in this playlist is not technical at all.
+>
+> It is knowing what not to build yet, and saying so in writing.
+>
+> This project has a real backlog. It includes safety checklists, security workflows, and event bookings. The backlog is ranked, with reasons.
+>
+> Security and safety modules are explicitly deferred. They need hardware, such as scanners, cameras, and access control. That hardware does not belong in this phase of the project.
+>
+> That is not laziness. That is scope control. A feature list without priorities and reasons is just a wish list."
 
 ---
 
@@ -114,13 +119,15 @@ rules → architecture → contracts → auth → validation → immutability �
 deployment/scope.
 
 **Narration:**
-> "That's the arc of this playlist: a vague ask becomes a domain rule, the domain
-> rules shape an architecture, the architecture exposes a contract, the contract is
-> guarded by authentication, authorization, and validation, the riskiest rules get
-> written down as ADRs, everything is proven with real tests, and it all ships
-> through a deployment process that doesn't rely on anyone's memory. None of it was
-> about a specific framework. That's deliberate — this is the process, independent
-> of the technology, and it's the lens the rest of the channel builds on."
+> "That is the arc of this playlist.
+>
+> A vague ask becomes a domain rule. The domain rules shape an architecture. The architecture exposes a contract.
+>
+> The contract is guarded by authentication, authorization, and validation. The riskiest rules are written down as ADRs. Everything is proven with real tests.
+>
+> And it all ships through a deployment process that does not rely on anyone's memory.
+>
+> None of it was about a specific framework. That is deliberate. This is the process, independent of the technology. And it is the lens the rest of the channel builds on."
 
 ---
 
@@ -130,10 +137,11 @@ deployment/scope.
 PostgreSQL & Prisma, Next.js) and the AI-Augmented Development playlist.
 
 **Narration:**
-> "From here, the channel goes deep on the specific technologies that made all of
-> this possible — starting with the database layer, because that's where this
-> project's hardest and most interesting rules actually live. Subscribe so you don't
-> miss it."
+> "From here, the channel goes deep on the specific technologies that made all of this possible.
+>
+> We start with the database layer, because that is where this project's hardest and most interesting rules live.
+>
+> Subscribe so you do not miss it."
 
 ---
 

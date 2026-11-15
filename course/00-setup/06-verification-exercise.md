@@ -13,9 +13,11 @@
 Numbered checklist in two columns of six. Each item has a checkbox. Below the list: a "What to do if stuck" section.
 
 **Narration:**
-This exercise is the final gate of the setup module. Every subsequent exercise in the course assumes this checklist is complete.
+This exercise is the final gate of the setup module. Every later exercise in the course assumes this checklist is complete.
 
-Work through each step in order. If a step fails, stop and fix it before moving on. Each failure has a common cause — the next slide lists the most frequent ones.
+Work through each step in order. If a step fails, stop and fix it before you move on.
+
+Each failure has a common cause. The next slide lists the most frequent ones.
 
 ---
 
@@ -55,7 +57,7 @@ All twelve checked = you are ready. One failure = stop and fix.
 Two-column table: "Symptom" on the left, "Likely cause and fix" on the right. Six rows.
 
 **Narration:**
-These are the setup failures that come up most frequently:
+These are the setup failures that come up most often.
 
 | Symptom | Likely cause and fix |
 |---------|---------------------|
@@ -66,7 +68,9 @@ These are the setup failures that come up most frequently:
 | `npm run dev` starts but login fails with a redirect loop | `NEXTAUTH_URL` is missing or wrong — must be `http://localhost:3000` in local dev |
 | Login page loads but credentials rejected | Seed did not run, or `AUTH_SEED_PASSWORD` changed after seed ran — re-seed with `npm run prisma:seed` |
 
-One important note: if you change `DATABASE_URL` after running migrations, the new database is empty — run `prisma migrate dev` and `prisma db seed` again against the new database.
+One important note. If you change `DATABASE_URL` after you run migrations, the new database is empty.
+
+In that case, run `prisma migrate dev` and `prisma db seed` again against the new database.
 
 **On-screen action / demo:**
 Show each row while explaining. If demonstrating a failure, reproduce it briefly and show the fix.
@@ -87,16 +91,18 @@ Most failures are `DATABASE_URL` or `NEXTAUTH_URL` misconfiguration. Check those
 Clean success screen. The PrismApp dashboard in a browser at localhost:3000. Text overlay: "You are ready for Section A."
 
 **Narration:**
-If your twelve-step checklist is complete, you have:
-- A working Node.js environment
-- A cloned repository with all dependencies installed
-- A configured `.env` with a live database connection
-- A migrated database with seed data
-- A running development server
+If your twelve-step checklist is complete, you have these five things.
+- A working Node.js environment.
+- A cloned repository with all dependencies installed.
+- A configured `.env` with a live database connection.
+- A migrated database with seed data.
+- A running development server.
 
-What you do not yet need to understand is: what the code does, why the database looks the way it does, or how any of the features work. That is what Sections A through H are for.
+You do not need to understand everything yet. You do not need to know what the code does. You do not need to know why the database looks the way it does. You do not need to know how any feature works.
 
-Use this table as your quick reference for the rest of the course:
+That is what Sections A through H are for.
+
+Use this table as your quick reference for the rest of the course.
 
 | Command | When to use it |
 |---------|---------------|
@@ -107,7 +113,9 @@ Use this table as your quick reference for the rest of the course:
 | `npx prisma studio` | When you need to see the data |
 | `npm run prisma:migrate:dev` | After changing `schema.prisma` |
 
-Welcome to the course. Go read Section A.
+Welcome to the course.
+
+Go read Section A.
 
 **On-screen action / demo:**
 Show the dashboard after login. Navigate to Blocks, then Contribution Heads. Confirm the seeded data is visible. Return to the login page and log out.

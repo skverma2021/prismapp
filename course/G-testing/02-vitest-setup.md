@@ -38,15 +38,17 @@ export default defineConfig({
 });
 ```
 
-**`environment: "node"`** — tests run in a pure Node.js environment. No `window`, no `document`, no DOM APIs. This is correct for server-side logic tests. If you were testing React components, you'd use `"jsdom"`.
+**`environment: "node"`** means tests run in a pure Node.js environment. There is no `window`, no `document`, and no DOM APIs.
 
-**`include: ["src/**/__tests__/**/*.test.ts"]`** — only files inside a `__tests__` folder, ending in `.test.ts`, inside `src/`. Files outside `src/` are not picked up. Files named `.spec.ts` are not picked up. This is intentional scoping.
+This is correct for server-side logic tests. To test React components, you would use `"jsdom"`.
 
-**`coverage.provider: "v8"`** — uses Node's built-in V8 coverage engine (faster and zero extra dependencies vs Istanbul's `@vitest/coverage-istanbul`).
+**`include: ["src/**/__tests__/**/*.test.ts"]`** picks only files inside a `__tests__` folder. They must end in `.test.ts` and live inside `src/`. Files outside `src/` are not picked up. Files named `.spec.ts` are not picked up. This scoping is intentional.
 
-**`coverage.include`** — only coverage for `src/modules/**` and `src/lib/**`. Route handlers in `app/api/` are excluded.
+**`coverage.provider: "v8"`** uses the V8 coverage engine built into Node. It is faster than Istanbul's `@vitest/coverage-istanbul`. It also needs zero extra dependencies.
 
-**`resolve.alias`** — maps `@` to the project root. This is why test files can use `import { HttpError } from "@/src/lib/api-response"` — the same `@` alias used throughout the main codebase.
+**`coverage.include`** limits coverage to `src/modules/**` and `src/lib/**`. Route handlers in `app/api/` are excluded.
+
+**`resolve.alias`** maps `@` to the project root. This is why test files can use `import { HttpError } from "@/src/lib/api-response"`. It is the same `@` alias used throughout the main codebase.
 
 **On-screen action / demo:**
 Open `vitest.config.ts`. Read each field. Show that `@` is the project root — type `"@"` in the import and trace it to `path.resolve(__dirname, ".")`.
@@ -84,11 +86,15 @@ src/
 **Narration:**
 Each module that has tests follows the same layout. The test file lives in a `__tests__` folder inside the module directory. The test file name mirrors the source file name with `.test.ts` appended.
 
-This co-location pattern means:
-- You know where tests are without searching
-- When you open `contributions.helpers.ts`, you know to look in `__tests__/contributions.helpers.test.ts`
-- When you delete a source file, you can easily find and delete its tests
-- The `include` glob in `vitest.config.ts` picks up this pattern automatically
+This co-location pattern has four benefits.
+
+You know where tests are without searching.
+
+When you open `contributions.helpers.ts`, you know to look in `__tests__/contributions.helpers.test.ts`.
+
+When you delete a source file, you can easily find and delete its tests.
+
+The `include` glob in `vitest.config.ts` picks up this pattern automatically.
 
 There is no central `tests/` folder at the root. Tests are owned by their modules.
 
@@ -118,17 +124,21 @@ Three command blocks with labels. `npm run test` (single pass). `npm run test:wa
 "test:watch": "vitest"
 ```
 
-**`npm run test`** — runs all tests once and exits. Exit code 0 = all passed. Exit code 1 = at least one failed. This is what a CI pipeline runs.
+**`npm run test`** runs all tests once and exits. Exit code 0 means all tests passed. Exit code 1 means at least one test failed. A CI pipeline runs this command.
 
-**`npm run test:watch`** — starts Vitest in watch mode. Vitest watches for file changes and re-runs affected tests automatically. This is what you use during development. When you edit a helper, only that helper's tests re-run — not the entire suite.
+**`npm run test:watch`** starts Vitest in watch mode. Vitest watches for file changes and re-runs the affected tests automatically. You use this during development. When you edit a helper, only that helper's tests re-run. The entire suite does not run.
 
-**`npx vitest run --coverage`** — runs all tests and generates a coverage report. Text output in the terminal; HTML report in `coverage/` folder. Open `coverage/index.html` in a browser to see which lines were reached.
+**`npx vitest run --coverage`** runs all tests and generates a coverage report. The text output appears in the terminal. The HTML report goes to the `coverage/` folder. Open `coverage/index.html` in a browser to see which lines were reached.
 
-Output to know:
-- Green dots: passing tests
-- Red `✗`: failing test
-- `FAIL` prefix: that test file has a failure
-- The summary line: `X tests passed, Y skipped, Z failed` in N.NNs
+Here is the output you need to know.
+
+Green dots are passing tests.
+
+A red `✗` is a failing test.
+
+A `FAIL` prefix means that test file has a failure.
+
+The summary line reads `X tests passed, Y skipped, Z failed` in N.NNs.
 
 **On-screen action / demo:**
 Run `npm run test` in the terminal. Walk through the output. Point to the count and duration. Then run `npm run test:watch` and edit a test file — show the re-run trigger.

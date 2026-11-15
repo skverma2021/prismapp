@@ -26,10 +26,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Apply a filter on a report in this app, and the URL updates. Refresh the page,
-> or send that link to a colleague, and the same filter is still applied. That's
-> not an accident — it's a deliberate choice to treat the URL itself as part of
-> the application's state, not just an address."
+> "Apply a filter on a report in this app, and the URL updates.
+>
+> Refresh the page, or send that link to a colleague. The same filter is still applied.
+>
+> That is not an accident. It is a deliberate choice. We treat the URL itself as part of the application's state, not just an address."
 
 ---
 
@@ -66,14 +67,15 @@ useEffect(() => {
 ```
 
 **Narration:**
-> "`useBrowseState` is the client-side data-fetching hook every master-data list
-> in this app is built on. It builds a query string from the current page,
-> page size, sort, and applied filters, fetches it, and sets the results into
-> state. The `stale` flag is the important defensive detail: if the filters
-> change again before this fetch resolves — someone typing fast in a search box —
-> the *older* response is thrown away instead of overwriting newer results. This
-> is the client-side data-fetching problem Server Components don't have to solve,
-> because a Server Component's fetch simply blocks rendering until it resolves."
+> "`useBrowseState` is the client-side data-fetching hook. Every master-data list in this app is built on it.
+>
+> It builds a query string from the current page, page size, sort, and applied filters. It fetches that URL. Then it sets the results into state.
+>
+> The `stale` flag is the important defensive detail.
+>
+> Suppose the filters change again before this fetch resolves. For example, someone types fast in a search box. Then the *older* response is thrown away. It does not overwrite newer results.
+>
+> This is a client-side data-fetching problem. Server Components do not have to solve it. A Server Component's fetch simply blocks rendering until it resolves."
 
 ---
 
@@ -83,12 +85,13 @@ useEffect(() => {
 and resets `filters`/`sortBy`/`page` from it, ~lines 172–186.
 
 **Narration:**
-> "This hook doesn't just read the URL once on mount — it watches
-> `useSearchParams()`'s return value, and whenever it changes, re-derives filters,
-> sort, and resets to page 1. That means the URL isn't a one-way output of this
-> hook's state; it's genuinely the source of truth. Navigate back in the browser,
-> and the filters that were active on the previous URL come back, because the hook
-> re-reads them from `searchParams` again."
+> "This hook does not just read the URL once on mount.
+>
+> It watches the return value of `useSearchParams()`. Whenever that value changes, it re-derives the filters and the sort. It also resets to page 1.
+>
+> So the URL is not a one-way output of this hook's state. It is genuinely the source of truth.
+>
+> Navigate back in the browser, and the filters from the previous URL come back. The hook reads them from `searchParams` again."
 
 ---
 
@@ -113,13 +116,15 @@ export function pushQueryState(pathname: string, values: Record<string, QueryVal
 ```
 
 **Narration:**
-> "Applying a filter calls `pushQueryState`, which builds a clean query string and
-> calls the browser's own `history.pushState` directly — not `router.push`. The
-> comment in the code explains why the early-return guard matters: Next.js
-> intercepts `pushState` and re-fires `useSearchParams()` on every call, so pushing
-> an identical URL would trigger Scene 2's effect again for no reason, and could
-> loop. This is browser-native history manipulation, deliberately kept simple,
-> feeding back into Next.js's own reactive `useSearchParams` hook."
+> "Applying a filter calls `pushQueryState`. It builds a clean query string.
+>
+> Then it calls the browser's own `history.pushState` directly. It does not use `router.push`.
+>
+> The comment in the code explains why the early-return guard matters.
+>
+> Next.js intercepts `pushState`. It re-fires `useSearchParams()` on every call. So pushing an identical URL would trigger the effect from Scene 2 again for no reason. It could even loop.
+>
+> This is browser-native history manipulation, kept deliberately simple. It feeds back into the reactive `useSearchParams` hook from Next.js."
 
 ---
 
@@ -130,12 +135,15 @@ export function pushQueryState(pathname: string, values: Record<string, QueryVal
 line (~line 212).
 
 **Narration:**
-> "And here's the other end: the transactions report reads `useSearchParams()`
-> directly to initialize its filter state on load. Apply a filter, `pushQueryState`
-> writes it to the address bar, `useSearchParams` picks it back up on next render,
-> and the whole loop is how a filtered report URL becomes something you can
-> bookmark, share in a chat message, or hit 'back' through — all without a full
-> page reload."
+> "And here is the other end.
+>
+> The transactions report reads `useSearchParams()` directly. It uses the value to initialize its filter state on load.
+>
+> You apply a filter. `pushQueryState` writes it to the address bar. `useSearchParams` picks it up again on the next render.
+>
+> That whole loop makes a filtered report URL useful. You can bookmark it. You can share it in a chat message. You can press 'back' through it.
+>
+> And all of it works without a full page reload."
 
 ---
 
@@ -144,8 +152,9 @@ line (~line 212).
 **Visual:** End card pointing to Episode 7.
 
 **Narration:**
-> "This episode assumed the fetches all succeed. Next: what this app actually
-> shows the user when one doesn't."
+> "This episode assumed that all the fetches succeed.
+>
+> Next, we see what this app actually shows the user when one does not."
 
 ---
 

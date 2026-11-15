@@ -25,10 +25,9 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "AI-assisted implementation is fast. That speed is only worth something if
-   you can prove, afterward, that what got built actually does what it was
-   supposed to. This episode is about a real test script that does exactly
-   that."
+> "AI-assisted implementation is fast. That speed is only valuable if you can prove, afterward, that what got built does what it should.
+>
+> This episode is about a real test script that does exactly that."
 
 ---
 
@@ -51,13 +50,13 @@ const unauthorized = await requestJson("POST", "/api/contribution-rates", {
 ```
 
 **Narration:**
-> "This script signs in as two different real roles — a manager and a
-   read-only user — and then tries the same mutation as each one. That's the
-   point: a test worth writing doesn't just check 'did the API respond,' it
-   checks the actual rule from the specification — read-only users cannot
-   create contribution rates, full stop. Generating a test like this only
-   works if you already know which rule you're proving; that's what makes this
-   a specification-driven test, not a status-code test."
+> "This script signs in as two different real roles. A manager, and a read-only user. Then it tries the same mutation as each one.
+>
+> That is the point. A test worth writing does not only check 'did the API respond.' It checks the actual rule from the specification. Read-only users cannot create contribution rates. No exceptions.
+>
+> Generating a test like this only works if you already know which rule you are proving.
+>
+> That is what makes this a specification-driven test, not a status-code test."
 
 ---
 
@@ -77,12 +76,11 @@ function assertStatus(result, expectedStatus, message) {
 ```
 
 **Narration:**
-> "Writing the tedious scaffolding — a fetch wrapper, an assertion helper that
-   prints a useful message on failure, a handful of repetitive request/assert
-   pairs for every role and every edge case — is exactly the kind of work AI
-   is genuinely fast at. The part that still needs a human is deciding *which*
-   role/edge-case combinations actually matter, which comes straight from the
-   spec, not from the test framework."
+> "Some work is tedious scaffolding. A fetch wrapper. An assertion helper that prints a useful message on failure. A handful of repetitive request and assert pairs for every role and every edge case.
+>
+> This is exactly the kind of work AI is genuinely fast at.
+>
+> The part that still needs a human is deciding *which* role and edge-case combinations matter. That decision comes straight from the spec, not from the test framework."
 
 ---
 
@@ -92,13 +90,13 @@ function assertStatus(result, expectedStatus, message) {
 screen.
 
 **Narration:**
-> "When a test like this fails, the message it prints — expected status,
-   actual status, and the full response payload — is exactly what you'd paste
-   to an AI assistant to debug the failure. That's the difference between
-   debugging *with* AI and debugging *blind with* AI: a vague 'it doesn't work'
-   forces the assistant to guess at the same things you'd have to guess at. A
-   precise failure message, with the actual payload attached, turns debugging
-   into a much narrower, much more reliable conversation."
+> "When a test like this fails, it prints a message. It shows the expected status, the actual status, and the full response payload.
+>
+> That message is exactly what you would paste to an AI assistant to debug the failure.
+>
+> This is the difference between debugging *with* AI and debugging *blind with* AI. A vague 'it does not work' forces the assistant to guess at the same things you would have to guess at.
+>
+> A precise failure message, with the actual payload attached, makes the conversation much narrower and much more reliable."
 
 ---
 
@@ -118,11 +116,13 @@ Minimum checks before considering a task complete:
 ```
 
 **Narration:**
-> "And this is the honest end of the story: a passing integration test is one
-   gate out of five this project defines as 'done.' Notice item 5 —
-   'manual smoke test' — is still explicitly a human action, not an automated
-   one. Even in a project that leans hard on AI throughout its process, some
-   verification steps are kept deliberately manual, on purpose."
+> "This is the honest end of the story.
+>
+> A passing integration test is one gate out of five that this project defines as 'done.'
+>
+> Notice item 5, 'manual smoke test.' It is still explicitly a human action, not an automated one.
+>
+> Even in a project that relies heavily on AI throughout its process, some verification steps are kept manual on purpose."
 
 ---
 
@@ -131,9 +131,11 @@ Minimum checks before considering a task complete:
 **Visual:** End card, next-episode pointer.
 
 **Narration:**
-> "So which parts should always stay manual — always stay under a human's
-   direct control? That's the question the rest of this playlist is really
-   about, starting next."
+> "So which parts should always stay manual? Which parts should always stay under a human's direct control?
+>
+> That is the question the rest of this playlist is really about.
+>
+> We start with it next."
 
 ---
 

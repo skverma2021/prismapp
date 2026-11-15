@@ -18,11 +18,11 @@ Here is the exercise. A product manager writes one sentence in the requirements 
 
 That sentence is not wrong. But it is dangerously incomplete.
 
-Before you watch the next slide, pause. List every question that sentence raises. Think about who can do it, what data it requires, what happens after, who can see the result, and what the system must never allow.
+Before you watch the next slide, pause. List every question that sentence raises.
+
+Think about who can do it. Think about what data it requires. Think about what happens after. Think about who can see the result. And think about what the system must never allow.
 
 I will give you 60 seconds.
-
-[pause]
 
 Let us compare your list.
 
@@ -70,17 +70,33 @@ Five coloured rows, each with a category label and 2–3 bullet points:
 - Can a Closed complaint be reopened?
 
 **Narration:**
-Here is a framework for surfacing hidden requirements. Five categories of questions applied to any user story.
+Here is a framework for surfacing hidden requirements. It has five categories of questions. You can apply them to any user story.
 
-**Who** — the sentence says "residents" but does not define it. In PrismApp, `Individual` covers owners, residents, and third-party payers. A complaint reporter must be a valid `Individual`, but does not need to be an active resident. Rule CM8 requires a category, which implies the reporter picks from a list. Already we have data requirements the original sentence never mentioned.
+**Who.** The sentence says "residents" but does not define the word.
 
-**What** — the sentence says "log" a complaint but does not say what that means. The domain rules document answers this: title, description, category, priority, unit reference, and a reporter identity. Five fields, all mandatory.
+In PrismApp, `Individual` covers owners, residents, and third-party payers. A complaint reporter must be a valid `Individual`. The reporter does not need to be an active resident.
 
-**When** — the sentence says nothing about time. But the domain rules define a six-state lifecycle, a 48-hour reopen window, and SLA targets. Three temporal constraints that were completely invisible in the original sentence.
+Rule CM8 requires a category. This implies the reporter picks from a list.
 
-**How many** — not addressed. The current implementation allows unlimited complaints per unit. But the vision mentions upvoting as a deduplication mechanism — which means the team has thought about it and explicitly deferred it.
+Already we have data requirements that the original sentence never mentioned.
 
-**What never** — this is often the most important category. CM4 says once a complaint is Closed and the reopen window has elapsed, no further transitions are permitted. CM6 says the ticket ID is immutable. These are the "what never" rules, and they are among the hardest things to retrofit if you discover them after data is in production.
+**What.** The sentence says "log" a complaint but does not say what that means.
+
+The domain rules document answers this. A complaint needs a title, description, category, priority, unit reference, and a reporter identity. These are five fields, all mandatory.
+
+**When.** The sentence says nothing about time. But the domain rules define a six-state lifecycle, a 48-hour reopen window, and SLA targets.
+
+These are three temporal constraints. They were completely invisible in the original sentence.
+
+**How many.** This is not addressed. The current implementation allows unlimited complaints per unit.
+
+But the vision mentions upvoting as a deduplication mechanism. So the team has thought about it and explicitly deferred it.
+
+**What never.** This is often the most important category.
+
+CM4 says that once a complaint is Closed and the reopen window has elapsed, no further transitions are permitted. CM6 says the ticket ID is immutable.
+
+These are the "what never" rules. They are among the hardest things to add later, if you discover them after data is in production.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md`. For each category, point to the corresponding rule:
@@ -113,19 +129,21 @@ Five bullet points, each matching a learning objective, with a brief one-line re
 **Narration:**
 Let us recap what we covered.
 
-We started by looking at why a single requirements document fails — because different requirements have completely different rates of change, and mixing them means every feature revision threatens the rules.
+We started with why a single requirements document fails. Different requirements change at different rates. Mixing them means every feature revision threatens the rules.
 
-We introduced three layers: domain rules as invariants enforced by code, entity contracts as the stable structure those rules demand, and the feature vision as the evolving delivery plan.
+We introduced three layers. Domain rules are invariants enforced by code. Entity contracts are the stable structure those rules demand. The feature vision is the evolving delivery plan.
 
-We practised reading a domain rules document — specifically how to classify each rule by the implementation artefact it demands: a database constraint, a service-layer check, or a transaction guard.
+We practised reading a domain rules document. We learned to classify each rule by the implementation artefact it demands. That is a database constraint, a service-layer check, or a transaction guard.
 
-We analysed the CMM vision document and learned that a good vision document is as valuable for its deferred list as for its committed features.
+We analysed the CMM vision document. A good vision document is as valuable for its deferred list as for its committed features.
 
-And we practised the hidden requirements exercise — using five question categories to surface everything that a plain-English user story leaves unsaid.
+And we practised the hidden requirements exercise. We used five question categories to surface everything that a plain-English user story leaves unsaid.
 
-These habits do not require any particular tool or technology. They apply to any project in any stack.
+These habits do not need any particular tool or technology. They apply to any project in any stack.
 
-In the next module we will take the domain rules and entity contracts from this module and turn them into an Entity Relationship Diagram — showing exactly how the rules drive the schema design.
+In the next module, we will take the domain rules and entity contracts from this module. We will turn them into an Entity Relationship Diagram.
+
+It will show exactly how the rules drive the schema design.
 
 **On-screen action / demo:**
 Briefly show the vault folder structure one final time:

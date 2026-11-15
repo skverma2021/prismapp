@@ -21,9 +21,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Here's a question that sounds trivial: who owns this flat? In a spreadsheet,
-> that's one cell. In a real application, it's one of the harder modeling problems
-> you'll run into — and today we'll see why."
+> "Here is a question that sounds trivial: who owns this flat?
+>
+> In a spreadsheet, that is one cell. In a real application, it is one of the harder modeling problems you will meet.
+>
+> Today we will see why."
 
 ---
 
@@ -33,12 +35,17 @@
 diagram: `Block (1) —— (many) Unit`.
 
 **Narration:**
-> "Blocks and units are straightforward. A block is a tower or wing — its name has to
-> be unique. Every unit belongs to exactly one block, and a unit's own description —
-> its flat number — only has to be unique *within* that block, not across the whole
-> society. Two different towers can both have a 'Unit 101'. That's a small detail,
-> but it's exactly the kind of rule that's easy to miss if you don't ask the domain
-> question directly: unique to what, exactly?"
+> "Blocks and units are straightforward.
+>
+> A block is a tower or a wing. Its name must be unique.
+>
+> Every unit belongs to exactly one block. The description of a unit is its flat number. It only has to be unique *within* that block, not across the whole society.
+>
+> So two different towers can both have a 'Unit 101'.
+>
+> That is a small detail. But it is easy to miss.
+>
+> You only find it if you ask the domain question directly: unique to what, exactly?"
 
 **On-screen action:** Point out two units named identically in different blocks if
 seed data allows; otherwise, state the rule verbally over the units list.
@@ -51,12 +58,15 @@ seed data allows; otherwise, state the rule verbally over the units list.
 box with three dotted arrows labeled "Owner?", "Resident?", "Payer?".
 
 **Narration:**
-> "An individual is just a person — name, mobile, email, gender. Nothing on this
-> record says 'owner' or 'resident'. That's deliberate. The same person can own one
-> flat, live in a completely different one, and occasionally pay a bill for a third
-> person's unit. If we baked 'owner' or 'resident' into the individual record itself,
-> we'd have no way to represent someone who is both, or someone who stops being an
-> owner but stays a resident. So the roles live somewhere else — as relationships."
+> "An individual is just a person. It has a name, mobile, email, and gender.
+>
+> Nothing on this record says 'owner' or 'resident'. That is deliberate.
+>
+> The same person can own one flat. They can live in a completely different one. And they can occasionally pay a bill for the unit of a third person.
+>
+> Suppose we put 'owner' or 'resident' into the individual record itself. Then we could not represent someone who is both. And we could not represent someone who stops being an owner but stays a resident.
+>
+> So the roles live somewhere else. They live in relationships."
 
 ---
 
@@ -67,15 +77,17 @@ box with three dotted arrows labeled "Owner?", "Resident?", "Payer?".
 tables, each with a start date and an end date.
 
 **Narration:**
-> "Here's the core idea of this episode. Ownership isn't a field that says 'owner
-> name: Priya Sharma.' It's its own record — who, which unit, from what date, to what
-> date. Residency works the same way, as a completely separate record. Two separate
-> timelines, because they change independently: an owner can rent their flat out
-> without giving up ownership, and a resident can move out while the same person
-> still owns the place. If you try to model this with a single 'current owner' field
-> on the unit, you lose all history the moment something changes — and you can't
-> answer 'who owned this on the 3rd of March last year.' Modeling it as a timestamped
-> relationship keeps that question answerable forever."
+> "Here is the core idea of this episode.
+>
+> Ownership is not a field that says 'owner name: Priya Sharma.' It is its own record. It says who, which unit, from what date, to what date.
+>
+> Residency works the same way, as a completely separate record.
+>
+> These are two separate timelines, because they change independently. An owner can rent their flat out without giving up ownership. And a resident can move out while the same person still owns the place.
+>
+> Suppose you model this with a single 'current owner' field on the unit. Then you lose all history the moment something changes. And you cannot answer 'who owned this on the 3rd of March last year.'
+>
+> Modeling it as a timestamped relationship keeps that question answerable forever."
 
 ---
 
@@ -86,12 +98,13 @@ one row with a `toDt` and one current row with no end date. Then `/residencies` 
 the same unit.
 
 **Narration:**
-> "In the running app, here's what that looks like. This unit's ownership list shows
-> a previous owner with an end date, and a current owner with no end date — an open
-> end date just means 'still true today.' Residency for the same unit is tracked the
-> same way, completely independently. Notice the owner and the resident right now
-> aren't even the same person — that's a rented-out unit, and the data model handles
-> it without any special-casing."
+> "In the running app, here is what that looks like.
+>
+> The ownership list of this unit shows a previous owner with an end date. It also shows a current owner with no end date. An open end date just means 'still true today.'
+>
+> Residency for the same unit is tracked the same way, completely independently.
+>
+> Notice that the owner and the resident right now are not even the same person. That is a rented-out unit. And the data model handles it without any special-casing."
 
 ---
 
@@ -100,12 +113,13 @@ the same unit.
 **Visual:** Talking head.
 
 **Narration:**
-> "This one modeling decision — relationships with dates, instead of attributes —
-> is what makes almost everything else in this application possible: accurate
-> historical reports, correct billing based on who actually lived somewhere on a
-> given date, and audit trails that hold up under scrutiny. But it also opens a new
-> problem: what stops two 'current owners' existing for the same unit at the same
-> time? That's exactly what the next episode is about."
+> "This one modeling decision uses relationships with dates, instead of attributes.
+>
+> It makes almost everything else in this application possible. It gives us accurate historical reports. It gives us correct billing, based on who lived somewhere on a given date. And it gives us audit trails that hold up under scrutiny.
+>
+> But it also opens a new problem. What stops two 'current owners' from existing for the same unit at the same time?
+>
+> That is exactly what the next episode is about."
 
 ---
 
@@ -114,9 +128,11 @@ the same unit.
 **Visual:** End card pointing to Episode 3.
 
 **Narration:**
-> "Next time, we look at what happens when ownership history goes wrong — overlaps,
-> gaps, and the surprisingly tricky question of who owns a brand-new flat before it's
-> ever been sold. Subscribe and I'll see you there."
+> "Next time, we look at what happens when ownership history goes wrong.
+>
+> We look at overlaps and gaps. And we look at a surprisingly tricky question: who owns a brand-new flat before it has ever been sold?
+>
+> Subscribe, and I will see you there."
 
 ---
 

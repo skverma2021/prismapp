@@ -16,15 +16,21 @@ A page of text (Domain-Rules.md) with three types of highlights:
 - Green: actor qualifiers — *only*, *exactly one*, *any person*
 
 **Narration:**
-Most developers skim a requirements document looking for things to build. That is the wrong approach for domain rules.
+Most developers skim a requirements document and look for things to build. That is the wrong approach for domain rules.
 
-When you read domain rules, you are looking for three specific patterns.
+When you read domain rules, you look for three specific patterns.
 
-First: modal verbs. Words like *must*, *cannot*, *must not*, and *shall* signal enforcement obligations. They tell you which sentences demand code, not just documentation. "A contribution record cannot be deleted" is not a preference — it is a contract.
+First, modal verbs. Words like *must*, *cannot*, *must not*, and *shall* signal enforcement obligations.
 
-Second: temporal qualifiers. Phrases like "at any given time," "once recorded," or "within 48 hours" are the footprint of a time-sensitive constraint. These almost always mean you need a date field in your schema and a time-based check in your service logic.
+They tell you which sentences demand code, not just documentation. "A contribution record cannot be deleted" is not a preference. It is a contract.
 
-Third: actor qualifiers. Words like "only," "exactly one," or "any person" define the cardinality and eligibility of a relationship. "A unit must have exactly one active owner" is both a cardinality rule (one, not many) and a temporal rule (active — meaning right now).
+Second, temporal qualifiers. Phrases like "at any given time," "once recorded," or "within 48 hours" signal a time-sensitive constraint.
+
+These almost always mean two things. You need a date field in your schema. You also need a time-based check in your service logic.
+
+Third, actor qualifiers. Words like "only," "exactly one," or "any person" define the cardinality and eligibility of a relationship.
+
+Take the rule "a unit must have exactly one active owner." It is a cardinality rule, because it says one, not many. It is also a temporal rule, because active means right now.
 
 Let us apply this discipline to the PrismApp rules document.
 
@@ -55,17 +61,21 @@ Row 3: CM7 "Ticket IDs must be unique" → YES — `@unique` on ticketId field.
 Row 4: CM3 "Reopen only within 48 hours of resolvedAt" → NO — needs time calculation in code.
 
 **Narration:**
-Here is a practical exercise every developer should do when reading domain rules: classify each rule by what can enforce it.
+Here is a practical exercise for every developer. When you read domain rules, classify each rule by what can enforce it.
 
-Rule O1 says an individual can own multiple units. That requires no constraint at all — it is a permission, not a restriction.
+Rule O1 says an individual can own multiple units. That needs no constraint at all. It is a permission, not a restriction.
 
-Rule O3 says a unit cannot have more than one active owner. Can a `UNIQUE` index enforce this? No. Ownership records are time-bounded. The same unit has many rows over its lifetime. The overlap check must compare date ranges, which requires reading existing rows before writing a new one — that is application-level logic inside a serializable transaction.
+Rule O3 says a unit cannot have more than one active owner. Can a `UNIQUE` index enforce this? No.
+
+Ownership records are time-bounded. The same unit has many rows over its lifetime.
+
+The overlap check must compare date ranges. That means reading existing rows before writing a new one. This is application-level logic inside a serializable transaction.
 
 Rule CM7 says ticket IDs must be unique. A simple `@unique` constraint on the `ticketId` column handles this completely.
 
-Rule CM3 says a complaint can only be reopened within 48 hours of resolution. No index can know what time it is and compare against a stored timestamp. This is time-sensitive service logic.
+Rule CM3 says a complaint can only be reopened within 48 hours of resolution. No index can know the current time and compare it with a stored timestamp. This is time-sensitive service logic.
 
-Classifying rules this way before you start building tells you exactly what goes in the schema, what goes in the service layer, and what needs a transaction.
+Classify rules this way before you start building. It tells you what goes in the schema, what goes in the service layer, and what needs a transaction.
 
 **On-screen action / demo:**
 Open `prisma/schema.prisma`. Show `@@unique` or `@unique` on the `ticketId` field of the Complaint model.
@@ -91,15 +101,27 @@ A numbered list of CM1–CM13, but with three sections visually grouped by colou
 - CM11–CM13 (purple): Anonymity and visibility
 
 **Narration:**
-Scroll to the Complaint Rules section of `Domain-Rules.md`. This section was added alongside the CMM module. Fourteen rules — written in plain English — define everything the system must enforce about complaints.
+Scroll to the Complaint Rules section of `Domain-Rules.md`. This section was added alongside the CMM module.
 
-CM1 through CM5 define the status lifecycle. Notice that CM2 does not just say transitions are forward. It specifically names `Reopened` as the one backward exception. That single sentence is the entire specification for a "can this transition happen?" check in the service layer.
+Fourteen rules, written in plain English, define everything the system must enforce about complaints.
 
-CM6 and CM7 are identity rules. The ticket ID is system-generated, immutable, and unique. Three words in the rule — *system-generated*, *immutable*, *unique* — each map to a specific implementation choice: generate in the service (not in the DB), never expose an update endpoint, add a `@unique` constraint.
+CM1 through CM5 define the status lifecycle. Notice that CM2 does not just say transitions move forward. It names `Reopened` as the one backward exception.
 
-CM11 through CM13 define visibility. This is the most interesting group. CM11 says a complaint *may* be anonymous — that is a permission. CM12 says the reporter ID *must not* be returned for anonymous complaints in resident-facing responses — that is an enforcement rule. CM13 says managers and admins *may* see the reporter regardless — that is a role-based exception to the enforcement rule.
+That single sentence is the entire specification for a "can this transition happen?" check in the service layer.
 
-Three sentences. Three completely different kinds of constraint. All three must be handled in the API response logic.
+CM6 and CM7 are identity rules. The ticket ID is system-generated, immutable, and unique.
+
+Each of those three words maps to an implementation choice. *System-generated* means we generate it in the service, not in the DB. *Immutable* means we never expose an update endpoint. *Unique* means we add a `@unique` constraint.
+
+CM11 through CM13 define visibility. This is the most interesting group.
+
+CM11 says a complaint *may* be anonymous. That is a permission.
+
+CM12 says the reporter ID *must not* be returned for anonymous complaints in resident-facing responses. That is an enforcement rule.
+
+CM13 says managers and admins *may* see the reporter regardless. That is a role-based exception to the enforcement rule.
+
+These are three sentences and three different kinds of constraint. All three must be handled in the API response logic.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md`. Scroll to "Complaint Rules (CMM)".

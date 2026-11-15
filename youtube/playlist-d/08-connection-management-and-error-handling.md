@@ -27,12 +27,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Serverless functions can spin up many instances of your app at once — and every
-> instance that carelessly creates its own Prisma Client opens its own pool of
-> database connections. Multiply that by traffic, and you can exhaust Postgres's
-> connection limit before you've written a single line of business logic. This
-> episode is about the one file that prevents that, and what happens when the
-> database still isn't reachable anyway."
+> "Serverless functions can start many instances of your app at once.
+> Every instance that carelessly creates its own Prisma Client opens its own pool of database connections.
+>
+> Multiply that by traffic. You can exhaust Postgres's connection limit before you have written a single line of business logic.
+>
+> This episode is about the one file that prevents that.
+> It is also about what happens when the database is still not reachable anyway."
 
 ---
 
@@ -61,12 +62,14 @@ if (process.env.NODE_ENV !== "production") {
 ```
 
 **Narration:**
-> "`db` is created once and reused everywhere else in the app via `import { db }
-> from "@/src/lib/db"`. In development, where hot-reloading would otherwise create
-> a fresh `PrismaClient` — and a fresh connection pool — on every file save, it's
-> cached on `global.prisma` so the same instance survives the reload. In
-> production, each serverless instance still gets its own client, but at least it's
-> exactly one per instance, not one per request within that instance."
+> "`db` is created once. It is reused everywhere else in the app via `import { db }
+> from "@/src/lib/db"`.
+>
+> In development, hot-reloading would otherwise create a fresh `PrismaClient` on every file save. That also means a fresh connection pool.
+> So the client is cached on `global.prisma`, and the same instance survives the reload.
+>
+> In production, each serverless instance still gets its own client.
+> But it is exactly one per instance, not one per request within that instance."
 
 ---
 
@@ -90,14 +93,14 @@ const adapter = new PrismaPg({ connectionString });
 ```
 
 **Narration:**
-> "`PrismaPg` is Prisma's driver adapter for Postgres specifically — it's what
-> lets this app talk to Postgres through the `pg` driver directly, rather than
-> Prisma's own built-in engine. And before that connection string is used, this
-> function rewrites its `sslmode` — if the environment's connection string says
-> anything weaker than `verify-full`, it's upgraded. That's a deliberate,
-> code-enforced floor on transport security: whatever gets pasted into
-> `DATABASE_URL`, the actual connection to Postgres won't downgrade below
-> certificate-verified TLS."
+> "`PrismaPg` is Prisma's driver adapter for Postgres specifically.
+> It lets this app talk to Postgres through the `pg` driver directly. It does not use Prisma's own built-in engine.
+>
+> Before the connection string is used, this function rewrites its `sslmode`.
+> If the environment's connection string says anything weaker than `verify-full`, it is upgraded.
+>
+> That is a deliberate, code-enforced floor on transport security.
+> Whatever gets pasted into `DATABASE_URL`, the actual connection to Postgres will not downgrade below certificate-verified TLS."
 
 ---
 
@@ -118,13 +121,16 @@ export async function GET() {
 ```
 
 **Narration:**
-> "Remember Episode 6's claim that this app has essentially no raw SQL? Here's the
-> one exception — a health-check endpoint, used by Vercel and uptime monitors, that
-> does nothing but confirm the database is reachable and can complete a
-> round-trip. `SELECT 1` isn't a domain query; it's the smallest possible proof of
-> life. This is exactly the kind of narrow, justified case where reaching past the
-> typed query API makes sense — the alternative, some `findFirst` against a real
-> table, would work but would be answering a slightly different question."
+> "Remember the claim in Episode 6 that this app has essentially no raw SQL?
+> Here is the one exception.
+>
+> It is a health-check endpoint, used by Vercel and uptime monitors.
+> It does nothing but confirm that the database is reachable and can complete a round-trip.
+>
+> `SELECT 1` is not a domain query. It is the smallest possible proof of life.
+>
+> This is exactly the kind of narrow, justified case where reaching past the typed query API makes sense.
+> The alternative would be a `findFirst` against a real table. That would work, but it would answer a slightly different question."
 
 ---
 
@@ -157,16 +163,19 @@ function isRetryableDatabaseFailure(error: unknown): boolean {
 ```
 
 **Narration:**
-> "This is the payoff of Episode 3's `unknown`-narrowing episode, applied to the
-> database specifically. A failed query could mean the database is genuinely
-> unreachable, or it could mean a transient blip worth retrying, or it could mean
-> a real constraint was violated and retrying would just fail the same way again.
-> `isRetryableDatabaseFailure` checks Prisma's own error codes —
-> `P1001` can't reach the server, `P2024` a connection pool timeout — codes that
-> specifically mean 'this might work if you try again,' as opposed to, say, a
-> unique constraint violation, which never will. Classifying the failure is what
-> lets the rest of the app decide whether to retry, surface a clear 'service
-> temporarily unavailable,' or fail fast."
+> "This is the payoff of Episode 3's `unknown`-narrowing episode, applied to the database specifically.
+>
+> A failed query could mean the database is genuinely unreachable.
+> It could mean a transient blip that is worth retrying.
+> Or it could mean a real constraint was violated, and retrying would just fail the same way again.
+>
+> `isRetryableDatabaseFailure` checks Prisma's own error codes.
+> `P1001` means it cannot reach the server. `P2024` means a connection pool timeout.
+> These codes specifically mean 'this might work if you try again'.
+> A unique constraint violation is different. It never will.
+>
+> Classifying the failure lets the rest of the app decide what to do.
+> It can retry. It can show a clear 'service temporarily unavailable' message. Or it can fail fast."
 
 ---
 
@@ -175,12 +184,12 @@ function isRetryableDatabaseFailure(error: unknown): boolean {
 **Visual:** End card, closing the playlist.
 
 **Narration:**
-> "That closes out Playlist D. We went from a plain-language domain to relations,
-> to constraints, to history that never gets overwritten, to atomic writes, to
-> indexed and aggregated reads, to migrations, and finally to the connection
-> itself. Every one of those decisions came from a real requirement this
-> application actually had — not a database tutorial's idea of what you might
-> need someday."
+> "That closes out Playlist D.
+>
+> We went from a plain-language domain to relations. Then constraints. Then history that never gets overwritten. Then atomic writes. Then indexed and aggregated reads. Then migrations. And finally the connection itself.
+>
+> Every one of those decisions came from a real requirement that this application actually had.
+> They did not come from a database tutorial's idea of what you might need someday."
 
 ---
 

@@ -24,10 +24,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "A `catch` block can throw literally anything — a real `Error`, a string, a
-> Prisma error object, `undefined`. TypeScript's honest answer to 'I don't know what
-> this is yet' is the `unknown` type. Today: how PrismApp uses `unknown` and
-> narrowing to turn total uncertainty into a fully typed error, in one function."
+> "A `catch` block can throw literally anything. It can be a real `Error`, a string, a Prisma error object, or `undefined`.
+>
+> TypeScript has an honest answer to 'I do not know what this is yet'. That answer is the `unknown` type.
+>
+> Today you will see how PrismApp uses `unknown` and narrowing. It turns total uncertainty into a fully typed error, in one function."
 
 ---
 
@@ -38,9 +39,10 @@ even though `error` could be a string with no `.message`.
 
 **Narration:**
 > "If you type a caught error as `any`, TypeScript stops checking it entirely.
-> `error.message` compiles even if `error` is a string — and then crashes at
-> runtime. `unknown` is `any`'s safer sibling: it accepts anything, but it forces
-> you to prove what something is — narrow it — before you're allowed to use it."
+>
+> `error.message` compiles even if `error` is a string. Then it crashes at runtime.
+>
+> `unknown` is the safer sibling of `any`. It accepts anything. But it forces you to prove what something is before you use it. That proof is called narrowing."
 
 ---
 
@@ -74,14 +76,17 @@ export function fromUnknownError(error: unknown, requestId?: string): HttpError 
 ```
 
 **Narration:**
-> "Every route handler in this app funnels caught errors through this one
-> function, and it never trusts the input. Every branch narrows `unknown` a
-> different way. `error instanceof HttpError` — a class check, the cleanest form of
-> narrowing. `typeof error === "object" && error !== null && "code" in error` —
-> three checks chained together, because `unknown` could be `null`, and `in` needs
-> an object. Only after all three pass does the code cast it to a shape with an
-> optional `code` and `meta`. Every single path ends in one typed, known thing: an
-> `HttpError`. Nothing downstream ever has to guess again."
+> "Every route handler in this app sends caught errors through this one function. It never trusts the input.
+>
+> Every branch narrows `unknown` in a different way.
+>
+> First, `error instanceof HttpError`. This is a class check, the cleanest form of narrowing.
+>
+> Next, `typeof error === "object" && error !== null && "code" in error`. These are three checks chained together. `unknown` could be `null`, and `in` needs an object.
+>
+> Only after all three pass does the code cast the value to a shape with an optional `code` and `meta`.
+>
+> Every path ends in one typed, known thing: an `HttpError`. Nothing downstream ever has to guess again."
 
 ---
 
@@ -108,11 +113,13 @@ function isConnectivityFailure(error: unknown): boolean {
 ```
 
 **Narration:**
-> "Both helpers take `unknown` and return a plain `boolean` — they're narrowing
-> functions, just not ones that change the caller's type directly. `error instanceof
-> Error` is the guard here: if it fails, bail out immediately with `false`, before
-> ever touching `.message`. That single `instanceof` check is what makes
-> `error.message` safe to read on the next line — TypeScript won't let you skip it."
+> "Both helpers take `unknown` and return a plain `boolean`.
+>
+> They are narrowing functions, but they do not change the caller's type directly.
+>
+> `error instanceof Error` is the guard here. If it fails, the function returns `false` immediately, before it ever touches `.message`.
+>
+> That single `instanceof` check makes `error.message` safe to read on the next line. TypeScript will not let you skip it."
 
 ---
 
@@ -129,13 +136,13 @@ function isHttpError(error: unknown): error is HttpError {
 ```
 
 **Narration:**
-> "This codebase gets by with inline `instanceof` and `typeof` checks — it doesn't
-> need anything more. But TypeScript also has a dedicated syntax for this: a
-> function that returns `error is HttpError` instead of `boolean`. Call this, and
-> anywhere you check `if (isHttpError(error))`, TypeScript narrows `error` to
-> `HttpError` inside that block — same effect as `instanceof`, just wrapped in a
-> name you can reuse. Worth knowing it exists, even in a codebase that hasn't
-> needed it yet."
+> "This codebase uses inline `instanceof` and `typeof` checks. It does not need anything more.
+>
+> But TypeScript also has a dedicated syntax for this. It is a function that returns `error is HttpError` instead of `boolean`.
+>
+> Now call `if (isHttpError(error))`. Inside that block, TypeScript narrows `error` to `HttpError`. The effect is the same as `instanceof`, wrapped in a name you can reuse.
+>
+> It is worth knowing that this exists, even in a codebase that has not needed it yet."
 
 ---
 
@@ -144,9 +151,9 @@ function isHttpError(error: unknown): error is HttpError {
 **Visual:** End card pointing to Episode 4.
 
 **Narration:**
-> "Next: this app validates plenty of runtime data by hand, with plain functions —
-> no schema library. We'll look at why, and how it keeps the runtime checks and the
-> compile-time types from drifting apart."
+> "Next: this app validates a lot of runtime data by hand, with plain functions. It uses no schema library.
+>
+> We will look at why. We will also see how it keeps the runtime checks and the compile-time types from drifting apart."
 
 ---
 

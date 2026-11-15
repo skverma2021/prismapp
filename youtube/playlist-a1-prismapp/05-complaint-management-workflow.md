@@ -21,9 +21,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "A broken gate isn't just a row in a table. It's a story with a beginning, several
-> possible middles, and rules about who's allowed to say it's over. Today: how this
-> app turns a complaint into a governed workflow instead of just a status field."
+> "A broken gate is not just a row in a table.
+>
+> It is a story with a beginning, several possible middles, and rules about who is allowed to say it is over.
+>
+> Today we see how this app turns a complaint into a governed workflow, instead of just a status field."
 
 ---
 
@@ -33,12 +35,15 @@
 → Closed, with a "Reopened" arrow curving from Resolved back to Open.
 
 **Narration:**
-> "Every complaint moves through a fixed set of states: open, assigned, in progress,
-> resolved, and closed. Movement is one-directional — you can't jump backward — with
-> exactly one exception: a resolved complaint can be reopened, which sends it back to
-> open. Everything else only moves forward. That constraint alone rules out an entire
-> category of bugs, like someone accidentally 'un-resolving' a complaint by mistake
-> through a stray API call."
+> "Every complaint moves through a fixed set of states. They are open, assigned, in progress, resolved, and closed.
+>
+> Movement is one-directional. You cannot jump backward.
+>
+> There is exactly one exception. A resolved complaint can be reopened, which sends it back to open.
+>
+> Everything else only moves forward.
+>
+> That constraint alone rules out a whole category of bugs. For example, someone could accidentally 'un-resolve' a complaint through a stray API call. That cannot happen."
 
 ---
 
@@ -65,13 +70,15 @@ fetch(`/api/complaints/${location.pathname.split("/").pop()}`, {
 ***
 
 **Narration:**
-> "Reopening isn't open-ended. A resident has a 48-hour window from the moment a
-> complaint is marked resolved to say 'this isn't actually fixed.' After that window,
-> and once the complaint is closed, the status is frozen — no more transitions at
-> all. That's a deliberate trade-off: it protects staff from complaints being
-> reopened weeks later for unrelated reasons, while still giving residents a fair,
-> bounded chance to push back. And this isn't just a button that disappears — even
-> a direct API call gets rejected once the window's closed."
+> "Reopening is not open-ended.
+>
+> A resident has a 48-hour window, from the moment a complaint is marked resolved, to say 'this is not actually fixed.'
+>
+> After that window, and once the complaint is closed, the status is frozen. There are no more transitions at all.
+>
+> That is a deliberate trade-off. It protects staff from complaints being reopened weeks later for unrelated reasons. And it still gives residents a fair, bounded chance to push back.
+>
+> This is not just a button that disappears. Even a direct API call gets rejected once the window is closed."
 
 ---
 
@@ -81,11 +88,11 @@ fetch(`/api/complaints/${location.pathname.split("/").pop()}`, {
 showing timestamps and actor names.
 
 **Narration:**
-> "Every single status change is written to an audit log with who did it and when.
-> This isn't optional logging bolted on for compliance — it's part of the core
-> design, because a workflow without an audit trail is just a rumor. If a resident
-> disputes that their complaint was ever actually 'in progress,' there's a real
-> record to check."
+> "Every single status change is written to an audit log. The log records who did it and when.
+>
+> This is not optional logging added for compliance. It is part of the core design, because a workflow without an audit trail is just a rumor.
+>
+> Suppose a resident disputes that their complaint was ever 'in progress.' Then there is a real record to check."
 
 ---
 
@@ -95,12 +102,13 @@ showing timestamps and actor names.
 and a priority dropdown, with an SLA hours value displayed once priority is picked.
 
 **Narration:**
-> "Every complaint is filed against a predefined category and a predefined priority
-> — not free text, so reporting stays consistent. Priority carries a target
-> resolution time, an SLA, in hours. Right now that SLA is tracked and visible, but
-> automatic escalation when it's breached is intentionally deferred — a good example
-> of scoping a feature honestly instead of half-building automation nobody's
-> validated yet."
+> "Every complaint is filed against a predefined category and a predefined priority. It is not free text, so reporting stays consistent.
+>
+> Priority carries a target resolution time, called an SLA, in hours.
+>
+> Right now, that SLA is tracked and visible. But automatic escalation when it is breached is intentionally deferred.
+>
+> This is a good example of scoping a feature honestly. We do not half-build automation that nobody has validated yet."
 
 ---
 
@@ -111,14 +119,15 @@ the reporter hidden; right: a manager's view of the same complaint with the repo
 visible.
 
 **Narration:**
-> "This is the interesting one. A complaint can be filed anonymously — the reporter's
-> identity is hidden from most staff and from other residents. But the system never
-> actually forgets who filed it. The identity is stored, just not returned in
-> resident-facing responses. Managers and admins can still see it. So 'anonymous'
-> here means 'protected from casual visibility,' not 'untraceable' — which is exactly
-> the balance a real society needs: residents can report sensitive issues without
-> fear, but there's still a real person accountable for false reports if it ever
-> comes to that."
+> "This is the interesting one.
+>
+> A complaint can be filed anonymously. The identity of the reporter is hidden from most staff and from other residents.
+>
+> But the system never forgets who filed it. The identity is stored. It is just not returned in resident-facing responses. Managers and admins can still see it.
+>
+> So 'anonymous' here means 'protected from casual visibility.' It does not mean 'untraceable.'
+>
+> That is exactly the balance a real society needs. Residents can report sensitive issues without fear. And there is still a real person accountable for false reports, if it ever comes to that."
 
 ---
 
@@ -128,12 +137,15 @@ visible.
 tagged, "Internal" and "Resident".
 
 **Narration:**
-> "Staff can attach notes to a complaint as they work it — but each note is tagged
-> either internal, visible only to managers and admins, or resident-facing, visible
-> to everyone. Only managers and admins can post internal notes. And once a note is
-> posted, it can't be edited or deleted — notes are append-only, same philosophy as
-> the financial ledger in the last episode: the record of what was said and when
-> doesn't get quietly rewritten."
+> "Staff can attach notes to a complaint as they work on it.
+>
+> Each note is tagged either internal or resident-facing. Internal notes are visible only to managers and admins. Resident-facing notes are visible to everyone.
+>
+> Only managers and admins can post internal notes.
+>
+> Once a note is posted, it cannot be edited or deleted. Notes are append-only.
+>
+> This is the same philosophy as the financial ledger in the last episode. The record of what was said, and when, does not get quietly rewritten."
 
 ---
 
@@ -142,12 +154,13 @@ tagged, "Internal" and "Resident".
 **Visual:** Talking head.
 
 **Narration:**
-> "None of this is complicated code. A status field, some booleans, a notes table.
-> What makes it engineering is deciding, deliberately, what's allowed to change, who's
-> allowed to see what, and how long a decision stays open before it's final. Get
-> those decisions right, and the code that enforces them is almost the easy part.
-> Next episode, we go back to the very first step we skipped: how the application
-> knows who you are, before any of these actions can happen at all."
+> "None of this is complicated code. It is a status field, some booleans, and a notes table.
+>
+> What makes it engineering is deciding, deliberately, what is allowed to change. It is deciding who is allowed to see what. And it is deciding how long a decision stays open before it is final.
+>
+> Get those decisions right, and the code that enforces them is almost the easy part.
+>
+> Next episode, we go back to the very first step we skipped. We see how the application knows who you are, before any of these actions can happen at all."
 
 ---
 
@@ -156,9 +169,9 @@ tagged, "Internal" and "Resident".
 **Visual:** End card pointing to Episode 6.
 
 **Narration:**
-> "If you've enjoyed seeing how business rules shape a real system, subscribe — next
-> time we follow the login, and then go one level deeper into the architecture
-> itself."
+> "If you enjoyed seeing how business rules shape a real system, subscribe.
+>
+> Next time, we follow the login. Then we go one level deeper into the architecture itself."
 
 ---
 

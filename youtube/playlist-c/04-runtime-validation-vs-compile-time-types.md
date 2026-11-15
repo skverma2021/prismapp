@@ -26,10 +26,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Here's a fact that trips people up: TypeScript's types disappear the moment your
-> code compiles. A request body from the network has no types at all by the time
-> your function sees it — it's just JSON. So who checks it's actually correct?
-> Today: the functions in this app that do that job by hand."
+> "Here is a fact that surprises many people. TypeScript's types disappear when your code compiles.
+>
+> A request body from the network has no types at all by the time your function sees it. It is just JSON.
+>
+> So who checks that it is correct?
+>
+> Today you will see the functions in this app that do that job by hand."
 
 ---
 
@@ -39,10 +42,13 @@
 request.json()`. Hover over `body` — it's typed `any`.
 
 **Narration:**
-> "`request.json()` returns `any`. TypeScript has no idea what's actually inside —
-> it could be `{}`, it could be `null`, it could be a string someone sent by
-> mistake. A type annotation you write yourself here is a promise, not a guarantee.
-> Something still has to check the real value, at runtime, every single request."
+> "`request.json()` returns `any`. TypeScript has no idea what is inside.
+>
+> It could be `{}`. It could be `null`. It could be a string that someone sent by mistake.
+>
+> A type annotation that you write yourself here is a promise, not a guarantee.
+>
+> Something still has to check the real value at runtime, on every single request."
 
 ---
 
@@ -71,12 +77,13 @@ export function parsePositiveInt(value: unknown, field: string): number {
 ```
 
 **Narration:**
-> "This is PrismApp's actual approach — no schema library, just small functions
-> that take `unknown` in and either return a real, narrower type, or throw. Notice
-> the return types: `requireString` returns `string`, not `string | undefined`. If
-> it returns at all, you know — for a fact, not a hope — that you have a non-empty
-> string. The runtime check and the compile-time type are doing two different jobs
-> that meet at exactly one line: the `return`."
+> "This is PrismApp's actual approach. It uses no schema library. It uses small functions that take `unknown` in. Each one either returns a real, narrower type, or throws.
+>
+> Look at the return types. `requireString` returns `string`, not `string | undefined`.
+>
+> If it returns at all, you know for a fact that you have a non-empty string. It is not a hope.
+>
+> The runtime check and the compile-time type do two different jobs. They meet at exactly one line: the `return`."
 
 ---
 
@@ -95,14 +102,15 @@ export type ComplaintStatus = (typeof COMPLAINT_STATUSES)[number];
 ```
 
 **Narration:**
-> "This is the other half of runtime-vs-compile-time. `COMPLAINT_STATUSES` is a
-> real array that exists when the app runs — you can loop over it, check
-> `.includes()` against it, use it to validate an incoming status string. `as const`
-> is what lets TypeScript also read that same array as a type. One declaration,
-> two jobs: a runtime list to validate against, and a compile-time type to check
-> against. If this app added a schema library like Zod later, this is exactly the
-> pattern it would be automating — this hand-written version is worth understanding
-> first, because it's the same idea with nothing hidden."
+> "This is the other half of runtime versus compile-time.
+>
+> `COMPLAINT_STATUSES` is a real array that exists when the app runs. You can loop over it. You can check `.includes()` against it. You can use it to validate an incoming status string.
+>
+> `as const` lets TypeScript also read that same array as a type.
+>
+> So there is one declaration with two jobs. It is a runtime list to validate against. And it is a compile-time type to check against.
+>
+> Suppose this app added a schema library like Zod later. It would automate exactly this pattern. This hand-written version is worth understanding first, because it is the same idea with nothing hidden."
 
 ---
 
@@ -112,10 +120,11 @@ export type ComplaintStatus = (typeof COMPLAINT_STATUSES)[number];
 `requireString(body.title, "title")` before ever touching `body.title` directly.
 
 **Narration:**
-> "Every mutation in this app goes through validators like these before the data
-> touches the database. It's not glamorous, but it's the actual boundary where
-> 'the internet sent us something' becomes 'we know what this is.' Skip it, and
-> every type annotation past that point is just a hopeful guess."
+> "Every mutation in this app goes through validators like these. This happens before the data touches the database.
+>
+> It is not glamorous. But it is the real boundary where 'the internet sent us something' becomes 'we know what this is'.
+>
+> Skip it, and every type annotation after that point is just a hopeful guess."
 
 ---
 
@@ -124,9 +133,11 @@ export type ComplaintStatus = (typeof COMPLAINT_STATUSES)[number];
 **Visual:** End card pointing to Episode 5.
 
 **Narration:**
-> "Next: the hooks that power almost every list and form in this app are generic —
-> written once, reused for blocks, units, individuals, complaints, everything. Here's
-> how that actually works."
+> "Next: the hooks that power almost every list and form in this app are generic.
+>
+> They are written once. They are reused for blocks, units, individuals, complaints, and more.
+>
+> Here is how that works."
 
 ---
 

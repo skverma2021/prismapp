@@ -25,10 +25,15 @@
 **Visual:** Talking head, code editor visible behind.
 
 **Narration:**
-> "Every real app has fields that can only ever be one of a handful of values — a
-> role, a status, a category. If you type those as `string`, TypeScript will happily
-> let you misspell one and find out in production. There's a better way, and it
-> costs you nothing. Let's look at where PrismApp actually uses it."
+> "Every real app has fields that can only be one of a few values.
+>
+> A role. A status. A category.
+>
+> If you type those as `string`, TypeScript will happily let you misspell one. Then you find the mistake in production.
+>
+> There is a better way, and it costs you nothing.
+>
+> Let us look at where PrismApp actually uses it."
 
 ---
 
@@ -38,10 +43,11 @@
 `"SOCEITY_ADMIN"` (typo) into a call site — no error, no red squiggle.
 
 **Narration:**
-> "If a role is just `string`, this compiles fine. Nothing catches the typo. The bug
-> ships, and you find out when an admin can't access their own admin page. The type
-> `string` is technically correct and practically useless here — it describes
-> 'any text,' when what we actually mean is 'one of exactly three values.'"
+> "If a role is just `string`, this code compiles fine. Nothing catches the typo.
+>
+> The bug ships. You find out when an admin cannot open their own admin page.
+>
+> The type `string` is technically correct, but it is not useful here. It describes 'any text'. What we actually mean is 'one of exactly three values'."
 
 ---
 
@@ -55,11 +61,13 @@ export type UserRole = "SOCIETY_ADMIN" | "MANAGER" | "READ_ONLY";
 ```
 
 **Narration:**
-> "This is the whole fix. `UserRole` isn't `string` — it's exactly one of these
-> three literal strings, and nothing else. Type the same typo now, anywhere `UserRole`
-> is expected, and the editor flags it immediately, before you ever run the app.
-> This is called a literal union type — a type built out of specific values instead
-> of a general shape."
+> "This is the whole fix.
+>
+> `UserRole` is not `string`. It is exactly one of these three literal strings, and nothing else.
+>
+> Now type the same typo anywhere `UserRole` is expected. The editor flags it immediately, before you ever run the app.
+>
+> This is called a literal union type. It is a type built from specific values, instead of a general shape."
 
 **On-screen action:** Retype `"SOCEITY_ADMIN"` where a `UserRole` is expected (e.g.
 a mock call site) — show the red squiggle and the exact compiler error.
@@ -90,12 +98,13 @@ export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 ```
 
 **Narration:**
-> "Same idea, slightly different technique. Instead of writing the union by hand,
-> PrismApp declares the allowed values once, as a `const` array, then derives the
-> type from it with `(typeof ARRAY)[number]`. Now the array of strings — the thing
-> your UI loops over to render a dropdown — and the type the compiler checks are
-> always in sync. Change the array, the type updates itself. One source of truth,
-> not two lists that can quietly drift apart."
+> "This is the same idea, with a slightly different technique.
+>
+> Instead of writing the union by hand, PrismApp declares the allowed values once, as a `const` array. Then it derives the type from that array with `(typeof ARRAY)[number]`.
+>
+> Now the array of strings and the type the compiler checks are always in sync. Your UI loops over that array to render a dropdown.
+>
+> Change the array, and the type updates itself. There is one source of truth. There are not two lists that can quietly drift apart."
 
 ---
 
@@ -105,12 +114,13 @@ export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 58–75), highlighting `parseUserRole(roleValue)`.
 
 **Narration:**
-> "Here's the payoff. Every protected route in this app calls something that
-> returns a `UserRole`, not a `string`. Every `if (role === "MANAGER")` check downstream
-> is comparing against one of exactly three known values — the compiler will tell
-> you if you typo it, and your editor will autocomplete the options for you. That's
-> the whole value of a domain type: it turns a class of bugs into something that
-> simply can't compile."
+> "Here is the payoff.
+>
+> Every protected route in this app calls something that returns a `UserRole`, not a `string`.
+>
+> Every `if (role === "MANAGER")` check downstream compares against one of exactly three known values. The compiler tells you if you make a typo. Your editor also autocompletes the options for you.
+>
+> That is the whole value of a domain type. It turns a class of bugs into code that simply cannot compile."
 
 ---
 
@@ -119,8 +129,9 @@ export type BookingStatus = (typeof BOOKING_STATUSES)[number];
 **Visual:** End card pointing to Episode 2.
 
 **Narration:**
-> "Next time: PrismApp writes almost all of its shapes as `type`, not `interface` —
-> except in exactly one place, where it has no choice. We'll look at why, next."
+> "Next time: PrismApp writes almost all of its shapes as `type`, not `interface`.
+>
+> There is exactly one place where it has no choice. We will look at why."
 
 ---
 

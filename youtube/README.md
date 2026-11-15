@@ -9,6 +9,19 @@ scripts for free public videos. They can share source facts (the `vault/` domain
 and the `course/00-intro/*` reference docs) but the *format* is different: shorter,
 punchier, camera/voice-first instead of slide-first.
 
+## Voice-over format
+
+Narration is written in short spoken sentences, for a presenter who is not reading
+in their first language.
+
+- A blank line (a `>` line inside a quoted narration block) means **pause and breathe**.
+- Lines inside one paragraph are short phrases that can be read in one breath.
+- Sentences are kept to about 20 words or fewer. One idea per sentence.
+- Em-dashes and parenthetical asides are avoided in narration, so the voice does not
+  have to drop and recover mid-sentence.
+- Technical terms (`$transaction`, `findMany`, `OVER` and so on) are never reworded.
+- The same convention applies to the narration and speaker notes in `course/`.
+
 ## What's in here
 
 | File | Video | Playlist |

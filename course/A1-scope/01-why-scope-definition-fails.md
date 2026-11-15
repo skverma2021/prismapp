@@ -13,13 +13,19 @@
 Two large words centered on a dark background: **SCOPE** and **CODE**. A line crosses out CODE; an arrow underlines SCOPE. Clean, minimal.
 
 **Narration:**
-When a software project goes over budget, misses its deadline, or gets rebuilt from scratch within two years, the post-mortem almost always points to the same two causes: the team built the wrong thing, or they built the right thing but kept changing what "right" meant.
+Sometimes a software project goes over budget. Sometimes it misses its deadline. Sometimes it is rebuilt from scratch within two years.
+
+The post-mortem almost always points to the same two causes.
+
+The team built the wrong thing. Or the team built the right thing, but kept changing what "right" meant.
 
 Neither of those is a coding problem. Both are scope problems.
 
-In this module we are going to look at how to define scope in a way that is precise enough to guide engineers, honest enough to set stakeholder expectations, and structured enough to survive the inevitable changes that come in every real project.
+In this module, we will learn how to define scope well.
 
-We will use a real application — PrismApp, a Society Management System built for a residential apartment complex — as our working example throughout.
+Good scope is precise enough to guide engineers. It is honest enough to set stakeholder expectations. And it is structured enough to survive the changes that come in every real project.
+
+We will use a real application as our working example. It is PrismApp, a Society Management System built for a residential apartment complex.
 
 **On-screen action / demo:**
 Open project root in VS Code. Show the top-level folder structure briefly — `app/`, `vault/`, `prisma/`. No deep dive yet.
@@ -40,13 +46,23 @@ Scope failure is more common than code failure — and more preventable.
 A single large document icon labelled "Requirements v1.0". Arrows pointing to it from multiple directions labelled: *Developer*, *Manager*, *Client*, *Tester*. A red stamp over it: OUTDATED.
 
 **Narration:**
-Most students are taught to write a Software Requirements Specification — an SRS — and treat it as the source of truth for the entire project.
+Most students learn to write a Software Requirements Specification. This is called an SRS.
 
-The problem is not with having a document. The problem is when one document tries to do three completely different jobs at the same time.
+Students then treat the SRS as the source of truth for the entire project.
 
-It tries to describe what the business absolutely cannot allow — rules like "a flat cannot have two owners at the same moment." It also tries to describe what the data looks like — entities, fields, relationships. And it tries to describe what features the product should have in version one.
+The problem is not the document itself. The problem is one document doing three different jobs at the same time.
 
-Each of those three things changes at a completely different rate. Mixing them in the same document means every time a feature changes — which happens constantly — you re-open the document, and you risk accidentally modifying the rules that should never change.
+First, it describes what the business can never allow. One example is the rule "a flat cannot have two owners at the same moment."
+
+Second, it describes what the data looks like. That means entities, fields, and relationships.
+
+Third, it describes which features the product should have in version one.
+
+Each of these three things changes at a different rate.
+
+Features change constantly. So you re-open the document again and again.
+
+Each time, you risk accidentally changing the rules that should never change.
 
 **On-screen action / demo:**
 None — static concept slide.
@@ -70,15 +86,23 @@ A horizontal timeline labelled "Project lifetime" at the top. Three rows, each w
 - Row 3 (green): **Feature Vision** — frequent peaks and troughs
 
 **Narration:**
-Think of requirements in three separate buckets, each with a different rate of change.
+Think of requirements as three separate buckets. Each bucket has a different rate of change.
 
-The first bucket is domain rules. These are the invariants — the things the business can never allow, regardless of what feature is being built. "A unit cannot have two active owners." "A contribution record cannot be deleted once posted." These do not change between sprints.
+The first bucket is domain rules. These are the invariants. They are the things the business can never allow, whatever feature we build.
 
-The second bucket is entity contracts — what data exists, what it is called, how entities relate to each other. These change occasionally: a new field gets added, a relationship is refactored. But they are far more stable than features.
+"A unit cannot have two active owners." "A contribution record cannot be deleted once posted." These rules do not change between sprints.
 
-The third bucket is the feature vision — what the application does for users in a given version. This changes constantly. Priorities shift, customers ask for new things, competitors release features.
+The second bucket is entity contracts. They describe what data exists, what it is called, and how entities relate to each other.
 
-Separating these three buckets is the foundational discipline of good requirements work. The rest of this module will show you exactly how PrismApp does it.
+These change occasionally. A new field is added. A relationship is refactored. But they are far more stable than features.
+
+The third bucket is the feature vision. It describes what the application does for users in a given version.
+
+This bucket changes constantly. Priorities shift. Customers ask for new things. Competitors release new features.
+
+Separating these three buckets is the foundation of good requirements work.
+
+The rest of this module shows exactly how PrismApp does it.
 
 **On-screen action / demo:**
 None — static diagram slide.

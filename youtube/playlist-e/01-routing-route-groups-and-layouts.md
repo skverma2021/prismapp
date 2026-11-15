@@ -26,10 +26,14 @@
 **Visual:** Talking head, `app/` folder tree visible behind.
 
 **Narration:**
-> "This app has a public sign-in page and a whole authenticated dashboard, sharing
-> one Next.js project. Neither needs to know about the other's layout. Here's the
-> folder structure that makes that possible — and the one detail about it that
-> genuinely surprises people the first time they see it."
+> "This app has a public sign-in page. It also has a whole authenticated dashboard.
+> Both live in one Next.js project.
+>
+> Neither one needs to know about the other's layout.
+>
+> Here is the folder structure that makes that possible.
+>
+> And there is one detail about it that surprises people the first time they see it."
 
 ---
 
@@ -53,11 +57,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 ```
 
 **Narration:**
-> "Every single route in this app passes through this file — it's an `async`
-> Server Component, so it can `await getServerAuthSession()` directly, on the
-> server, before any HTML reaches the browser, and hand the result to a client-side
-> session provider. This is the one layout everything shares: fonts, the `<html>`
-> tag, and the session."
+> "Every single route in this app passes through this file.
+>
+> It is an `async` Server Component. So it can `await getServerAuthSession()` directly, on the server, before any HTML reaches the browser.
+>
+> Then it hands the result to a client-side session provider.
+>
+> This is the one layout everything shares. It holds the fonts, the `<html>` tag, and the session."
 
 ---
 
@@ -67,13 +73,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 side by side, with their resulting URLs `/` and `/home`.
 
 **Narration:**
-> "Here's the surprising part. `(public)` and `(dashboard)` are folders — but the
-> parentheses tell Next.js to treat them as *route groups*: organizational folders
-> that group routes together without appearing in the URL at all.
-> `app/(dashboard)/home/page.tsx` serves `/home`, not `/(dashboard)/home`. The
-> parentheses exist purely so this codebase can attach a *different layout* to
-> everything inside `(dashboard)` versus everything inside `(public)`, without that
-> grouping leaking into the URLs users actually see."
+> "Here is the surprising part.
+>
+> `(public)` and `(dashboard)` are folders. But the parentheses tell Next.js to treat them as *route groups*.
+>
+> A route group organizes routes together. It does not appear in the URL at all.
+>
+> So `app/(dashboard)/home/page.tsx` serves `/home`, not `/(dashboard)/home`.
+>
+> The parentheses exist for one reason. They let this codebase attach a *different layout* to everything inside `(dashboard)`.
+> It can attach another layout to everything inside `(public)`.
+>
+> And that grouping never leaks into the URLs users see."
 
 ---
 
@@ -94,13 +105,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
 ```
 
 **Narration:**
-> "Every page under `(dashboard)` — blocks, units, contributions, all of it —
-> nests inside this layout, which nests inside the root layout. And this layout
-> does something the root layout doesn't: it calls `requireServerAppSession` before
-> rendering anything. No dashboard page has to remember to check auth itself —
-> the layout it's nested inside already refuses to render without a valid,
-> allowed-role session. We'll look at exactly what that function does in Episode
-> 4."
+> "Every page under `(dashboard)` nests inside this layout. That includes blocks, units, contributions, and all the rest.
+>
+> This layout nests inside the root layout.
+>
+> And it does something the root layout does not do. It calls `requireServerAppSession` before rendering anything.
+>
+> So no dashboard page has to remember to check auth itself.
+>
+> The layout already refuses to render without a valid session and an allowed role.
+>
+> We will look at exactly what that function does in Episode 4."
 
 ---
 
@@ -110,12 +125,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
 logic reading `searchParams`.
 
 **Narration:**
-> "`(public)/page.tsx` sits directly under the root layout with no extra gate — it
-> *is* the sign-in page, so requiring a session first would make no sense. It even
-> reads `searchParams.auth` to show a banner like 'sign in to continue' — that's
-> the other end of the redirect we just saw in `DashboardLayout`. Same root
-> layout, two folders, two completely different rules about who gets in, and
-> neither folder's name shows up in a single URL."
+> "`(public)/page.tsx` sits directly under the root layout, with no extra gate.
+>
+> It *is* the sign-in page. So requiring a session first would make no sense.
+>
+> It also reads `searchParams.auth` to show a banner like 'sign in to continue'. That is the other end of the redirect we just saw in `DashboardLayout`.
+>
+> So we have the same root layout, and two folders. Each folder has completely different rules about who gets in.
+>
+> And neither folder's name shows up in a single URL."
 
 ---
 
@@ -124,9 +142,12 @@ logic reading `searchParams`.
 **Visual:** End card pointing to Episode 2.
 
 **Narration:**
-> "Notice that both layouts we looked at are `async function` components with no
-> `"use client"` at the top — they run only on the server. Most of the actual
-> dashboard pages they wrap are the opposite. That boundary is next."
+> "Notice that both layouts we looked at are `async function` components.
+> Neither has `"use client"` at the top. So they run only on the server.
+>
+> Most of the dashboard pages they wrap are the opposite.
+>
+> That boundary is next."
 
 ---
 

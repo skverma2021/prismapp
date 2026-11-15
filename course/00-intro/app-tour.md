@@ -22,10 +22,13 @@ The narration script is the exact read — keep the tone brisk, confident, not s
 Browser is at the `/` public route. The login form is centered. Email field, password field, Sign In button.
 
 **Narration:**
-"This is PrismApp — a society management platform we'll build together from scratch.
+"This is PrismApp. It is a society management platform that we will build together from scratch.
+
 It handles blocks, units, residents, monthly contributions, and complaints for a residential society.
-Let's take a quick walk through the finished product before we dive into the code.
-I'll log in as the Society Admin."
+
+Let us take a quick walk through the finished product before we dive into the code.
+
+I will log in as the Society Admin."
 
 [TYPE into email field. CLICK Sign In. Don't show the password.]
 
@@ -41,8 +44,11 @@ The current user's name and role are visible in the nav header.
 
 **Narration:**
 "The home page is a role-aware launchpad. A Society Admin sees everything.
-A Read-Only user sees the same cards but cannot access mutation screens.
+
+A Read-Only user sees the same cards. But a Read-Only user cannot open the mutation screens.
+
 The same session JWT drives both the navigation and the API access checks.
+
 Let me show each module."
 
 **Course connection:** Section C — roles and auth boundary, server-side role guards.
@@ -56,9 +62,11 @@ A paginated table with columns: Description, Created At. A search box and sort s
 Show at least 3 blocks in the table (e.g., Block A, Block B, Tower 1).
 
 **Narration:**
-"Blocks are the top-level physical units — a wing, a tower, a phase.
+"Blocks are the top-level physical units. A block can be a wing, a tower, or a phase.
+
 Every unit belongs to a block. The list supports search and pagination.
-This is the simplest module in the project — which is why we build it first."
+
+This is the simplest module in the project. That is why we build it first."
 
 **Course connection:** Section D — list pattern (`$transaction([findMany, count])`), browse UI, `useBrowseState`.
 
@@ -70,9 +78,13 @@ This is the simplest module in the project — which is why we build it first."
 Type a block name in the input field. Click Create. The new row appears at the top of the table without a page reload.
 
 **Narration:**
-"Creating a block posts to `/api/blocks`. The server validates the input, writes to PostgreSQL, records an audit event, and returns the new row.
-The client prepends it to the list — no page reload needed.
-Notice: the URL didn't change."
+"Creating a block posts to `/api/blocks`.
+
+The server validates the input. It writes to PostgreSQL. It records an audit event. Then it returns the new row.
+
+The client adds the new row to the top of the list. No page reload is needed.
+
+Notice that the URL did not change."
 
 **Course connection:** Section D — `createBlock` service, `useCrudActions.create()`, optimistic local state update.
 
@@ -85,8 +97,9 @@ Show the block filter dropdown — select "Block A". The table updates to show o
 Columns: Unit (number), Block, Sq Ft, Inception Date.
 
 **Narration:**
-"Units belong to blocks. Each unit has a square footage value — this is used in contribution calculations later.
-The block filter is reflected in the URL, so this view is bookmarkable and shareable."
+"Units belong to blocks. Each unit has a square footage value. Later, we use it in contribution calculations.
+
+The block filter is reflected in the URL. So this view can be bookmarked and shared."
 
 **Course connection:** Section B — ERD (Unit → Block FK), Section D — URL-synced filter state.
 
@@ -98,9 +111,11 @@ The block filter is reflected in the URL, so this view is bookmarkable and share
 Columns: Name, Mobile, Gender. A search box. Show 4–5 individuals.
 
 **Narration:**
-"Individuals are the people in the system — owners, residents, payers.
-One person can be an owner of one unit and a resident of another — those are separate timeline records.
-A person is not tied to a unit; the unit-person relationship is in ownerships and residencies."
+"Individuals are the people in the system. They can be owners, residents, or payers.
+
+One person can own one unit and live in another. Those are separate timeline records.
+
+A person is not tied to a unit. The link between a unit and a person lives in ownerships and residencies."
 
 **Course connection:** Section B — ERD (Individual entity, no direct FK to Unit), Section A — scope (owner ≠ resident distinction).
 
@@ -114,8 +129,11 @@ If possible, show two consecutive entries showing an ownership transfer.
 
 **Narration:**
 "Ownerships are temporal records. A unit can have at most one active owner at a time.
-If a unit changes hands, the previous ownership gets an end date, and a new record begins.
+
+If a unit changes hands, the previous ownership gets an end date. Then a new record begins.
+
 The system prevents overlapping ownership dates at the database transaction level.
+
 This is one of the most technically interesting parts of the project."
 
 **Course connection:** Section B — temporal modeling (open-ended date ranges), Section D — `db.$transaction(async tx => {...})` overlap check.
@@ -129,8 +147,11 @@ In the create form, enter a start date that falls inside an existing active owne
 Show the red error notice: "An ownership record already exists for this unit during the requested period."
 
 **Narration:**
-"The system rejects the overlap. Not just a UI check — the server validates inside a serializable transaction.
-Even two concurrent requests cannot both slip through. We'll see exactly how that works in Section D."
+"The system rejects the overlap. This is not just a UI check. The server validates inside a serializable transaction.
+
+Even two concurrent requests cannot both succeed.
+
+We will see exactly how that works in Section D."
 
 **Course connection:** Section D — `ensureNoOwnershipOverlap` inside `$transaction(async tx => {...})`.
 
@@ -143,9 +164,13 @@ Columns: Description, Pay Unit (Per Sq Ft / Per Person / Lump Sum), Period (Mont
 Show 3–4 heads: e.g., Maintenance Charges (Per Sq Ft, Monthly), Gym Membership (Per Person, Yearly), Club Membership (Lump Sum, Yearly).
 
 **Narration:**
-"Contribution heads define what residents pay and how the amount is calculated.
-'Per Sq Ft' multiplies the rate by the unit's area. 'Per Person' multiplies by resident count. 'Lump Sum' charges a flat amount.
-All three resolve to the same formula: quantity × rate. That's a deliberate design choice — it keeps reports simple."
+"Contribution heads define what residents pay. They also define how the amount is calculated.
+
+'Per Sq Ft' multiplies the rate by the area of the unit. 'Per Person' multiplies the rate by the resident count. 'Lump Sum' charges a flat amount.
+
+All three use the same formula: quantity × rate.
+
+That is a deliberate design choice. It keeps reports simple."
 
 **Course connection:** Section B — Contribution Head entity, pay-unit enum. Section A — uniform formula design decision.
 
@@ -158,9 +183,13 @@ Show two rate rows with different `effectiveFrom` dates — demonstrating rate h
 Highlight that older rate rows cannot be edited.
 
 **Narration:**
-"Rates are append-only. When the maintenance charge goes up in April, you add a new rate — you don't overwrite the old one.
-Contributions posted before the change are already locked to the rate that was current at the time.
-Financial records don't change retroactively. This is a non-negotiable domain rule."
+"Rates are append-only. Suppose the maintenance charge goes up in April. You add a new rate. You do not overwrite the old one.
+
+Contributions posted before the change are already locked to the rate that was current at that time.
+
+Financial records do not change retroactively.
+
+This is a non-negotiable domain rule."
 
 **Course connection:** Section A — immutability scope, Section B — ContributionRate entity with `effectiveFrom`.
 
@@ -174,9 +203,11 @@ Select a unit and a monthly head. The month grid shows Jan–Dec with status bad
 Select two unpaid months. Show the calculated amount appearing at the bottom.
 
 **Narration:**
-"This is the contribution capture screen. Select a unit and a head, and the system shows the payment ledger for the year.
-Paid months are locked — you can't record a payment twice for the same unit, head, and period.
-Select the months you want to post, review the calculated amount, and submit."
+"This is the contribution capture screen. Select a unit and a head. The system then shows the payment ledger for the year.
+
+Paid months are locked. You cannot record a payment twice for the same unit, head, and period.
+
+Select the months you want to post. Review the calculated amount. Then submit."
 
 **Course connection:** Section D — complex write (`$transaction` for duplicate prevention), Section B — header-detail pattern.
 
@@ -189,9 +220,11 @@ The submitted months flip from yellow "Unpaid" to green "Paid".
 A transaction reference ID is visible (e.g., TXN-2026-00042).
 
 **Narration:**
-"The transaction is written atomically. The system checks for duplicates and posts all selected months as one logical event.
+"The transaction is written atomically. The system checks for duplicates. Then it posts all selected months as one logical event.
+
 The transaction ID ties the header to all the detail rows.
-Once posted, these records cannot be edited or deleted — only corrected with a compensating entry."
+
+Once posted, these records cannot be edited or deleted. They can only be corrected with a compensating entry."
 
 **Course connection:** Section D — immutability rule enforcement, `fromUnknownError` mapping P2002 to CONFLICT.
 
@@ -206,8 +239,10 @@ Show the `paidMonthsCount` and `unpaidMonthsCount` summary columns on the right.
 
 **Narration:**
 "This is the management report. One page shows the payment status of every unit for an entire year.
-Filter by block to see a wing at a time. Export to CSV to share with the committee.
-The matrix query is a single SQL join — no application-level branching, because all heads use the same `quantity × rate` formula."
+
+Filter by block to see one wing at a time. Export to CSV to share with the committee.
+
+The matrix query is a single SQL join. There is no application-level branching. All heads use the same `quantity × rate` formula."
 
 **Course connection:** Section B — reporting motivation for uniform formula. Section D — report API and pagination.
 
@@ -221,9 +256,11 @@ Apply a filter by a date range and a block. Show the filtered result.
 Scroll to the bottom to show total amount.
 
 **Narration:**
-"The transaction report is the audit-friendly view — every posted contribution with full context.
+"The transaction report is the audit-friendly view. It shows every posted contribution with full context.
+
 Filter by date, block, unit, head, or period. Export to CSV.
-The 'Posted By' column records who recorded the payment — that identity comes from the JWT, not a form field."
+
+The 'Posted By' column records who recorded the payment. That identity comes from the JWT, not from a form field."
 
 **Course connection:** Section C — auth boundary (actor identity from JWT). Section D — pagination, CSV export.
 
@@ -237,9 +274,11 @@ Status badges are visible: Open (amber), In Progress (indigo), Resolved (emerald
 Show the create form at the bottom: title, category dropdown, priority dropdown, anonymous toggle.
 
 **Narration:**
-"The Complaint Management Module — added after the contribution module was stable.
-Residents submit complaints, which get a ticket ID, category, priority, and SLA clock.
-Notice the 'Anonymous' toggle — a Read-Only session sees 'Anonymous' in the reporter column when that flag is set."
+"This is the Complaint Management Module. We added it after the contribution module was stable.
+
+Residents submit complaints. Each complaint gets a ticket ID, a category, a priority, and an SLA clock.
+
+Notice the 'Anonymous' toggle. When that flag is set, a Read-Only session sees 'Anonymous' in the reporter column."
 
 **Course connection:** Section A — scope and extensibility (CMM added as a standalone module without reworking existing code). Section D — module structure.
 
@@ -252,9 +291,13 @@ Rows showing: Timestamp, Action (e.g., BLOCK_CREATED, OWNERSHIP_TRANSFERRED), En
 Click on one row to expand the payload — show the `before` and `after` JSON diff for an update operation.
 
 **Narration:**
-"Every mutation writes to the audit log. Block created, ownership transferred, contribution posted.
-The payload includes a before/after diff for updates — so you can see exactly what changed, when, and by whom.
-This is the financial-grade auditability requirement. It's baked in from the start, not bolted on later."
+"Every mutation writes to the audit log. Block created. Ownership transferred. Contribution posted.
+
+For updates, the payload includes a before and after diff. So you can see exactly what changed, when, and by whom.
+
+This is the financial-grade auditability requirement.
+
+It is built in from the start. It is not added later."
 
 **Course connection:** Section D — `writeAuditLog` called after every service write.
 
@@ -267,9 +310,11 @@ A list of users with columns: Name, Email, Role (SOCIETY_ADMIN / MANAGER / READ_
 Show the create form: email, display name, role selector, password (hashed on creation).
 
 **Narration:**
-"Access control is built in. Three roles: Society Admin, Manager, and Read-Only.
-A Read-Only user can see every list and report but cannot post contributions or change master data.
-User accounts are stored in PostgreSQL — no external auth provider required for V1."
+"Access control is built in. There are three roles: Society Admin, Manager, and Read-Only.
+
+A Read-Only user can see every list and report. But a Read-Only user cannot post contributions or change master data.
+
+User accounts are stored in PostgreSQL. Version 1 needs no external auth provider."
 
 **Course connection:** Section C — role model, bcryptjs password hashing. Section A — roles scope decision.
 
@@ -282,10 +327,13 @@ Navigate to `/contributions` — show the page with forms and action buttons abs
 Navigate to `/blocks` — show the table is visible but the Create form is absent.
 
 **Narration:**
-"The UI respects roles — buttons and forms are hidden for Read-Only sessions.
-But the real enforcement is server-side. If a Read-Only user calls `POST /api/blocks` directly, they get a 403.
-UI gating is convenience; backend role checks are the actual security boundary.
-That distinction matters — and we'll implement it properly in Section C."
+"The UI respects roles. Buttons and forms are hidden for Read-Only sessions.
+
+But the real enforcement is server-side. Suppose a Read-Only user calls `POST /api/blocks` directly. They get a 403.
+
+UI gating is a convenience. Backend role checks are the actual security boundary.
+
+That distinction matters. We will implement it properly in Section C."
 
 **Course connection:** Section C — `requireMutationRole` in route handlers, `requireServerAppSession` in layouts.
 
@@ -297,10 +345,15 @@ That distinction matters — and we'll implement it properly in Section C."
 Optionally, show a simple graphic: "A → Scope → B → Data Model → C → Technology → D → CRUD → E → Hardening"
 
 **Narration:**
-"That's PrismApp. You just saw the full working application.
-In this course, you'll build every screen and every API from an empty Next.js project.
-We start with the scope — what the system needs to do and why. Then the data model. Then the technology choices and why they were made. Then the implementation. Then hardening for production.
-Every decision you saw in that tour has a reason. By the end, you'll know all of them."
+"That is PrismApp. You just saw the full working application.
+
+In this course, you will build every screen and every API from an empty Next.js project.
+
+We start with the scope. What the system needs to do, and why. Then the data model. Then the technology choices, and why we made them. Then the implementation. Then hardening for production.
+
+Every decision you saw in that tour has a reason.
+
+By the end, you will know all of them."
 
 ---
 

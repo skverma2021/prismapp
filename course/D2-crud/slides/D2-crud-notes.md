@@ -13,15 +13,19 @@
 
 Two states for filters. Draft and applied.
 
-The user types "Block" in the search box. The draft filter updates immediately. The table does not refetch — because the data-loading `useEffect` depends on `appliedFilters`, not `filters`.
+The user types "Block" in the search box. The draft filter updates immediately. The table does not refetch.
 
-The user clicks Apply. `applyFilters()` copies draft → applied, increments `reloadKey`, and sets page to 1. The `useEffect` fires. The fetch runs.
+The reason is that the data-loading `useEffect` depends on `appliedFilters`, not `filters`.
 
-If the user types something and then clicks Reset instead, the draft is discarded. The table stays at the last applied state.
+The user clicks Apply. `applyFilters()` copies draft to applied. It also increments `reloadKey` and sets page to 1. Then the `useEffect` fires and the fetch runs.
 
-`pushQueryState` is called during Apply, writing the current filters to the URL. Browser back/forward navigates between filter states. Bookmarks work.
+Now suppose the user types something and then clicks Reset instead. The draft is discarded. The table stays at the last applied state.
 
-The hook is initialized from `useSearchParams()`. If the URL has `?q=Block+A&sortBy=createdAt`, the hook starts with those values — so a bookmarked URL shows the correct data immediately.
+`pushQueryState` is called during Apply. It writes the current filters to the URL. Browser back and forward then navigate between filter states. Bookmarks work.
+
+The hook is initialized from `useSearchParams()`. If the URL has `?q=Block+A&sortBy=createdAt`, the hook starts with those values.
+
+So a bookmarked URL shows the correct data immediately.
 
 **Takeaway: draft = what the user is typing. Applied = what the last search used. They are deliberately separate.**
 
@@ -33,13 +37,17 @@ The hook is initialized from `useSearchParams()`. If the URL has `?q=Block+A&sor
 
 Walk through the four components.
 
-`BrowseFilterBar` — takes the draft values and the Apply/Reset callbacks. The sort selector uses `sortOptions` defined in the page component — not in the hook. This keeps display labels out of the shared hook.
+First, `BrowseFilterBar`. It takes the draft values and the Apply and Reset callbacks.
 
-`DataTable` — `rowKey="id"`. Always use the entity's primary key. Without a stable key, React re-mounts every row on re-render. The table handles `loading` (skeleton) and `loadError` (inline error message) internally. The page component doesn't conditionally render the table.
+The sort selector uses `sortOptions`. These are defined in the page component, not in the hook. This keeps display labels out of the shared hook.
 
-`PaginationControls` — takes `page`, `totalPages`, `totalItems`, `onPageChange`. Renders prev/next buttons and a page indicator.
+Second, `DataTable`. It uses `rowKey="id"`. Always use the primary key of the entity. Without a stable key, React re-mounts every row on re-render.
 
-`NoticeStack` — takes `submitError` and `submitSuccess` from the browse state. Shows colored banners. These are set by `useCrudActions` after mutations.
+The table handles `loading`, which is a skeleton, and `loadError`, which is an inline error message. It does this internally. So the page component does not conditionally render the table.
+
+Third, `PaginationControls`. It takes `page`, `totalPages`, `totalItems`, and `onPageChange`. It renders previous and next buttons and a page indicator.
+
+Fourth, `NoticeStack`. It takes `submitError` and `submitSuccess` from the browse state. It shows colored banners. `useCrudActions` sets these after mutations.
 
 **Takeaway: four components, same composition on every browse page. Learn one, know all.**
 
@@ -51,11 +59,13 @@ Walk through the four components.
 
 `useCrudActions` is initialized with the submit feedback callbacks from `useBrowseState`. This wires the two hooks together.
 
-On a successful create, `onSuccess` receives the new record. The page component prepends it to `state.items` and increments `state.totalItems`. No network refetch. The UI updates immediately.
+On a successful create, `onSuccess` receives the new record. The page component adds it to the start of `state.items` and increments `state.totalItems`.
 
-On a successful delete, `onSuccess` filters the deleted ID out of `state.items` and decrements `totalItems`.
+There is no network refetch. The UI updates immediately.
 
-`deleteLoadingId` tracks which row is being deleted. Only that row's delete button spins. The rest of the table is interactive.
+On a successful delete, `onSuccess` filters the deleted ID out of `state.items`. It also decrements `totalItems`.
+
+`deleteLoadingId` tracks which row is being deleted. Only the delete button of that row spins. The rest of the table stays interactive.
 
 On failure, `setSubmitError` is called. The `NoticeStack` shows the red banner. The list is not modified.
 
@@ -69,13 +79,15 @@ On failure, `setSubmitError` is called. The `NoticeStack` shows the red banner. 
 
 [PAUSE: give students time to write their plan]
 
-Don't open any code files yet. Write down: the Prisma model fields, the service functions you need, the route files you'll create, and the UI components you'll use.
+Do not open any code files yet.
+
+Write down these four things. The Prisma model fields. The service functions you need. The route files you will create. The UI components you will use.
 
 [WAIT — then show the task description and folder structure]
 
-ParkingSpace module. Belongs to a block. Space number, type (COVERED/OPEN), optional note, optional unit assignment.
+The module is ParkingSpace. It belongs to a block. It has a space number, a type (COVERED or OPEN), an optional note, and an optional unit assignment.
 
-The folder structure is the same as every other module: `src/modules/parking-spaces/`, `app/api/parking-spaces/`, `app/(dashboard)/parking-spaces/`.
+The folder structure is the same as every other module. It is `src/modules/parking-spaces/`, `app/api/parking-spaces/`, and `app/(dashboard)/parking-spaces/`.
 
 **Takeaway: the structure is identical to every module in the codebase. The content is different. That's the point of the modular monolith.**
 
@@ -85,11 +97,15 @@ The folder structure is the same as every other module: `src/modules/parking-spa
 
 [WALK THROUGH: key decisions, not the full code]
 
-The create service doesn't need an application-level uniqueness check for `[blockId, spaceNumber]`. The `@@unique` constraint in the schema handles it. Prisma throws P2002. `fromUnknownError` maps to CONFLICT. Zero extra code.
+The create service does not need an application-level uniqueness check for `[blockId, spaceNumber]`.
 
-The unit assignment rule ("at most one unit at a time") is a check-then-write. It needs `$transaction(async tx => {...})`. This is the only part of the module that requires the callback form of transaction.
+The `@@unique` constraint in the schema handles it. Prisma throws P2002. `fromUnknownError` maps it to CONFLICT. We write zero extra code.
 
-The list page uses the same four components. `useBrowseState` config adds a `type` filter. `sortOptions` includes `spaceNumber`.
+The unit assignment rule is "at most one unit at a time." This rule is a check-then-write. It needs `$transaction(async tx => {...})`.
+
+This is the only part of the module that requires the callback form of transaction.
+
+The list page uses the same four components. The `useBrowseState` config adds a `type` filter. `sortOptions` includes `spaceNumber`.
 
 **Takeaway: unique constraints in the schema save application-level checks. Only behavioral rules (check-then-write) require explicit transaction logic.**
 
@@ -99,14 +115,24 @@ The list page uses the same four components. `useBrowseState` config adds a `typ
 
 [SHOW: six-operation summary table]
 
-Six operations. List, Create, Get, Update, Delete, Complex Write. Every module is built from these six.
+Six operations. List, Create, Get, Update, Delete, and Complex Write. Every module is built from these six.
 
-The table maps each operation to its server pattern and its client pattern. Memorize this table and you can build a module in any framework — the operations are universal, only the function names change.
+The table maps each operation to its server pattern and its client pattern. Memorize this table and you can build a module in any framework.
 
-One note on what's missing from the table: business logic. Business logic is NOT one of the six operations. It lives inside the service functions that the operations call. The six patterns are plumbing. Business logic is domain knowledge.
+The operations are universal. Only the function names change.
+
+One note on what is missing from the table. It is business logic.
+
+Business logic is NOT one of the six operations. It lives inside the service functions that the operations call.
+
+The six patterns are plumbing. Business logic is domain knowledge.
 
 [FINAL CHALLENGE]
 
-Your test: build the parking space module without looking at existing module files. If you can do it from memory, you have internalized the pattern.
+Here is your test. Build the parking space module without looking at existing module files.
 
-**Section D complete. Section E — Hardening — covers what separates a working prototype from a production deployment: audit logging verification, performance indexes, and observability with Sentry.**
+If you can do it from memory, you have internalized the pattern.
+
+**Section D complete.
+
+Section E, Hardening, covers what separates a working prototype from a production deployment. It covers audit logging verification, performance indexes, and observability with Sentry.**

@@ -26,11 +26,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Next.js has Server Actions — form submissions that run a function on the
-> server without you writing a fetch call by hand. This app doesn't use them. Its
-> forms are plain controlled inputs, submitting through `fetch` to the Route
-> Handlers we just saw. Let's see why that's a reasonable choice here, not an
-> oversight."
+> "Next.js has Server Actions. These are form submissions that run a function on the server. You do not write a fetch call by hand.
+>
+> This app does not use them. Its forms are plain controlled inputs. They submit through `fetch` to the Route Handlers we just saw.
+>
+> Let us see why that is a reasonable choice here. It is not an oversight."
 
 ---
 
@@ -47,10 +47,11 @@ const [createDescription, setCreateDescription] = useState("");
 ```
 
 **Narration:**
-> "The create field is an ordinary controlled input — its value lives in
-> `useState`, updated on every keystroke. Nothing Next.js-specific here at all;
-> this is just React. The Next.js-specific part is what happens next, when you
-> click 'Create.'"
+> "The create field is an ordinary controlled input.
+>
+> Its value lives in `useState`. It updates on every keystroke. There is nothing Next.js-specific here at all. This is just React.
+>
+> The Next.js-specific part is what happens next, when you click 'Create.'"
 
 ---
 
@@ -96,13 +97,15 @@ const create = useCallback(async <T,>(options: CreateOptions<T>) => {
 ```
 
 **Narration:**
-> "`handleCreate` doesn't call `fetch` directly — it calls `crud.create`, a generic
-> function from `useCrudActions` that every master-data page in this app shares.
-> It POSTs, parses the response as an `ApiEnvelope<T>` — Playlist C's discriminated
-> union, again — throws a readable error if `payload.ok` is false, and otherwise
-> calls back into the page's own `onSuccess` with fully-typed data. One hook, one
-> fetch implementation, reused by every create button in the app instead of
-> being rewritten per page."
+> "`handleCreate` does not call `fetch` directly. It calls `crud.create`.
+>
+> That is a generic function from `useCrudActions`. Every master-data page in this app shares it.
+>
+> It sends a POST. It parses the response as an `ApiEnvelope<T>`. This is the discriminated union from Playlist C, again.
+>
+> If `payload.ok` is false, it throws a readable error. Otherwise it calls back into the page's own `onSuccess` with fully-typed data.
+>
+> So there is one hook and one fetch implementation. Every create button in the app reuses it. Nobody rewrites it per page."
 
 ---
 
@@ -112,26 +115,30 @@ const create = useCallback(async <T,>(options: CreateOptions<T>) => {
 resetting the page to 1, clearing the search query, invalidating a lookup cache.
 
 **Narration:**
-> "`onSuccess` isn't just a success message. It resets the form, jumps the list
-> back to page 1 so the new row is visible, clears any active search filter that
-> might hide it, and calls `invalidateBlockDependentLookups()` — because other
-> screens cache a dropdown of blocks, and this new block needs to show up there
-> too. All of that is page-specific business logic, deliberately kept out of the
-> shared hook — `useCrudActions` only knows how to make the request and report
-> success or failure."
+> "`onSuccess` is not just a success message.
+>
+> It resets the form. It jumps the list back to page 1, so the new row is visible. It clears any active search filter that might hide the row.
+>
+> And it calls `invalidateBlockDependentLookups()`. Other screens cache a dropdown of blocks, and this new block needs to show up there too.
+>
+> All of that is page-specific business logic. It is deliberately kept out of the shared hook.
+>
+> `useCrudActions` only knows how to make the request and report success or failure."
 
 ---
 
 ## Scene 4 — Why not a Server Action here (3:45–4:45)
 
 **Narration (talking head, no new code):**
-> "A Server Action would let this skip the explicit `fetch` and envelope-parsing
-> entirely. This app doesn't use them, for a consistency reason: every mutation
-> already goes through a Route Handler, because some of those same endpoints also
-> need to be callable directly — by scripts, by future integrations, by the
-> test scripts in `scripts/test-*.mjs`. Keeping one API surface, hit the same way
-> by the UI and by anything else, was worth the extra explicitness of writing the
-> `fetch` call out — even generically, once, in a shared hook."
+> "A Server Action would let this skip the explicit `fetch` and the envelope parsing.
+>
+> This app does not use them, and the reason is consistency.
+>
+> Every mutation already goes through a Route Handler. Some of those same endpoints must also be callable directly. Scripts can call them. Future integrations can call them. So can the test scripts in `scripts/test-*.mjs`.
+>
+> We keep one API surface. The UI and everything else hit it the same way.
+>
+> That was worth the extra work of writing the `fetch` call out. We write it only once, in a shared hook."
 
 ---
 
@@ -140,8 +147,11 @@ resetting the page to 1, clearing the search query, invalidating a lookup cache.
 **Visual:** End card pointing to Episode 6.
 
 **Narration:**
-> "`useCrudActions` handles writes. Reading the list itself — pagination,
-> sorting, filters synced to the URL — is a second hook, and that's next."
+> "`useCrudActions` handles writes.
+>
+> Reading the list itself is handled by a second hook. That includes pagination, sorting, and filters synced to the URL.
+>
+> That is next."
 
 ---
 

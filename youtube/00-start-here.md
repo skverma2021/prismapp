@@ -21,10 +21,13 @@
 **Visual:** Talking head, simple background (or softly blurred code editor).
 
 **Narration:**
-> "Most coding channels teach you a framework on a toy app. This channel does
-> something different: we take a real, messy, real-world problem, and build the
-> actual application — end to end — so you learn how to *engineer* software, not
-> just how to type it."
+> "Most coding channels teach you a framework on a toy app.
+>
+> This channel does something different.
+>
+> We take a real, messy problem. And we build the actual application, from start to finish.
+>
+> So you learn how to *engineer* software, not just how to type it."
 
 ---
 
@@ -34,13 +37,17 @@
 thumbnails, then a hard cut to a real, slightly messy requirements document on screen.
 
 **Narration:**
-> "Tutorials are great for learning syntax. They're not great at teaching you the
-> things that actually make software projects succeed or fail: reading a vague
-> requirement and finding the business rule hiding inside it. Designing data that
-> won't fall apart when the real world gets messy — people move, ownerships change,
-> payments get corrected. And proving, not assuming, that what you built actually
-> behaves correctly. That's engineering. It's a different skill from writing code,
-> and it's the one this channel is built around."
+> "Tutorials are great for learning syntax.
+>
+> They are not great at teaching the things that make software projects succeed or fail.
+>
+> One: reading a vague requirement and finding the business rule inside it.
+>
+> Two: designing data that still works when the real world gets messy. People move. Ownerships change. Payments get corrected.
+>
+> Three: proving, not assuming, that what you built behaves correctly.
+>
+> That is engineering. It is a different skill from writing code. And it is the skill this channel is built around."
 
 ---
 
@@ -51,13 +58,17 @@ blocks list, units list, an ownership timeline, a contribution payment screen, a
 complaint ticket. Fast-paced, like a product demo reel.
 
 **Narration:**
-> "The project we're building together is a Society Management System — the kind of
-> software that runs an apartment complex or gated community. Blocks, units, owners,
-> residents. Monthly maintenance payments with real financial rules. Complaints that
-> move through a real workflow from 'open' to 'resolved'. It's not glamorous, and
-> that's exactly the point — it's realistic. It has relationships, history, money,
-> and rules that have to hold up over time. That's what makes it worth building on
-> camera instead of a toy app."
+> "The project we are building together is a Society Management System.
+>
+> This is the kind of software that runs an apartment complex or a gated community.
+>
+> It has blocks, units, owners, and residents. It has monthly maintenance payments with real financial rules. And it has complaints that move through a real workflow, from 'open' to 'resolved'.
+>
+> It is not glamorous. That is exactly the point, because it is realistic.
+>
+> It has relationships, history, money, and rules that must hold up over time.
+>
+> That is why it is worth building on camera instead of a toy app."
 
 ---
 
@@ -68,14 +79,19 @@ time:
 `Problem → Concept → Technology → Implementation → Working Feature`
 
 **Narration:**
-> "Every topic on this channel follows the same pattern. We start with a real problem
-> the application has — say, 'a unit needs exactly one owner at all times, even
-> before it's ever sold.' Then we understand the concept behind it. Then we look at
-> what technology helps us solve it — a database constraint, a transaction, a
-> validation rule. Then we implement it. And only then do we call it done, because we
-> can show it actually working. Problem first. Syntax last. That order is
-> deliberate — it's the order real engineering happens in, and it's the opposite of
-> how most tutorials are structured."
+> "Every topic on this channel follows the same pattern.
+>
+> We start with a real problem the application has. For example: 'a unit needs exactly one owner at all times, even before it is ever sold.'
+>
+> Then we understand the concept behind it.
+>
+> Then we look at which technology helps us solve it. It might be a database constraint, a transaction, or a validation rule.
+>
+> Then we implement it. And only then do we call it done, because we can show it working.
+>
+> Problem first. Syntax last.
+>
+> That order is deliberate. It is the order real engineering happens in. And it is the opposite of how most tutorials are built."
 
 ---
 
@@ -85,13 +101,15 @@ time:
 icon on the other, with an arrow connecting them labeled "review".
 
 **Narration:**
-> "AI is part of why this channel exists, but it's not the channel's identity. AI is
-> making implementation faster than ever — which means the bottleneck is shifting.
-> The valuable skill now is understanding the problem well enough to know what to
-> build, and reviewing what gets built well enough to know if it's actually correct.
-> So on this channel, AI shows up constantly — as a partner in the process — but it
-> never replaces the engineering judgment. You'll see both sides: where AI genuinely
-> speeds things up, and where a human has to catch what it gets wrong."
+> "AI is part of why this channel exists. But it is not the identity of the channel.
+>
+> AI makes implementation faster than ever. That means the main difficulty is shifting.
+>
+> The valuable skill now is understanding the problem well enough to know what to build. And it is reviewing what gets built well enough to know if it is correct.
+>
+> So on this channel, AI appears constantly, as a partner in the process. But it never replaces engineering judgment.
+>
+> You will see both sides. You will see where AI genuinely speeds things up. And you will see where a human has to catch what it gets wrong."
 
 ---
 
@@ -104,14 +122,18 @@ Next.js", with "Playlist F — AI-Augmented Development" running alongside all o
 them. A small footnote label reads "A-series grows with each new case-study app".
 
 **Narration:**
-> "Here's the shape of the channel. Playlist A1 tells the story of the first
-> application, PrismApp — what we're building and why — with no deep technical detail
-> yet, just the big picture. If a second real project joins the channel later, it
-> gets its own A-series playlist alongside this one. After that, separate playlists
-> go deep on the engineering itself: the process behind it, then TypeScript,
-> PostgreSQL and Prisma, and Next.js — each one taught through problems these
-> real applications ran into, not through generic examples. And running alongside
-> all of it, a playlist on working with AI as part of the engineering process.
+> "Here is the shape of the channel.
+>
+> Playlist A1 tells the story of the first application, PrismApp. It shows what we are building and why. It has no deep technical detail yet, just the big picture.
+>
+> If a second real project joins the channel later, it gets its own A-series playlist alongside this one.
+>
+> After that, separate playlists go deep on the engineering itself. First the process behind it. Then TypeScript. Then PostgreSQL and Prisma. Then Next.js.
+>
+> Each one is taught through problems these real applications ran into, not through generic examples.
+>
+> And running alongside all of it, a playlist on working with AI as part of the engineering process.
+>
 > Different playlists, one continuous story."
 
 ---
@@ -122,9 +144,11 @@ them. A small footnote label reads "A-series grows with each new case-study app"
 subscribe button animation.
 
 **Narration:**
-> "If you want to actually understand how real software gets built — not just
-> memorize another framework — subscribe, and start with Episode 1, where I introduce
-> the application we're building from the ground up."
+> "If you want to understand how real software gets built, not just memorize another framework, then subscribe.
+>
+> Start with Episode 1.
+>
+> There I introduce the application we are building from the ground up."
 
 ---
 

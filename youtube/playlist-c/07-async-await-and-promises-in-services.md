@@ -25,10 +25,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Every mutation in this app — creating a complaint, posting a payment — is a
-> chain of `async` functions calling `async` functions. Today, we follow one all
-> the way through: from the route handler, into the service layer, into the
-> database, and back out — and see exactly what type is flowing at each hop."
+> "Every mutation in this app is a chain of `async` functions calling `async` functions. Two examples are creating a complaint and posting a payment.
+>
+> Today we follow one mutation all the way through. It starts at the route handler. It goes into the service layer, then into the database, and back out.
+>
+> We will see exactly what type flows at each step."
 
 ---
 
@@ -52,11 +53,13 @@ export async function POST(request: NextRequest) {
 ```
 
 **Narration:**
-> "`async function POST` always returns a `Promise` — Next.js awaits it for you.
-> Inside, three `await`s in a row: authorize the request, parse the body, then hand
-> off to `createComplaint`. No `.then()` chains, no callback nesting — each `await`
-> pauses this function until the previous promise settles, and the code reads top
-> to bottom like synchronous code, even though none of it is."
+> "`async function POST` always returns a `Promise`. Next.js awaits it for you.
+>
+> Inside, there are three `await`s in a row. First, authorize the request. Second, parse the body. Third, hand off to `createComplaint`.
+>
+> There are no `.then()` chains and no callback nesting. Each `await` pauses this function until the previous promise settles.
+>
+> So the code reads from top to bottom like synchronous code, even though it is not."
 
 ---
 
@@ -87,14 +90,13 @@ export async function createComplaint(input: CreateComplaintInput, actor: AuthCo
 ```
 
 **Narration:**
-> "Every `db.*.findUnique` call returns a `Promise` of a typed row, or `null` —
-> Prisma generates that type from the schema. `await` unwraps the promise; the
-> `if (!unit)` right after is doing real work — it narrows `unit` from 'possibly
-> null' to 'definitely present' for every line below it. Four sequential checks,
-> each one a real `await`, each one narrowing before the next step is allowed to
-> assume anything. The function's return type is inferred as a `Promise` of
-> whatever the final `db.complaint.create(...)` resolves to — nobody wrote that
-> type by hand; TypeScript derived it from the Prisma call."
+> "Every `db.*.findUnique` call returns a `Promise` of a typed row, or `null`. Prisma generates that type from the schema.
+>
+> `await` unwraps the promise. The `if (!unit)` right after does real work. It narrows `unit` from 'possibly null' to 'definitely present' for every line below it.
+>
+> There are four sequential checks. Each one is a real `await`. Each one narrows before the next step may assume anything.
+>
+> The return type of the function is inferred as a `Promise` of whatever the final `db.complaint.create(...)` resolves to. Nobody wrote that type by hand. TypeScript derived it from the Prisma call."
 
 ---
 
@@ -104,12 +106,11 @@ export async function createComplaint(input: CreateComplaintInput, actor: AuthCo
 Episode 3's `fromUnknownError`.
 
 **Narration:**
-> "If any `await` in `createComplaint` throws — a validation `HttpError`, or a
-> genuine database failure — the promise it's part of rejects, and that rejection
-> propagates straight up through every `await` in between, uncaught, until it
-> reaches the route handler's `try`/`catch`. That's the other half of async/await:
-> exceptions behave like synchronous `throw` again, instead of needing a `.catch()`
-> at every single link in the chain."
+> "Suppose any `await` in `createComplaint` throws. It could be a validation `HttpError`, or a genuine database failure.
+>
+> Then the promise it belongs to rejects. The rejection travels straight up through every `await` in between, uncaught. It stops at the `try`/`catch` in the route handler.
+>
+> That is the other half of async/await. Exceptions behave like a synchronous `throw` again. You do not need a `.catch()` at every link in the chain."
 
 ---
 
@@ -119,11 +120,13 @@ Episode 3's `fromUnknownError`.
 inferred `Promise<{...}>` in the tooltip.
 
 **Narration:**
-> "Hover any `async` function in this codebase, and the editor shows you
-> `Promise<SomeType>` — never just `SomeType`. That's not decoration. It's the
-> honest signature: calling this function doesn't hand you the data, it hands you a
-> promise of the data, later. `await` is the only thing that turns one into the
-> other, and TypeScript won't let you forget which one you're holding."
+> "Hover over any `async` function in this codebase. The editor shows `Promise<SomeType>`, never just `SomeType`.
+>
+> That is not decoration. It is the honest signature.
+>
+> Calling this function does not give you the data. It gives you a promise of the data, for later.
+>
+> `await` is the only thing that turns one into the other. And TypeScript will not let you forget which one you are holding."
 
 ---
 
@@ -132,9 +135,9 @@ inferred `Promise<{...}>` in the tooltip.
 **Visual:** End card pointing to Episode 8.
 
 **Narration:**
-> "Last episode in this playlist: the exact shape every API response takes in this
-> app — success or failure — and the custom error type that makes sure nothing
-> escapes untyped."
+> "Last episode in this playlist: the exact shape of every API response in this app, for success and for failure.
+>
+> We will also see the custom error type that makes sure nothing escapes untyped."
 
 ---
 

@@ -21,9 +21,11 @@
 **Visual:** Talking head, with a small on-screen timeline graphic showing a gap.
 
 **Narration:**
-> "A brand-new flat, fresh from the builder — nobody's bought it yet. So who owns it?
-> If your answer is 'nobody, for now,' this episode is for you, because in this
-> system, that answer isn't allowed."
+> "Imagine a brand-new flat, fresh from the builder. Nobody has bought it yet. So who owns it?
+>
+> Suppose your answer is 'nobody, for now.' Then this episode is for you.
+>
+> In this system, that answer is not allowed."
 
 ---
 
@@ -33,12 +35,15 @@
 at any time. O4 — A unit must always have exactly one active owner."
 
 **Narration:**
-> "Two rules drive this whole episode. First: a unit can never have two active
-> owners at once — that would mean two people simultaneously hold title to the same
-> flat, which doesn't make sense. Second, and less obvious: a unit must *always* have
-> exactly one active owner — no gaps, not even for a single day, not even before it's
-> ever been sold. Most systems only think about the first rule. The second one is
-> where it gets interesting."
+> "Two rules drive this whole episode.
+>
+> First, a unit can never have two active owners at once. That would mean two people hold title to the same flat at the same time. That does not make sense.
+>
+> Second, and less obvious: a unit must *always* have exactly one active owner. There are no gaps. Not for a single day. Not even before the unit has ever been sold.
+>
+> Most systems only think about the first rule.
+>
+> The second one is where it gets interesting."
 
 ---
 
@@ -48,14 +53,15 @@ at any time. O4 — A unit must always have exactly one active owner."
 labeled "BUILDER_INVENTORY", second segment labeled with a real buyer's name.
 
 **Narration:**
-> "Before any real owner exists, someone still effectively holds the unit — the
-> builder. So the system creates a system identity called `BUILDER_INVENTORY` and
-> makes it the owner of record from the exact date the unit is created — its
-> `inceptionDt`. It's not a real person, it can't be picked as a resident, and it
-> can't be removed. It exists purely so the ownership timeline never has a hole in
-> it. The moment a unit is created, its first ownership row is created in the same
-> atomic operation — there's no window, even a split second, where the unit has no
-> owner."
+> "Before any real owner exists, someone still effectively holds the unit. That someone is the builder.
+>
+> So the system creates a system identity called `BUILDER_INVENTORY`. It makes this identity the owner of record from the exact date the unit is created. That date is its `inceptionDt`.
+>
+> It is not a real person. It cannot be picked as a resident. And it cannot be removed.
+>
+> It exists only so the ownership timeline never has a hole in it.
+>
+> The moment a unit is created, its first ownership row is created in the same atomic operation. So there is no window, not even a split second, where the unit has no owner."
 
 **On-screen action:** Screen recording — create a new unit in the app, then
 immediately open its ownership timeline and show the `BUILDER_INVENTORY` row already
@@ -69,13 +75,13 @@ present.
 gap, no overlap, a single shared boundary.
 
 **Narration:**
-> "When a unit actually sells, the transfer isn't just 'add a new owner and end the
-> old one whenever.' The outgoing owner's end date and the incoming owner's start
-> date have to be exactly contiguous — the new owner starts the very next day after
-> the old one ends. That's stricter than just 'don't overlap.' It also forbids gaps.
-> If someone tried to record a transfer that left a three-day hole, the system
-> rejects it, because that would leave three days where nobody legally owned the
-> flat."
+> "When a unit actually sells, the transfer is not just 'add a new owner and end the old one whenever.'
+>
+> The end date of the outgoing owner and the start date of the incoming owner must be exactly contiguous. The new owner starts the very next day after the old one ends.
+>
+> That is stricter than just 'do not overlap.' It also forbids gaps.
+>
+> Suppose someone tries to record a transfer that leaves a three-day hole. The system rejects it. That would leave three days where nobody legally owned the flat."
 
 ---
 
@@ -85,13 +91,17 @@ gap, no overlap, a single shared boundary.
 date that overlaps an existing active ownership; show the red error notice.
 
 **Narration:**
-> "Here's what that looks like in practice. I'll try to backdate a new owner into a
-> period that's already covered by someone else. The system doesn't just show a
-> polite warning — it rejects the write outright, and it does this check inside a
-> serializable database transaction, not just a client-side validation. That matters
-> because two people could try to submit conflicting ownership changes at almost the
-> exact same moment — a simple 'check then write' in application code can miss that
-> race. A serializable transaction can't."
+> "Here is what that looks like in practice.
+>
+> I will try to backdate a new owner into a period that is already covered by someone else.
+>
+> The system does not just show a polite warning. It rejects the write outright.
+>
+> It does this check inside a serializable database transaction. It is not only a client-side validation.
+>
+> That matters because two people could try to submit conflicting ownership changes at almost the same moment. A simple 'check then write' in application code can miss that race.
+>
+> A serializable transaction cannot."
 
 ---
 
@@ -101,13 +111,15 @@ date that overlaps an existing active ownership; show the red error notice.
 timeline with a visible gap labeled "vacant".
 
 **Narration:**
-> "Residency looks similar but isn't identical. A unit can have zero or one active
-> resident — gaps are fine, because a flat can sit vacant between a sale and a new
-> tenant moving in, or during renovation. There's also one rule that connects
-> ownership and residency directly: nobody can move in while the unit is still owned
-> by `BUILDER_INVENTORY`. Residency can only begin once a real individual owns the
-> unit. That single rule stops the system identity from accidentally 'housing' real
-> people, which would make no sense."
+> "Residency looks similar, but it is not identical.
+>
+> A unit can have zero or one active resident. Gaps are fine. A flat can sit vacant between a sale and a new tenant moving in, or during renovation.
+>
+> There is also one rule that connects ownership and residency directly. Nobody can move in while the unit is still owned by `BUILDER_INVENTORY`.
+>
+> Residency can only begin once a real individual owns the unit.
+>
+> That single rule stops the system identity from accidentally 'housing' real people. That would make no sense."
 
 ---
 
@@ -116,11 +128,13 @@ timeline with a visible gap labeled "vacant".
 **Visual:** Talking head.
 
 **Narration:**
-> "This is a good example of the channel's whole approach: on the surface, 'track who
-> owns a flat' sounds like a five-minute feature. In reality, it forces you to decide
-> what 'always' means, what happens on day zero, and how to guarantee correctness
-> under concurrent writes. Next episode, we move to the part of the app where money
-> is actually involved — the contributions engine."
+> "This is a good example of the whole approach of this channel.
+>
+> On the surface, 'track who owns a flat' sounds like a five-minute feature.
+>
+> In reality, it forces you to decide what 'always' means. It forces you to decide what happens on day zero. And it forces you to guarantee correctness under concurrent writes.
+>
+> Next episode, we move to the part of the app where money is actually involved. That is the contributions engine."
 
 ---
 
@@ -129,10 +143,11 @@ timeline with a visible gap labeled "vacant".
 **Visual:** End card pointing to Episode 4.
 
 **Narration:**
-> "If temporal data modeling like this is new to you, this is exactly the kind of
-> problem this channel exists to walk through in depth. Subscribe, and next time
-> we'll look at how the app handles maintenance payments without ever letting a
-> number be quietly changed after the fact."
+> "If temporal data modeling like this is new to you, this is exactly the kind of problem this channel exists to explain in depth.
+>
+> Subscribe.
+>
+> Next time, we will look at how the app handles maintenance payments. And we will see how it never lets a number be quietly changed after the fact."
 
 ---
 

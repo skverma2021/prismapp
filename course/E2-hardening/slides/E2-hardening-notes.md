@@ -11,21 +11,23 @@
 
 [OPEN: src/lib/api-response.ts — show fromUnknownError]
 
-Everything in a route handler's catch block flows through one function. Read it as a classifier with seven branches.
+Everything in the catch block of a route handler flows through one function. Read it as a classifier with seven branches.
 
-Branch 1: already an HttpError — pass through unchanged. The domain logic already decided what the error is.
+Branch 1. The error is already an HttpError. It passes through unchanged. The domain logic already decided what the error is.
 
-Branch 2: P2002 unique constraint → 409 CONFLICT. Without this mapping, a duplicate block description would return a Prisma error message that exposes the internal schema.
+Branch 2. P2002, a unique constraint, becomes 409 CONFLICT. Without this mapping, a duplicate block description would return a Prisma error message. That message exposes the internal schema.
 
-Branch 3: P2003 referential integrity → 409 CONFLICT. Trying to delete a block that has units — Prisma throws P2003, the firewall maps it to a clean "Operation violates a related data constraint."
+Branch 3. P2003, referential integrity, becomes 409 CONFLICT. Suppose you try to delete a block that has units. Prisma throws P2003. The firewall maps it to a clean "Operation violates a related data constraint."
 
-Branch 4: P2025 record not found → 404. An update or delete targeting a nonexistent ID.
+Branch 4. P2025, record not found, becomes 404. This happens when an update or delete targets an ID that does not exist.
 
-Branches 5-6: connectivity/transaction failures → 503 SERVICE_UNAVAILABLE with `retryable: true`. The client can retry automatically.
+Branches 5 and 6. Connectivity and transaction failures become 503 SERVICE_UNAVAILABLE with `retryable: true`. The client can retry automatically.
 
-Branch 7: anything else → 500 INTERNAL_ERROR. Always logged. Never the raw error.
+Branch 7. Anything else becomes 500 INTERNAL_ERROR. It is always logged. The raw error is never returned.
 
-The consequence: the client never sees a raw Prisma error, never a stack trace, never "Could not perform query because of a constraint violation on constraint: unique_blocks_description_key".
+The consequence is clear. The client never sees a raw Prisma error. It never sees a stack trace.
+
+It never sees a message like "Could not perform query because of a constraint violation on constraint: unique_blocks_description_key".
 
 **Takeaway: One function. Seven branches. The client always gets `ApiEnvelope`. The server's internals are never leaked.**
 
@@ -41,9 +43,15 @@ When `fromUnknownError` reaches the 500 branch, it calls `logServerError`. The f
 {"level":"error","requestId":"abc-123","status":500,"code":"INTERNAL_ERROR","message":"..."}
 ```
 
-Why JSON? Vercel's log dashboard can filter on individual fields. `level = "error"`. `requestId = "abc-123"`. These are first-class queries, not regex on plain text.
+Why JSON? The Vercel log dashboard can filter on individual fields. `level = "error"`. `requestId = "abc-123"`.
 
-What is NOT logged: 400-level errors. Auth failures, validation errors, not-found responses — these are expected outcomes. Logging every 400 would flood the log dashboard with noise. Only 500+ errors and database errors are server-side failures worth logging.
+These are first-class queries. They are not regex searches on plain text.
+
+What is NOT logged? 400-level errors.
+
+Auth failures, validation errors, and not-found responses are expected outcomes. Logging every 400 would flood the log dashboard with noise.
+
+Only 500+ errors and database errors are server-side failures worth logging.
 
 **Takeaway: Log 500s as structured JSON. Use the requestId field. Do not log 400s — they're expected domain outcomes.**
 
@@ -55,15 +63,23 @@ What is NOT logged: 400-level errors. Auth failures, validation errors, not-foun
 
 [OPEN: sentry.server.config.ts — show tracesSampleRate]
 
-`onRequestError = Sentry.captureRequestError` — this is a Next.js 15+ instrumentation hook. Any unhandled request error is automatically sent to Sentry. No manual `Sentry.captureException` calls inside route handlers.
+`onRequestError = Sentry.captureRequestError`. This is a Next.js 15+ instrumentation hook.
 
-`tracesSampleRate: 0.1` in production. Ten percent. Sentry charges by transaction volume. 10% captures enough for latency analysis without a large bill. In development, 100% — trace everything.
+Any unhandled request error is sent to Sentry automatically. We need no manual `Sentry.captureException` calls inside route handlers.
 
-The DSN is from `NEXT_PUBLIC_SENTRY_DSN`. If it's not set, `Sentry.init(dsn: undefined)` does nothing silently. No crashes, no errors.
+`tracesSampleRate: 0.1` in production. That is ten percent.
 
-What structured logs cannot do: aggregate. If the same error occurs 200 times across 200 different requestIds, your logs show 200 separate entries. Sentry groups them into one issue, shows the frequency, shows the stack trace once, and can alert you when it exceeds a threshold.
+Sentry charges by transaction volume. 10% captures enough data for latency analysis without a large bill. In development, the rate is 100%, so we trace everything.
 
-Three layers of observability. Console logs: the raw events. Request ID: the correlation key. Sentry: the aggregation and alerting layer.
+The DSN comes from `NEXT_PUBLIC_SENTRY_DSN`. If it is not set, `Sentry.init(dsn: undefined)` does nothing, silently. There are no crashes and no errors.
+
+Here is what structured logs cannot do. They cannot aggregate.
+
+Suppose the same error occurs 200 times across 200 different requestIds. Your logs show 200 separate entries.
+
+Sentry groups them into one issue. It shows the frequency. It shows the stack trace once. And it can alert you when the count exceeds a threshold.
+
+There are three layers of observability. Console logs are the raw events. The request ID is the correlation key. Sentry is the aggregation and alerting layer.
 
 **Takeaway: Structured logs, request correlation, and Sentry are all present from day one. Each adds something the others cannot provide.**
 
@@ -75,17 +91,19 @@ Three layers of observability. Console logs: the raw events. Request ID: the cor
 
 [SHOW: bar chart — query time with and without index on 10,000 rows]
 
-Without an index: full table scan. Read every row. Compare. Discard.
+Without an index, the database does a full table scan. It reads every row. It compares. It discards.
 
-With an index: B-tree lookup. O(log n). On 10,000 rows, about 14 comparisons instead of 10,000.
+With an index, it does a B-tree lookup. That is O(log n). On 10,000 rows, it needs about 14 comparisons instead of 10,000.
 
 [OPEN: prisma/schema.prisma — Unit model]
 
-`@@unique([blockId, description])` — uniqueness constraint. Also an implicit index.
+`@@unique([blockId, description])` is a uniqueness constraint. It is also an implicit index.
 
-`@@index([blockId])` — the units list page filter: "show me all units in Block A." Without this index, that query scans every unit in the system.
+`@@index([blockId])` supports the filter on the units list page: "show me all units in Block A." Without this index, that query scans every unit in the system.
 
-The cost: every index slows INSERT, UPDATE, and DELETE — the B-tree must be updated. A table with 10 indexes takes roughly 10× longer to write to. Choose indexes based on query patterns.
+Now the cost. Every index slows INSERT, UPDATE, and DELETE, because the B-tree must be updated.
+
+A table with 10 indexes takes roughly 10 times longer to write to. So choose indexes based on query patterns.
 
 **Takeaway: Indexes make reads fast. They cost writes. Add them for filter and sort columns that are queried frequently.**
 
@@ -95,17 +113,19 @@ The cost: every index slows INSERT, UPDATE, and DELETE — the B-tree must be up
 
 [OPEN: schema.prisma — UnitOwner @@index declarations]
 
-`@@index([unitId, fromDt, toDt])` — supports the overlap check query: `WHERE unitId = ? AND (toDt IS NULL OR toDt >= startDate) AND fromDt <= endDate`. Composite because all three columns are in the WHERE clause together.
+`@@index([unitId, fromDt, toDt])` supports the overlap check query: `WHERE unitId = ? AND (toDt IS NULL OR toDt >= startDate) AND fromDt <= endDate`.
+
+It is a composite index because all three columns are in the WHERE clause together.
 
 [OPEN: schema.prisma — Contribution @@index declarations]
 
-Five indexes on the Contribution table. Walk through each one and name the query it enables.
+The Contribution table has five indexes. Walk through each one and name the query it enables.
 
-`[unitId, contributionHeadId]` — the month ledger query. The contribution capture page fetches all contributions for one unit+head pair. This is the most-used query in the system.
+`[unitId, contributionHeadId]` is for the month ledger query. The contribution capture page fetches all contributions for one unit and head pair. This is the most used query in the system.
 
-`[transactionDateTime]` — the transactions report date range filter.
+`[transactionDateTime]` is for the date range filter of the transactions report.
 
-`[correctionOfContributionId]` — when viewing a contribution, look up whether it has been corrected. Without this index, that lookup scans the entire contributions table.
+`[correctionOfContributionId]` is for corrections. When you view a contribution, you look up whether it has been corrected. Without this index, that lookup scans the entire contributions table.
 
 **Takeaway: Trace every `@@index` to the query pattern it supports. If you can't name the query, question whether the index belongs.**
 
@@ -117,13 +137,23 @@ Five indexes on the Contribution table. Walk through each one and name the query
 
 The audit log has three indexes. It deliberately does not have `@@index([action])`.
 
-Why not? Action has about 20 distinct values. Low cardinality. An index is most effective when it narrows the result set significantly — high selectivity. `unitId` with 200 units is highly selective — filtering by unit returns 0.5% of records. `action` with 20 values returns 5% per value. The B-tree lookup is less effective; PostgreSQL might decide a sequential scan is faster.
+Why not? Action has about 20 distinct values. That is low cardinality.
 
-The action filter on the audit log page is always combined with a time range — the `[createdAt]` index does the heavy lifting. Filtering by action on the already-reduced time-range result set is cheap.
+An index is most effective when it narrows the result set a lot. That is high selectivity.
 
-Adding the index would penalize every audit log write for minimal read benefit.
+`unitId` with 200 units is highly selective. Filtering by unit returns 0.5% of records.
 
-And the composite vs separate distinction: `@@index([unitId, fromDt, toDt])` is NOT three indexes. Three separate indexes cannot serve a query that filters all three columns together. Composite column order matters: equality columns first, range columns last.
+`action` with 20 values returns 5% per value. The B-tree lookup is less effective. PostgreSQL might decide that a sequential scan is faster.
+
+The action filter on the audit log page is always combined with a time range. The `[createdAt]` index does the heavy work. Filtering by action on the already reduced result set is cheap.
+
+Adding the index would slow every audit log write for minimal read benefit.
+
+Now the difference between composite and separate indexes. `@@index([unitId, fromDt, toDt])` is NOT three indexes.
+
+Three separate indexes cannot serve a query that filters all three columns together.
+
+Column order in a composite index matters. Put equality columns first and range columns last.
 
 **Takeaway: High-selectivity columns make good indexes. Low-selectivity columns usually don't. Composite index column order matches your WHERE clause order.**
 
@@ -135,9 +165,9 @@ And the composite vs separate distinction: `@@index([unitId, fromDt, toDt])` is 
 
 [SHOW: checklist card]
 
-Work through this on the parking space module from Section D, or any new module you've built.
+Work through this on the parking space module from Section D, or on any new module you have built.
 
-Five items. Each one is binary — present or not. No partial credit.
+There are five items. Each one is binary. It is present or it is not. There is no partial credit.
 
 Read the items aloud and prompt students to check their own code.
 
@@ -147,7 +177,9 @@ Read the items aloud and prompt students to check their own code.
 4. Every catch block uses `fromUnknownError`.
 5. Input is parsed from `unknown`, not trusted directly.
 
-Any blank is a production gap, not a style issue. Each one represents a class of vulnerability or a compliance requirement.
+Any blank is a production gap, not a style issue.
+
+Each one represents a class of vulnerability or a compliance requirement.
 
 **Takeaway: The checklist takes five minutes. It catches the gaps that code review misses under time pressure.**
 
@@ -159,11 +191,17 @@ Any blank is a production gap, not a style issue. Each one represents a class of
 
 The Complaint model has `@@index([unitId])` and `@@index([status])`. A new report is needed: complaints for a block, newest first.
 
-The query filters by `unit.blockId` (a join condition) and sorts by `createdAt DESC`. The sort is the bottleneck — without a `[createdAt]` index, PostgreSQL sorts all matching rows in memory before applying the page limit.
+The query filters by `unit.blockId`, which is a join condition. It sorts by `createdAt DESC`.
 
-Walk through the fix: add `@@index([createdAt])` to the Complaint model, run `npx prisma migrate dev --name add_complaint_created_at_index`.
+The sort is the bottleneck. Without a `[createdAt]` index, PostgreSQL sorts all matching rows in memory before it applies the page limit.
 
-Now the harder question: if the most common query is "complaints for a specific unit, newest first," would `@@index([unitId, createdAt])` be better than separate indexes? Yes — a composite index on `[unitId, createdAt]` allows PostgreSQL to use one index for both the filter (equality on unitId) and the sort (range/order on createdAt). Separate indexes would require a merge step.
+Walk through the fix. Add `@@index([createdAt])` to the Complaint model. Then run `npx prisma migrate dev --name add_complaint_created_at_index`.
+
+Now the harder question. Suppose the most common query is "complaints for a specific unit, newest first." Would `@@index([unitId, createdAt])` be better than separate indexes?
+
+Yes. A composite index on `[unitId, createdAt]` lets PostgreSQL use one index for both steps. It serves the filter, which is equality on unitId. It also serves the sort, which is order on createdAt.
+
+Separate indexes would require a merge step.
 
 **Takeaway: Trace the slow query to its missing index. Know when a composite index beats two separate ones.**
 
@@ -175,21 +213,25 @@ Now the harder question: if the most common query is "complaints for a specific 
 
 Read through the table. Every row maps a production property to the specific code that implements it.
 
-Identity verification — `getToken`, no DB hit per request.
-Role enforcement — `requireMutationRole` at the top of every handler.
-Structured errors — `fromUnknownError` classification firewall.
-Request correlation — `proxy.ts`, `x-request-id`.
-Brute-force protection — rate limit on the credentials endpoint.
-Audit trail — `writeAuditLog`, before/after diff.
-Error alerting — Sentry, `onRequestError`.
-Query performance — `@@index` declarations, composite strategy.
+Identity verification uses `getToken`. There is no DB hit per request.
+Role enforcement uses `requireMutationRole`. It sits at the top of every handler.
+Structured errors use the `fromUnknownError` classification firewall.
+Request correlation uses `proxy.ts` and `x-request-id`.
+Brute-force protection is a rate limit on the credentials endpoint.
+The audit trail uses `writeAuditLog` with a before and after diff.
+Error alerting uses Sentry and `onRequestError`.
+Query performance uses `@@index` declarations and a composite strategy.
 
 [SHOW: course arc timeline]
 
-Section A: scope. B: data model. C: technology choices. D: CRUD patterns. E: hardening.
+Section A: scope. Section B: data model. Section C: technology choices. Section D: CRUD patterns. Section E: hardening.
 
-You started from a blank project. You now understand every layer of a production application — the requirements that drove the decisions, the data model that encodes the domain rules, the technology choices and why they were made, the repeatable implementation patterns, and the hardening layer that makes the difference between a demo and a system you can trust with financial data.
+You started from a blank project. Now you understand every layer of a production application.
 
-Apply the hardening checklist to your next project. Audit the one you're already working on. The gaps will be obvious.
+You know the requirements that drove the decisions. You know the data model that encodes the domain rules. You know the technology choices and why they were made. You know the repeatable implementation patterns.
+
+And you know the hardening layer. It makes the difference between a demo and a system you can trust with financial data.
+
+Apply the hardening checklist to your next project. Audit the one you are already working on. The gaps will be obvious.
 
 **Course complete.**

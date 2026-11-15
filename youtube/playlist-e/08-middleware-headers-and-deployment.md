@@ -28,9 +28,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Everything so far has been what happens once a request reaches a page or a
-> Route Handler. This episode is about what runs *before* that — and what happens
-> after `next build` finishes, when this app actually goes live on Vercel."
+> "Everything so far has been what happens once a request reaches a page or a Route Handler.
+>
+> This episode is about what runs *before* that.
+>
+> It also covers what happens after `next build` finishes, when this app actually goes live on Vercel."
 
 ---
 
@@ -59,13 +61,13 @@ export function proxy(request: NextRequest) {
 ```
 
 **Narration:**
-> "If you've used an older Next.js version, you'll recognize this as middleware —
-> code that runs before a request reaches any route or page. Next.js 16 renamed
-> the convention to `proxy.ts`, but the idea is identical: this function runs
-> ahead of everything else. Here, it does exactly one job — watch for repeated
-> `POST` attempts against the credentials sign-in callback, and rate-limit them
-> per IP address, closing off a brute-force login vector before it ever reaches
-> next-auth's own handler."
+> "If you have used an older Next.js version, you will recognize this as middleware.
+>
+> It is code that runs before a request reaches any route or page. Next.js 16 renamed the convention to `proxy.ts`. But the idea is identical. This function runs ahead of everything else.
+>
+> Here, it does exactly one job. It watches for repeated `POST` attempts against the credentials sign-in callback. It rate-limits them per IP address.
+>
+> This closes off a brute-force login vector. It happens before the request ever reaches the handler of next-auth."
 
 ---
 
@@ -74,13 +76,17 @@ export function proxy(request: NextRequest) {
 **Visual:** Highlight the code comment above `RATE_LIMIT_MAX`.
 
 **Narration:**
-> "The rate limit state is an in-memory `Map`, not Redis or a database table — and
-> the comment explains the trade-off explicitly: 'a new function instance resets
-> state — sufficient to deter automated scripts without requiring an external
-> dependency,' for 'a single-region internal deployment.' That's an honest,
-> written-down engineering decision, not an oversight — a simple defense that
-> matches this app's actual deployment shape, with the reasoning left in the code
-> for whoever reads it next."
+> "The rate limit state is an in-memory `Map`. It is not Redis, and it is not a database table.
+>
+> The comment explains the trade-off explicitly.
+>
+> It says: 'a new function instance resets state — sufficient to deter automated scripts without requiring an external dependency.'
+>
+> It adds that this is for 'a single-region internal deployment.'
+>
+> That is an honest, written-down engineering decision. It is not an oversight.
+>
+> It is a simple defense that matches this app's actual deployment shape. And the reasoning stays in the code for whoever reads it next."
 
 ---
 
@@ -107,13 +113,13 @@ export default withSentryConfig(nextConfig, { /* ... */ });
 ```
 
 **Narration:**
-> "`headers()` is a Next.js config hook that attaches these four headers to
-> *every* response — blocking framing (`X-Frame-Options: DENY`), stopping MIME
-> sniffing, tightening the referrer sent to other sites, and disabling camera,
-> microphone, and geolocation entirely, since this app needs none of them. And
-> the whole config gets wrapped in `withSentryConfig`, which is what turns build
-> output into something Sentry can map stack traces against — the same Sentry
-> instance `global-error.tsx` reports to in Episode 7."
+> "`headers()` is a Next.js config hook. It attaches these four headers to *every* response.
+>
+> The first blocks framing, with `X-Frame-Options: DENY`. The second stops MIME sniffing. The third tightens the referrer sent to other sites. The fourth disables camera, microphone, and geolocation entirely, since this app needs none of them.
+>
+> Then the whole config gets wrapped in `withSentryConfig`.
+>
+> That turns build output into something Sentry can map stack traces against. It is the same Sentry instance that `global-error.tsx` reports to in Episode 7."
 
 ---
 
@@ -129,10 +135,13 @@ export default withSentryConfig(nextConfig, { /* ... */ });
 ```
 
 **Narration:**
-> "The entire Vercel-specific configuration is one build command: regenerate the
-> Prisma client from the current schema, then run the normal Next.js build. No
-> other Vercel-specific wiring is needed — environment variables, the Postgres
-> connection, and everything else are ordinary project settings, not code."
+> "The entire Vercel-specific configuration is one build command.
+>
+> It regenerates the Prisma client from the current schema. Then it runs the normal Next.js build.
+>
+> No other Vercel-specific wiring is needed.
+>
+> Environment variables, the Postgres connection, and everything else are ordinary project settings. They are not code."
 
 ---
 
@@ -142,16 +151,17 @@ export default withSentryConfig(nextConfig, { /* ... */ });
 and fetch `cache` options — no matches in `app/` or `src/`.
 
 **Narration:**
-> "Worth saying plainly, the way we did for window functions back in Playlist D:
-> this app uses none of Next.js's data-caching or revalidation features —
-> `revalidatePath`, `revalidateTag`, or a fetch call's `cache`/`next.revalidate`
-> options. Every list, every report, every dashboard screen fetches fresh on every
-> load. For an internal society-management tool, where an admin needs to see a
-> payment that was just recorded thirty seconds ago, stale cached data would be a
-> worse failure than a slightly slower request. If a future read-heavy, rarely-
-> changing screen showed up — a public society directory, say — that's the point
-> where reaching for revalidation would earn its place. It hasn't been needed
-> yet."
+> "It is worth saying plainly, the way we did for window functions back in Playlist D.
+>
+> This app uses none of the data-caching or revalidation features of Next.js. That means `revalidatePath`, `revalidateTag`, and the `cache` or `next.revalidate` options of a fetch call.
+>
+> Every list, every report, and every dashboard screen fetches fresh on every load.
+>
+> This is an internal society-management tool. An admin needs to see a payment that was recorded thirty seconds ago. Stale cached data would be a worse failure than a slightly slower request.
+>
+> Suppose a future screen is read-heavy and rarely changes. A public society directory is one example. That is the point where revalidation would become useful.
+>
+> It has not been needed yet."
 
 ---
 
@@ -160,12 +170,11 @@ and fetch `cache` options — no matches in `app/` or `src/`.
 **Visual:** End card, closing the playlist.
 
 **Narration:**
-> "That's Playlist E. We went from folders that don't show up in a URL, to the
-> server/client boundary, to the request pipeline itself, to how the browser
-> actually talks back, to what happens when any of it fails, to what runs before
-> a single line of your code does. Every choice here — including the ones this
-> app deliberately didn't make, like caching — came from what this specific
-> application actually needed."
+> "That is Playlist E.
+>
+> We went from folders that do not show up in a URL, to the server and client boundary. Then to the request pipeline itself. Then to how the browser talks back. Then to what happens when any of it fails. And finally to what runs before a single line of your code does.
+>
+> Every choice here came from what this specific application needed. That includes the ones this app deliberately did not make, like caching."
 
 ---
 

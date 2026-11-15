@@ -24,10 +24,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Two questions sound similar but are completely different: 'do I know who you
-> are?' and 'are you allowed to do this?' Get them confused in your code, and you'll
-> ship a security bug that looks like a UI bug. Today, how this app keeps them
-> separate on purpose."
+> "Two questions sound similar, but they are completely different.
+>
+> 'Do I know who you are?' And 'are you allowed to do this?'
+>
+> If you confuse them in your code, you will ship a security bug that looks like a UI bug.
+>
+> Today, we see how this app keeps them separate on purpose."
 
 ---
 
@@ -37,13 +40,13 @@
 "What can you do?" (role check per action).
 
 **Narration:**
-> "Authentication answers 'who are you' — it's the login, the session, the cookie.
-> Authorization answers a completely separate question, asked again on every single
-> action: 'is this specific person, who we already know, allowed to do this specific
-> thing.' You can be fully authenticated and still be told no. Conflating these two
-> checks into one is a classic source of bugs, because the correct failure response
-> is different for each: unauthenticated gets a `401`, authenticated-but-not-allowed
-> gets a `403`."
+> "Authentication answers 'who are you?' It is the login, the session, and the cookie.
+>
+> Authorization answers a separate question. We ask it again on every action. 'Is this specific person, who we already know, allowed to do this specific thing?'
+>
+> You can be fully authenticated and still be told no.
+>
+> Combining these two checks into one is a classic source of bugs. The correct failure response is different for each. An unauthenticated request gets a `401`. An authenticated request that is not allowed gets a `403`."
 
 ---
 
@@ -53,14 +56,17 @@
 Matrix table (Society Admin / Manager / Read-Only across capability rows).
 
 **Narration:**
-> "This app defines three roles, and — deliberately — nothing more granular than
-> that for now. Society Admin has full access, including managing other users'
-> roles. Manager has full operational access but can't touch role assignments or
-> perform destructive financial actions. Read-Only can view everything but mutate
-> nothing. Notice one row that applies to every single role equally: nobody, at any
-> role, can edit or delete a posted contribution. Some rules aren't about role at
-> all — they're absolute, and the matrix says so explicitly instead of leaving it
-> implied."
+> "This app defines three roles. For now, we deliberately keep nothing more granular than that.
+>
+> Society Admin has full access, including managing other users' roles.
+>
+> Manager has full operational access. But a Manager cannot change role assignments or perform destructive financial actions.
+>
+> Read-Only can view everything but cannot change anything.
+>
+> Notice one row that applies to every role equally. Nobody, at any role, can edit or delete a posted contribution.
+>
+> Some rules are not about role at all. They are absolute. And the matrix says so explicitly, instead of leaving it implied."
 
 ---
 
@@ -70,13 +76,13 @@ Matrix table (Society Admin / Manager / Read-Only across capability rows).
 role) box, connected by a dotted "may or may not be the same human" line.
 
 **Narration:**
-> "Here's a distinction worth calling out because it's easy to get wrong: anyone in
-> the system can be a payer — an owner, a resident, or just a person recorded in the
-> system — without needing any platform role at all. Only a Manager or Admin can
-> actually *record* that payment in the system. The person handing over cash and the
-> person with a login are frequently different humans, and the data model keeps them
-> as genuinely separate concepts instead of forcing every payer to also be a
-> system user."
+> "Here is a distinction that is easy to get wrong.
+>
+> Anyone in the system can be a payer. That can be an owner, a resident, or just a person recorded in the system. They do not need any platform role at all.
+>
+> Only a Manager or Admin can *record* that payment in the system.
+>
+> The person handing over cash and the person with a login are often different humans. So the data model keeps them as separate concepts. It does not force every payer to also be a system user."
 
 ---
 
@@ -87,13 +93,15 @@ devtools fetch or a REST client) to a mutation endpoint as a Read-Only session,
 showing a `403 FORBIDDEN` response even though no UI button for it exists.
 
 **Narration:**
-> "Here's the rule that matters most in this episode: UI visibility is not
-> authorization. Hiding a button for a Read-Only user is a convenience, not a
-> security boundary. The actual check happens again, every time, inside the route
-> handler or server action — before any business logic runs. I'll prove it: here's a
-> direct call to a mutation endpoint that has no corresponding button in the
-> Read-Only UI at all. It still gets rejected, with a proper `403`, not a silent
-> failure or a stack trace."
+> "Here is the rule that matters most in this episode. UI visibility is not authorization.
+>
+> Hiding a button for a Read-Only user is a convenience. It is not a security boundary.
+>
+> The real check happens again, every time, inside the route handler or server action. It runs before any business logic.
+>
+> I will prove it. Here is a direct call to a mutation endpoint. The Read-Only UI has no button for it at all.
+>
+> It is still rejected, with a proper `403`. It is not a silent failure or a stack trace."
 
 ---
 
@@ -104,12 +112,13 @@ showing a `403 FORBIDDEN` response even though no UI button for it exists.
 visibility).
 
 **Narration:**
-> "Not every access-control question gets answered on day one, and that's fine as
-> long as it's written down rather than silently ignored. Should roles be scoped per
-> block instead of global? Should financial corrections need a second approver? This
-> document answers the ones needed for V1 and explicitly lists the rest as open,
-> with recommended defaults — global roles for now, no mandatory second approver yet
-> — so nobody mistakes 'not built yet' for 'forgotten.'"
+> "Not every access-control question gets answered on day one. That is fine, as long as it is written down and not silently ignored.
+>
+> Should roles be scoped per block instead of global? Should financial corrections need a second approver?
+>
+> This document answers the questions needed for V1. It lists the rest as open, with recommended defaults. Roles are global for now. There is no mandatory second approver yet.
+>
+> So nobody mistakes 'not built yet' for 'forgotten.'"
 
 ---
 
@@ -118,9 +127,11 @@ visibility).
 **Visual:** End card pointing to Episode B5.
 
 **Narration:**
-> "Next episode, we go one layer deeper — what happens to input the moment it
-> arrives at the server, before any of these authorization checks even matter.
-> Subscribe and I'll see you there."
+> "Next episode, we go one layer deeper.
+>
+> We will see what happens to input the moment it arrives at the server, before any of these authorization checks even matter.
+>
+> Subscribe, and I will see you there."
 
 ---
 

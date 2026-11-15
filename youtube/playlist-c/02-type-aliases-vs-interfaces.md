@@ -25,10 +25,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "`type` and `interface` look almost the same, and most tutorials tell you to just
-> pick one and move on. That's not quite right. This codebase uses `type` for
-> almost everything — and `interface` exactly once, for a job `type` can't do at
-> all. Let's see both."
+> "`type` and `interface` look almost the same. Most tutorials tell you to pick one and move on.
+>
+> That is not quite right.
+>
+> This codebase uses `type` for almost everything. It uses `interface` exactly once, for a job that `type` cannot do at all.
+>
+> Let us see both."
 
 ---
 
@@ -62,14 +65,13 @@ export type BrowseConfig<T, S extends string> = {
 ```
 
 **Narration:**
-> "Every shape in this hook — `FilterDef`, `SortOptionDef`, `BrowseConfig` — is a
-> `type`, not an `interface`. And there's a concrete reason: several of them are
-> generic — `SortOptionDef<S extends string>`, `BrowseConfig<T, S extends string>` —
-> and a couple of them are unions of specific literals, like `"asc" | "desc"`.
-> `interface` can express generics too, but unions of literal types are `type`'s
-> territory. Once you're reaching for unions and generics together, `type` is the
-> natural default, so this codebase just uses it consistently everywhere, even for
-> the plain object shapes, for one less decision to make per file."
+> "Every shape in this hook is a `type`, not an `interface`. That includes `FilterDef`, `SortOptionDef`, and `BrowseConfig`.
+>
+> There is a concrete reason. Several of them are generic, like `SortOptionDef<S extends string>` and `BrowseConfig<T, S extends string>`. A couple of them use unions of specific literals, like `"asc" | "desc"`.
+>
+> `interface` can express generics too. But unions of literal types belong to `type`.
+>
+> When you need unions and generics together, `type` is the natural default. So this codebase uses it everywhere, even for plain object shapes. That is one less decision to make in each file."
 
 ---
 
@@ -104,14 +106,15 @@ declare module "next-auth/jwt" {
 ```
 
 **Narration:**
-> "`next-auth` ships its own `Session`, `User`, and `JWT` types — and by default,
-> none of them know this app adds a `role` or a `displayName`. This file fixes
-> that, but notice: it's `interface`, not `type`. That's not a style choice — it's
-> required. Interfaces support declaration merging: two `interface Session`
-> declarations with the same name, in the same module, get merged into one. `type`
-> does not support this at all — attempt it, and TypeScript just tells you the name
-> is already taken. This is the one job `interface` does that `type` structurally
-> cannot."
+> "`next-auth` ships its own `Session`, `User`, and `JWT` types. By default, none of them know that this app adds a `role` or a `displayName`.
+>
+> This file fixes that. But notice that it uses `interface`, not `type`. That is not a style choice. It is required.
+>
+> Interfaces support declaration merging. Two `interface Session` declarations with the same name, in the same module, merge into one.
+>
+> `type` does not support this at all. Try it, and TypeScript tells you the name is already taken.
+>
+> This is the one job that `interface` does and `type` structurally cannot."
 
 **On-screen action:** Attempt to change one of these to `type Session = {...}` in a
 scratch copy — show the compiler error about duplicate identifier / no merging.
@@ -124,10 +127,11 @@ scratch copy — show the compiler error about duplicate identifier / no merging
 `session.user.role` and gets a typed `UserRole`, not `any`.
 
 **Narration:**
-> "Because that augmentation exists, everywhere in this app that reads
-> `session.user.role`, TypeScript already knows it's a `UserRole` — one of exactly
-> three values — not `any`, and not a plain `string` you have to re-validate. The
-> augmentation happens once, in one file, and every consumer downstream benefits."
+> "Because that augmentation exists, TypeScript already knows the type wherever this app reads `session.user.role`.
+>
+> It is a `UserRole`, one of exactly three values. It is not `any`. It is not a plain `string` that you have to validate again.
+>
+> The augmentation happens once, in one file. Every consumer downstream benefits."
 
 ---
 
@@ -136,9 +140,11 @@ scratch copy — show the compiler error about duplicate identifier / no merging
 **Visual:** End card pointing to Episode 3.
 
 **Narration:**
-> "Next: what happens the moment data crosses a boundary you don't control — a
-> request body, a caught error — and TypeScript can no longer just take your word
-> for its shape."
+> "Next: what happens when data crosses a boundary that you do not control?
+>
+> Two examples are a request body and a caught error.
+>
+> At that point, TypeScript can no longer take your word for its shape."
 
 ---
 

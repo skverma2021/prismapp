@@ -13,11 +13,19 @@
 A speech bubble from a stick figure developer: "We'll add photo attachments later." A clock fast-forwards. Next sprint: a second figure points at a requirements doc: "Where are the photo attachments?" The developer looks confused. No written record exists.
 
 **Narration:**
-Every project has features that the team decides to defer. The question is not whether to defer — deferring is good, responsible engineering. The question is whether the deferral is written down and agreed upon by everyone.
+Every project has features that the team decides to defer. The question is not whether to defer. Deferring is good, responsible engineering.
 
-When a deferral is unwritten, it becomes an implicit promise. The developer who said "we'll do it later" means "we might do it eventually, if the priorities align." The product manager who heard "we'll do it later" means "it will be in the next sprint." These two people are having completely different conversations.
+The question is whether the deferral is written down and agreed upon by everyone.
 
-In PrismApp, the CMM module was planned with a very long feature list — photo attachments, WhatsApp bot intake, vendor ratings, OTP-based closure, festival event suppression. If any of those had been left as verbal "we'll handle it" decisions, they would have resurfaced as urgent requirements the moment someone read the vision document and expected them to be implemented.
+When a deferral is unwritten, it becomes an implicit promise.
+
+The developer who said "we will do it later" means "we might do it eventually, if the priorities align." The product manager who heard "we will do it later" means "it will be in the next sprint."
+
+These two people are having completely different conversations.
+
+In PrismApp, the CMM module was planned with a very long feature list. It included photo attachments, WhatsApp bot intake, vendor ratings, OTP-based closure, and festival event suppression.
+
+Suppose any of those had been left as verbal "we will handle it" decisions. They would have come back as urgent requirements. That would happen the moment someone read the vision document and expected them to be implemented.
 
 **On-screen action / demo:**
 None — concept slide.
@@ -38,15 +46,19 @@ A verbal deferral is a misunderstanding waiting to happen. Write it down, or it 
 A screenshot of the relevant section of `AGENTS.md` — Section 10, "Scope Control" — with key phrases highlighted: "CMM is the highest-priority backlog module", "Do not implement CMM features during Contribution Module hardening cycles", "reject or defer" for safety/security/events/notifications.
 
 **Narration:**
-Open `AGENTS.md` in the project root. Scroll to Section 10 — Scope Control.
+Open `AGENTS.md` in the project root. Scroll to Section 10, Scope Control.
 
-This section does three things that most projects never bother to do.
+This section does three things that most projects never do.
 
-First, it names the next priority explicitly: CMM, not Safety, not Events. This prevents well-meaning developers from starting on Security features because those seem important.
+First, it names the next priority explicitly. The priority is CMM, not Safety, not Events. This stops well-meaning developers from starting on Security features just because they seem important.
 
-Second, it states when CMM work begins: only after Phase 3 hardening quality gates are met. This is not a vague "after contributions are done." It is a specific, testable condition.
+Second, it states when CMM work begins. It begins only after Phase 3 hardening quality gates are met.
 
-Third, it lists the deferred modules by name — Safety, Security, Events, WhatsApp bot, OTP closure — and says to *reject or defer* any work on them during current cycles. "Reject" is a strong word. It means if someone raises a pull request that adds an Events table, the reviewer has written authority to say no.
+This is not a vague "after contributions are done." It is a specific, testable condition.
+
+Third, it lists the deferred modules by name. They are Safety, Security, Events, WhatsApp bot, and OTP closure. It says to *reject or defer* any work on them during current cycles.
+
+"Reject" is a strong word. Suppose someone raises a pull request that adds an Events table. The reviewer then has written authority to say no.
 
 This is scope control as a team agreement, not as a feeling.
 
@@ -75,15 +87,25 @@ A two-column table. Left: Deferred feature. Right: Infrastructure it requires.
 - OTP closure → SMS gateway + real-time OTP validation
 
 **Narration:**
-There is a pattern in the CMM deferral list that every student should recognise. None of the deferred features are deferred because they are unimportant. They are deferred because they require infrastructure that does not yet exist.
+There is a pattern in the CMM deferral list that every student should recognise.
 
-Photo attachments need a file storage service — Vercel Blob or an S3-compatible bucket. That is a new external dependency, a new cost, and a new security surface to protect.
+None of the deferred features are deferred because they are unimportant. They are deferred because they need infrastructure that does not yet exist.
 
-WhatsApp bot intake needs the WhatsApp Business API — a separate vendor integration, rate limits, message template approvals, and webhook handling.
+Photo attachments need a file storage service. That means Vercel Blob or an S3-compatible bucket.
 
-SLA escalation needs a cron job or event-driven scheduler. PrismApp runs on Vercel, which is stateless. There is no "always-on" process to run timers. That constraint alone makes SLA escalation a separate infrastructure decision.
+That is a new external dependency. It is also a new cost, and a new security surface to protect.
 
-When you write down a deferral, write the reason too. "Photo attachments: deferred — requires file storage provider decision (Vercel Blob vs S3). See vault/CMM/cmm-vision.md — Open Questions 4." This transforms a vague deferral into a trackable decision.
+WhatsApp bot intake needs the WhatsApp Business API. That is a separate vendor integration. It brings rate limits, message template approvals, and webhook handling.
+
+SLA escalation needs a cron job or an event-driven scheduler. PrismApp runs on Vercel, which is stateless.
+
+There is no "always-on" process to run timers. That constraint alone makes SLA escalation a separate infrastructure decision.
+
+When you write down a deferral, write the reason too.
+
+For example: "Photo attachments: deferred. Requires file storage provider decision (Vercel Blob vs S3). See vault/CMM/cmm-vision.md, Open Questions 4."
+
+This turns a vague deferral into a trackable decision.
 
 **On-screen action / demo:**
 Open `vault/CMM/cmm-vision.md`. Scroll to "New Infrastructure Required" under Implementation Notes.

@@ -13,13 +13,13 @@
 Diagram: `contributions.service.ts` → `db.contribution.create(...)` → PostgreSQL. Arrow from `db` with label "vi.mock replaces this". Below: note saying "You're now testing that your code calls the mock correctly — not that it produces correct DB results."
 
 **Narration:**
-Every service function in PrismApp begins or ends with a Prisma call:
+Every service function in PrismApp begins or ends with a Prisma call.
 
 ```ts
 const contribution = await db.contribution.create({ data: { ... } });
 ```
 
-To unit test `createContribution`, you'd need `db` to not be a real database connection. Vitest's `vi.mock` can replace the module:
+To unit test `createContribution`, `db` must not be a real database connection. Vitest's `vi.mock` can replace the module.
 
 ```ts
 vi.mock("@/src/lib/db", () => ({
@@ -32,13 +32,15 @@ vi.mock("@/src/lib/db", () => ({
 }));
 ```
 
-This works — the function can be called without a database.
+This works. The function can be called without a database.
 
-But now the test verifies something weaker: that your service code calls `db.contribution.create` with the right arguments and handles the mock's return value. It does NOT verify that the actual SQL query, indexes, constraints, and Prisma transformation behave correctly with real data.
+But now the test verifies something weaker. It verifies that your service code calls `db.contribution.create` with the right arguments. It also verifies that the code handles the mock's return value.
 
-For financial logic — duplicate prevention, timeline overlap, immutability enforcement — you want to know the database constraint fires, not just that the service code attempts to call the right Prisma method.
+It does NOT verify that the actual SQL query, indexes, constraints, and Prisma transformation behave correctly with real data.
 
-That's an integration test, not a unit test.
+Consider the financial logic. This includes duplicate prevention, timeline overlap, and immutability enforcement. You want to know that the database constraint fires. It is not enough to know that the service code calls the right Prisma method.
+
+That is an integration test, not a unit test.
 
 **On-screen action / demo:**
 Open `contributions.service.ts`. Show any function that calls `db.*`. Then show `src/lib/db.ts` — the Prisma singleton. Explain: `vi.mock("@/src/lib/db")` would replace this module during test runs.
@@ -59,7 +61,7 @@ Open `contributions.service.ts`. Show any function that calls `db.*`. Then show 
 Code block showing a full minimal service test file with `vi.mock`. Annotations: (1) `vi.mock` placement, (2) `beforeEach(() => vi.clearAllMocks())`, (3) accessing the mock in the test, (4) asserting `toHaveBeenCalledWith`.
 
 **Narration:**
-If you were writing a service test, the structure would look like this:
+If you were writing a service test, the structure would look like this.
 
 ```ts
 import { vi, describe, it, expect, beforeEach } from "vitest";
@@ -99,11 +101,15 @@ describe("createContribution", () => {
 });
 ```
 
-Key points:
-- `vi.mock` is **hoisted** by Vitest to the top of the file regardless of where you write it. This is unlike regular code.
-- `beforeEach(() => vi.clearAllMocks())` resets call counts and mock return values between tests. Without this, a `mockResolvedValue` set in test 1 can affect test 2.
-- `expect(fn).toHaveBeenCalledWith(...)` checks that the mock was called with specific arguments.
-- `expect.objectContaining(...)` does partial matching — you don't need to specify every field, only the ones you care about.
+There are four key points.
+
+First, `vi.mock` is **hoisted** by Vitest to the top of the file. This happens wherever you write it. Regular code does not behave this way.
+
+Second, `beforeEach(() => vi.clearAllMocks())` resets call counts and mock return values between tests. Without it, a `mockResolvedValue` set in test 1 can affect test 2.
+
+Third, `expect(fn).toHaveBeenCalledWith(...)` checks that the mock was called with specific arguments.
+
+Fourth, `expect.objectContaining(...)` does partial matching. You do not need to specify every field. You only specify the ones you care about.
 
 **On-screen action / demo:**
 This is a conceptual demo — no file to show. Draw the structure on screen or walk through the code block. Point out the hoisting note.
@@ -124,20 +130,27 @@ This is a conceptual demo — no file to show. Draw the structure on screen or w
 Decision tree: "Does the test require a DB response to be meaningful?" → Yes → Integration test. No → Unit test. Examples: "rangesOverlap logic" → No (pure math). "Overlap rejected on write" → Yes (DB constraint + service logic together).
 
 **Narration:**
-The unit tests in PrismApp test the logic that runs before and after the database call: validation, computation, normalisation. For those, the database is irrelevant.
+The unit tests in PrismApp test the logic that runs before and after the database call. This includes validation, computation, and normalisation. For those, the database is irrelevant.
 
-Integration tests would cover: what happens when a duplicate contribution is attempted? The service has code to prevent it, but there's also a unique constraint in the database. Which one fires first? Does the service return the right error response? Does the correction flow work end-to-end?
+Integration tests would cover other questions. What happens when a duplicate contribution is attempted? The service has code to prevent it. There is also a unique constraint in the database. Which one fires first?
 
-To set up integration tests you would:
-1. Create a test database (a separate schema in Postgres, or a Docker container)
-2. Run migrations against it: `prisma migrate deploy`
-3. Seed minimal required data (heads, periods, units) before each test
-4. Run the service functions against the real DB
-5. Assert on returned values and (optionally) query the DB directly to verify state
+Does the service return the right error response? Does the correction flow work end-to-end?
 
-Vitest supports this pattern with `beforeAll`/`afterAll` hooks for setup/teardown.
+To set up integration tests, follow five steps.
 
-PrismApp doesn't have these tests yet. They're a natural next step as the contribution module matures — especially for the correction/reversal flow and the duplicate prevention logic, where the interaction between service logic and database constraints must both be correct.
+1. Create a test database. Use a separate schema in Postgres, or a Docker container.
+
+2. Run migrations against it with `prisma migrate deploy`.
+
+3. Seed minimal required data before each test. This means heads, periods, and units.
+
+4. Run the service functions against the real DB.
+
+5. Assert on returned values. Optionally, query the DB directly to verify state.
+
+Vitest supports this pattern with `beforeAll` and `afterAll` hooks for setup and teardown.
+
+PrismApp does not have these tests yet. They are a natural next step as the contribution module matures. This is most true for the correction and reversal flow, and for the duplicate prevention logic. In both, the service logic and the database constraints must be correct together.
 
 **On-screen action / demo:**
 Open `vault/00-Core/ADR-001-Data-Immutability-and-Corrections.md` briefly. Point out that the correction flow involves multiple database writes in a specific order — exactly the kind of scenario integration tests would verify.

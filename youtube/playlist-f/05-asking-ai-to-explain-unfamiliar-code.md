@@ -25,9 +25,9 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Most code doesn't need explaining. Some code very much does — and the
-   giveaway is almost always the same thing: a comment that's justifying a
-   choice, not just describing what the next line does."
+> "Most code does not need explaining. Some code very much does.
+>
+> The giveaway is almost always the same. It is a comment that justifies a choice, not just describes what the next line does."
 
 ---
 
@@ -48,12 +48,13 @@ export function pushQueryState(nextUrl: string) {
 ```
 
 **Narration:**
-> "This is exactly the kind of code worth asking AI to explain, because on its
-   own it looks almost wrong. Why call `window.history.pushState` directly
-   instead of the Next.js router? The comment answers it — but if you deleted
-   the comment, a reasonable engineer looking at this for the first time could
-   easily 'fix' it by swapping in `router.push()`, and quietly reintroduce the
-   exact re-render loop this code was written to avoid."
+> "This is exactly the kind of code worth asking AI to explain. On its own, it looks almost wrong.
+>
+> Why call `window.history.pushState` directly instead of the Next.js router? The comment answers it.
+>
+> But imagine you delete the comment. A reasonable engineer who sees this code for the first time could 'fix' it by using `router.push()`.
+>
+> That change would quietly bring back the exact re-render loop this code was written to avoid."
 
 ---
 
@@ -63,13 +64,13 @@ export function pushQueryState(nextUrl: string) {
 one (traces the guard clause and names the failure mode it prevents).
 
 **Narration:**
-> "A shallow explanation just restates the code in English — 'this checks if
-   the URL changed and updates it if not.' A useful explanation names the
-   failure mode: if this guard clause weren't here, every keystroke or filter
-   change could re-trigger `useSearchParams`, which re-runs the data-loading
-   effect, which fetches again, which could re-trigger the very state change
-   that caused the fetch. Asking 'what breaks without this line' is a sharper
-   question than asking 'what does this line do.'"
+> "A shallow explanation just restates the code in English. For example: 'this checks if the URL changed and updates it if not.'
+>
+> A useful explanation names the failure mode. Without this guard clause, every keystroke or filter change could re-trigger `useSearchParams`.
+>
+> That re-runs the data-loading effect. The effect fetches again. And the fetch could re-trigger the very state change that caused it.
+>
+> Asking 'what breaks without this line' is a sharper question than asking 'what does this line do.'"
 
 ---
 
@@ -85,13 +86,15 @@ one (traces the guard clause and names the failure mode it prevents).
 ```
 
 **Narration:**
-> "Same pattern, different file. On its own, an in-memory rate limiter looks
-   like a bug waiting to happen — surely it should be Redis? The comment tells
-   you this was a deliberate, scoped decision: single-region, internal app,
-   good-enough deterrent, not a guarantee. The value of asking AI to explain
-   this isn't just 'what does a Map do here' — it's confirming whether the
-   *justification* still holds. If this app ever became multi-region, this
-   comment is exactly the sentence that should trigger a redesign."
+> "It is the same pattern in a different file.
+>
+> On its own, an in-memory rate limiter looks like a bug waiting to happen. Surely it should be Redis?
+>
+> The comment tells you this was a deliberate, scoped decision. It is a single-region, internal app. It is a good-enough deterrent, not a guarantee.
+>
+> The value of asking AI to explain this is not just 'what does a Map do here.' It is confirming whether the *justification* still holds.
+>
+> If this app ever became multi-region, this comment is exactly the sentence that should trigger a redesign."
 
 ---
 
@@ -100,11 +103,11 @@ one (traces the guard clause and names the failure mode it prevents).
 **Visual:** Talking head.
 
 **Narration:**
-> "The habit this episode is really about: when you find a comment justifying
-   a choice instead of describing one, that's a flag to slow down — ask what
-   breaks without it, and ask whether the reason it was written still applies
-   today. That question is just as useful whether you're reading your own old
-   code, a teammate's code, or code an AI assistant just generated for you."
+> "This episode is really about one habit.
+>
+> When you find a comment that justifies a choice, instead of describing one, slow down. Ask what breaks without it. And ask whether the reason it was written still applies today.
+>
+> That question is useful in many situations. You can ask it about your own old code. You can ask it about a teammate's code. Or you can ask it about code that an AI assistant just generated for you."
 
 ---
 
@@ -113,8 +116,11 @@ one (traces the guard clause and names the failure mode it prevents).
 **Visual:** End card, next-episode pointer.
 
 **Narration:**
-> "Understanding code is half the battle. Proving it actually works — with
-   tests, and with AI helping you debug when it doesn't — is next."
+> "Understanding code is only half of the work.
+>
+> The other half is proving that it works. That uses tests, and AI can help you debug when it does not work.
+>
+> That is next."
 
 ---
 

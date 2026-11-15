@@ -26,9 +26,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "This app has a dozen list pages — blocks, units, individuals, complaints,
-> bookings — and exactly one pagination hook behind all of them. Not twelve
-> copies with the names swapped. One. Generics are how."
+> "This app has a dozen list pages. There are blocks, units, individuals, complaints, bookings, and more.
+>
+> And there is exactly one pagination hook behind all of them.
+>
+> It is not twelve copies with the names swapped. It is one hook.
+>
+> Generics make that possible."
 
 ---
 
@@ -39,10 +43,11 @@ Block[], ...}` next to `function useUnitBrowseState(): {items: Unit[], ...}` —
 nearly identical bodies, different types hard-coded.
 
 **Narration:**
-> "Without generics, 'one hook per entity' is the honest alternative — same logic,
-> pasted once per type, because the hook needs to know what kind of items it's
-> holding. That's a maintenance trap: fix a bug in one copy, and now eleven others
-> still have it."
+> "Without generics, the honest alternative is one hook per entity.
+>
+> It is the same logic, pasted once per type. The hook needs to know what kind of items it holds.
+>
+> That is a maintenance trap. You fix a bug in one copy, and eleven other copies still have it."
 
 ---
 
@@ -71,13 +76,15 @@ export type BrowseState<T, S extends string> = {
 ```
 
 **Narration:**
-> "`T` and `S` are type parameters — placeholders filled in at the call site, not
-> here. `T` is 'whatever kind of item this list holds' — a `Block`, a `Unit`, a
-> `ComplaintItem`. `S` is constrained with `extends string` — it's not just any
-> type, it has to be a string, specifically the union of valid sort-field names for
-> that entity. Write the pagination, filtering, and sorting logic exactly once
-> against `T` and `S`, and every entity that calls this hook gets fully-typed
-> `items: T[]` back — no casting, no `any`."
+> "`T` and `S` are type parameters. They are placeholders, filled in at the call site, not here.
+>
+> `T` means 'whatever kind of item this list holds'. It can be a `Block`, a `Unit`, or a `ComplaintItem`.
+>
+> `S` is constrained with `extends string`. It is not just any type. It must be a string, specifically the union of valid sort-field names for that entity.
+>
+> We write the pagination, filtering, and sorting logic exactly once, against `T` and `S`.
+>
+> Then every entity that calls this hook gets fully typed `items: T[]` back. There is no casting and no `any`."
 
 ---
 
@@ -87,10 +94,11 @@ export type BrowseState<T, S extends string> = {
 `useBrowseState<ComplaintItem, "createdAt" | "title">({...})`.
 
 **Narration:**
-> "At the call site, `T` becomes `ComplaintItem`, `S` becomes the literal union of
-> that page's sort fields. TypeScript now knows `items` is `ComplaintItem[]`,
-> `sortBy` can only be one of those exact field names, and `setSortBy` will reject
-> anything else. All from one generic hook definition."
+> "At the call site, `T` becomes `ComplaintItem`. `S` becomes the literal union of that page's sort fields.
+>
+> TypeScript now knows that `items` is `ComplaintItem[]`. It knows that `sortBy` can only be one of those exact field names. And `setSortBy` rejects anything else.
+>
+> All of this comes from one generic hook definition."
 
 ---
 
@@ -118,12 +126,13 @@ export function ok<T>(data: T, status = 200, warning?: string): Response {
 ```
 
 **Narration:**
-> "Generics aren't only for object shapes — functions get them too. `create<T>` is
-> called once per entity, with `T` set to whatever that create call returns —
-> a `Block`, a `Complaint`. `options.onSuccess(payload.data)` is fully typed as
-> `T`, not `any`, because the generic threads all the way from the call site
-> through the fetch response. Same story on the server: `ok<T>()` wraps any typed
-> payload in the same envelope shape, for every route in the app."
+> "Generics are not only for object shapes. Functions get them too.
+>
+> `create<T>` is called once per entity. `T` is set to whatever that create call returns, such as a `Block` or a `Complaint`.
+>
+> `options.onSuccess(payload.data)` is fully typed as `T`, not `any`. The generic passes all the way from the call site, through the fetch response.
+>
+> The server has the same story. `ok<T>()` wraps any typed payload in the same envelope shape, for every route in the app."
 
 ---
 
@@ -132,8 +141,9 @@ export function ok<T>(data: T, status = 200, warning?: string): Response {
 **Visual:** End card pointing to Episode 6.
 
 **Narration:**
-> "Next: `Record`, `keyof typeof`, and the other utility types this app uses to
-> derive new types from ones that already exist, instead of writing them twice."
+> "Next: `Record`, `keyof typeof`, and the other utility types this app uses.
+>
+> They derive new types from types that already exist. So we do not write them twice."
 
 ---
 

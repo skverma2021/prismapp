@@ -8,15 +8,19 @@ These notes are for Camtasia recording. Each note maps to a slide or demo segmen
 
 *[SLIDE: Pyramid diagram — unit / integration / E2E]*
 
-Every project needs a testing strategy. The common model is the pyramid.
+Every project needs a testing strategy.
 
-Bottom: unit tests — fast, isolated, no database, no network. These are the ones PrismApp has.
+The common model is the pyramid.
 
-Middle: integration tests — service plus database. Slower. Need setup. Verify that the combination of your code and Postgres produces the right result.
+At the bottom are unit tests. They are fast and isolated. They need no database and no network. These are the tests PrismApp has.
 
-Top: E2E tests — browser driving the full app. Most realistic. Slowest. Most brittle.
+In the middle are integration tests. They test the service together with the database. They are slower and need setup. They verify that your code and Postgres produce the right result together.
 
-PrismApp focuses on the bottom. The riskiest pure logic — financial calculations, overlap detection, input validation — lives in functions that don't need a database to test.
+At the top are E2E tests. A browser drives the full app. They are the most realistic, but also the slowest and the most fragile.
+
+PrismApp focuses on the bottom of the pyramid.
+
+The riskiest pure logic lives in functions that do not need a database to test. That logic includes financial calculations, overlap detection, and input validation.
 
 [Show terminal] `npm run test` — 5 files, passing, under a second.
 
@@ -26,13 +30,15 @@ PrismApp focuses on the bottom. The riskiest pure logic — financial calculatio
 
 *[SLIDE: Three categories table]*
 
-Three signals that a function is worth testing:
+There are three signals that a function is worth testing.
 
-**Multiple valid behaviours**: `normalizeHeadPeriod` accepts `MONTH`, `month`, `Month`, `  MONTH  `. All must return `"MONTH"`. A change that breaks case handling would silently affect database values.
+**Multiple valid behaviours.** `normalizeHeadPeriod` accepts `MONTH`, `month`, `Month`, `  MONTH  `. All of them must return `"MONTH"`.
 
-**Known error cases**: `parseContributionId` must throw on `"0"`, `"-5"`, `"abc"`. If these are accepted, invalid IDs reach the DB.
+A change that breaks case handling would silently affect database values.
 
-**Trusted output**: `roundTo2` feeds the payment write path and the reports. Wrong output = wrong amounts in two places.
+**Known error cases.** `parseContributionId` must throw on `"0"`, `"-5"`, `"abc"`. If it accepts these, invalid IDs reach the DB.
+
+**Trusted output.** `roundTo2` feeds the payment write path and the reports. Wrong output means wrong amounts in two places.
 
 [Show test file] Open `contributions.helpers.test.ts`. The `roundTo2` describe block — read the IEEE 754 comment. That comment exists because someone thought about the edge case carefully.
 
@@ -42,13 +48,17 @@ Three signals that a function is worth testing:
 
 *[SLIDE: Tested vs Not tested table]*
 
-Service functions aren't unit tested — they call Prisma. You can mock Prisma with `vi.mock`, but then you're testing that your code calls the mock correctly — not that your code plus Postgres produces the right result.
+Service functions are not unit tested, because they call Prisma.
 
-Route handlers aren't unit tested — they need a `NextRequest` object and the Next.js runtime.
+You can mock Prisma with `vi.mock`. But then you test that your code calls the mock correctly. You do not test that your code and Postgres produce the right result.
 
-This doesn't mean those tests are bad ideas. It means they're a different category — integration tests — with higher setup cost.
+Route handlers are not unit tested either. They need a `NextRequest` object and the Next.js runtime.
 
-For V1, PrismApp tests the cheapest-to-test, highest-risk code. That's the right trade-off.
+This does not mean those tests are bad ideas. They belong to a different category, called integration tests. They have a higher setup cost.
+
+For V1, PrismApp tests the code that is cheapest to test and highest in risk.
+
+That is the right trade-off.
 
 ---
 
@@ -56,15 +66,15 @@ For V1, PrismApp tests the cheapest-to-test, highest-risk code. That's the right
 
 *[SLIDE: Annotated vitest.config.ts]*
 
-20 lines. Every line matters.
+The config file is 20 lines. Every line matters.
 
-`environment: "node"` — no DOM, no window. Server-side logic only. If you were testing React components, this would be `"jsdom"`.
+`environment: "node"` means there is no DOM and no window. It is for server-side logic only. To test React components, you would use `"jsdom"`.
 
-`include: ["src/**/__tests__/**/*.test.ts"]` — only files inside a `__tests__` folder. Files in `app/` or `prisma/` are not picked up.
+`include: ["src/**/__tests__/**/*.test.ts"]` picks up only files inside a `__tests__` folder. Files in `app/` or `prisma/` are not picked up.
 
-`coverage.provider: "v8"` — Node's built-in coverage engine. Zero extra dependencies.
+`coverage.provider: "v8"` is the coverage engine built into Node. It adds zero extra dependencies.
 
-`resolve.alias: { "@": project root }` — the same `@` alias used in source code. Test imports and source imports are consistent.
+`resolve.alias: { "@": project root }` is the same `@` alias used in source code. Test imports and source imports stay consistent.
 
 [Show VS Code] Open `vitest.config.ts`. Read each field.
 
@@ -74,11 +84,13 @@ For V1, PrismApp tests the cheapest-to-test, highest-risk code. That's the right
 
 *[SLIDE: Directory tree]*
 
-Tests are co-located with the source they test. Each module folder has a `__tests__/` subdirectory. Test filename = source filename + `.test.ts`.
+Tests live next to the source they test.
 
-`contributions.helpers.test.ts` tests `contributions.helpers.ts`. No ambiguity.
+Each module folder has a `__tests__/` subdirectory. The test filename is the source filename plus `.test.ts`.
 
-This is intentional — when you modify a function, you know exactly where its tests are.
+`contributions.helpers.test.ts` tests `contributions.helpers.ts`. There is no ambiguity.
+
+This is intentional. When you change a function, you know exactly where its tests are.
 
 [Show Explorer] Navigate `src/modules/contributions/`. Expand `__tests__/`. Show both test files. Then show `src/modules/ownerships/__tests__/`.
 
@@ -88,11 +100,11 @@ This is intentional — when you modify a function, you know exactly where its t
 
 *[SLIDE: Three commands]*
 
-`npm run test` — single pass. Exit code 0 = all pass. Use this in CI.
+`npm run test` runs a single pass. Exit code 0 means all tests pass. Use this in CI.
 
-`npm run test:watch` — watch mode. Edit a file, Vitest re-runs only affected tests. Use this during development.
+`npm run test:watch` starts watch mode. When you edit a file, Vitest re-runs only the affected tests. Use this during development.
 
-`npx vitest run --coverage` — generates a coverage report. HTML in `coverage/`. Shows which lines were hit.
+`npx vitest run --coverage` generates a coverage report. The HTML goes in `coverage/`. It shows which lines were hit.
 
 [Demo] Run `npm run test`. Read the output: file count, test count, duration. Then run watch mode — save a file and watch the re-run.
 
@@ -102,11 +114,13 @@ This is intentional — when you modify a function, you know exactly where its t
 
 *[SLIDE: Annotated test file structure]*
 
-Three import groups: vitest test functions, `HttpError`, then the functions under test.
+The file has three import groups. First come the vitest test functions. Then `HttpError`. Then the functions under test.
 
-Then `describe` blocks — one per function. `describe` holds the function name. `it` describes one behaviour.
+After the imports come the `describe` blocks, one per function. `describe` holds the function name. `it` describes one behaviour.
 
-Together they read as a sentence: "roundTo2 rounds to 2 decimal places."
+Together they read as a sentence.
+
+For example: "roundTo2 rounds to 2 decimal places."
 
 [VS Code] Open `contributions.helpers.test.ts`. Collapse all `describe` blocks. The file outline is a list of function names.
 
@@ -116,15 +130,17 @@ Together they read as a sentence: "roundTo2 rounds to 2 decimal places."
 
 *[SLIDE: Before/after with d() helper]*
 
-When tests need many `Date` objects, a local inline factory makes them readable.
+Some tests need many `Date` objects. A small local factory makes them readable.
 
 ```ts
 const d = (iso: string) => new Date(iso + "T00:00:00.000Z");
 ```
 
-Defined inside the `describe` block. Not exported. Exists only to clean up test cases.
+It is defined inside the `describe` block. It is not exported. It exists only to keep test cases clean.
 
-The `T00:00:00.000Z` suffix forces UTC midnight — the convention PrismApp uses for date-only fields throughout.
+The `T00:00:00.000Z` suffix forces UTC midnight.
+
+PrismApp uses this convention for date-only fields throughout.
 
 [VS Code] Open `ownerships.helpers.test.ts`. Show `const d = ...`. Count how many times it's used. Then show what one test would look like without it.
 
@@ -134,13 +150,17 @@ The `T00:00:00.000Z` suffix forces UTC midnight — the convention PrismApp uses
 
 *[SLIDE: Three boundary timeline diagrams]*
 
-Overlap logic fails at the edges. Three cases:
+Overlap logic fails at the edges. There are three cases.
 
-1. **Adjacent** (A ends Jan 31, B starts Feb 1) — NOT overlapping. Allowed.
-2. **Same-day boundary** (A ends Jan 31, B starts Jan 31) — IS overlapping. Not allowed.
-3. **Open-ended range** (A starts Jan, no end) — overlaps with anything starting after Jan.
+Case one is adjacent ranges. A ends Jan 31 and B starts Feb 1. They do NOT overlap, so this is allowed.
 
-If the implementation uses `>` instead of `>=` for the same-day check, adjacent-is-fine silently becomes same-day-is-fine-too. The test catches that.
+Case two is a same-day boundary. A ends Jan 31 and B starts Jan 31. They DO overlap, so this is not allowed.
+
+Case three is an open-ended range. A starts in Jan and has no end. It overlaps with anything that starts after Jan.
+
+Suppose the implementation uses `>` instead of `>=` for the same-day check. Then a same-day boundary is silently accepted, just like an adjacent range.
+
+The test catches that.
 
 [VS Code] Open `ownerships.helpers.test.ts`. Read the three boundary test cases with their comments.
 
@@ -150,14 +170,15 @@ If the implementation uses `>` instead of `>=` for the same-day check, adjacent-
 
 *[SLIDE: Valid vs Invalid columns]*
 
-Schema parsers have two sides:
+Schema parsers have two sides.
 
-Valid input → returns a typed object with correct values.
-Invalid input → throws `HttpError`.
+Valid input returns a typed object with correct values. Invalid input throws `HttpError`.
 
-Tests verify both. For the error side: `expect(() => fn()).toThrow(HttpError)`. Not the message — the class.
+Tests verify both sides. For the error side, use `expect(() => fn()).toThrow(HttpError)`. This checks the class, not the message.
 
-Messages can change in a refactor. The error type contract should not. Test what matters.
+Messages can change in a refactor. The error type contract should not change.
+
+Test what matters.
 
 [VS Code] Open `contributions.schemas.test.ts`. Show one valid test and one invalid test.
 
@@ -167,7 +188,7 @@ Messages can change in a refactor. The error type contract should not. Test what
 
 *[SLIDE: VALID_CONTRIBUTION constant + three mutation tests]*
 
-Define one valid object at the top of the `describe`. Each error test mutates or removes one field.
+Define one valid object at the top of the `describe`. Each error test changes or removes exactly one field.
 
 ```ts
 const VALID_CONTRIBUTION = { unitId: "...", ... };
@@ -179,7 +200,7 @@ const { unitId: _omit, ...rest } = VALID_CONTRIBUTION;
 { ...VALID_CONTRIBUTION, contributionHeadId: 0 }
 ```
 
-`_omit` prefix tells the linter the variable is intentionally unused.
+The `_omit` prefix tells the linter that the variable is intentionally unused.
 
 [VS Code] Find `VALID_CONTRIBUTION`. Count the error tests — each changes exactly one field.
 
@@ -189,11 +210,13 @@ const { unitId: _omit, ...rest } = VALID_CONTRIBUTION;
 
 *[SLIDE: Three assertion forms]*
 
-`toThrow(HttpError)` — class check. Most tests use this.
+`toThrow(HttpError)` is a class check. Most tests use this.
 
-`try { fn(); expect.fail("should have thrown") } catch(e) { ... }` — use when you need to check `e.status` or `e.code`.
+Use `try { fn(); expect.fail("should have thrown") } catch(e) { ... }` when you need to check `e.status` or `e.code`.
 
-`expect.fail(...)` is critical: if the function does NOT throw, this line runs and fails the test with a clear message. Without it, the catch block never runs and the test silently passes when it shouldn't.
+`expect.fail(...)` is critical.
+
+If the function does NOT throw, this line runs and fails the test with a clear message. Without it, the catch block never runs. The test then passes silently when it should fail.
 
 [VS Code] Open `residencies.helpers.test.ts`. Find the `try/catch` block for `ensureNotBeforeUnitInception`. Point out `expect.fail`.
 
@@ -203,13 +226,13 @@ const { unitId: _omit, ...rest } = VALID_CONTRIBUTION;
 
 *[SLIDE: Service → Prisma → DB diagram with vi.mock annotation]*
 
-Service functions call Prisma. `vi.mock` can replace `db` with a stub. The function runs without a database.
+Service functions call Prisma. `vi.mock` can replace `db` with a stub. Then the function runs without a database.
 
-But now you're testing that your code calls the mock correctly. Not that your code plus Postgres produces the right result.
+But now you test that your code calls the mock correctly. You do not test that your code and Postgres produce the right result.
 
-For financial writes — duplicate prevention, timeline overlap, correction flow — you want the database constraint to fire, not just the service code to attempt the right call.
+For financial writes, you want the database constraint to fire. That includes duplicate prevention, timeline overlap, and the correction flow. It is not enough that the service code attempts the right call.
 
-That's integration testing. Not unit testing.
+That is integration testing, not unit testing.
 
 ---
 
@@ -219,15 +242,15 @@ That's integration testing. Not unit testing.
 
 `vi.mock("@/src/lib/db", () => ({ db: { contribution: { create: vi.fn() } } }))` replaces the db module for this test file.
 
-Must be at top level — Vitest hoists it above imports.
+It must be at the top level. Vitest hoists it above the imports.
 
-`beforeEach(() => vi.clearAllMocks())` resets call history between tests.
+`beforeEach(() => vi.clearAllMocks())` resets the call history between tests.
 
 `mockResolvedValue(...)` controls what the mock returns.
 
-`toHaveBeenCalledWith(...)` asserts the mock was called with the right arguments.
+`toHaveBeenCalledWith(...)` asserts that the mock was called with the right arguments.
 
-This is the pattern — not in PrismApp today, but ready for integration test expansion.
+This is the pattern. PrismApp does not use it today, but it is ready for integration test expansion.
 
 ---
 
@@ -235,15 +258,19 @@ This is the pattern — not in PrismApp today, but ready for integration test ex
 
 *[SLIDE: Decision tree — unit vs integration]*
 
-Add integration tests when correctness depends on the database constraint, not just application logic.
+Add integration tests when correctness depends on the database constraint, not only on application logic.
 
-- `rangesOverlap` logic — unit test. It's pure math.
-- Overlap rejected on write — integration test. Service + DB constraint must both fire correctly.
-- Correction flow — integration test. Multiple writes in sequence; rollback behaviour matters.
+Take the `rangesOverlap` logic. It is pure math, so a unit test is enough.
 
-Setup: test database, `prisma migrate deploy`, seed minimal data, run service against real DB.
+Take overlap rejected on write. The service and the DB constraint must both fire correctly, so it needs an integration test.
 
-PrismApp doesn't have these yet. They're the natural next step for the contribution module's hardening phase.
+Take the correction flow. It makes multiple writes in sequence, and rollback behaviour matters. It also needs an integration test.
+
+The setup has four steps. Create a test database. Run `prisma migrate deploy`. Seed minimal data. Run the service against the real DB.
+
+PrismApp does not have these tests yet.
+
+They are the natural next step for the contribution module's hardening phase.
 
 ---
 
@@ -251,14 +278,20 @@ PrismApp doesn't have these yet. They're the natural next step for the contribut
 
 *[SLIDE: Summary — five test files, three patterns, one config]*
 
-Module G covered:
+Module G covered five topics.
 
-- Why PrismApp tests helpers and parsers, not services (pure functions vs DB dependency)
-- `vitest.config.ts` — every field, co-location convention
-- Helper tests: `describe`/`it` structure, the `d()` date factory, boundary case focus
-- Schema parser tests: valid baseline + mutation, `toThrow(HttpError)` vs `try/catch`
-- Mock strategy: `vi.mock` for service tests, integration test territory for DB-dependent logic
+First, why PrismApp tests helpers and parsers, not services. Pure functions need no database. Services depend on one.
 
-The exercise asks you to write a new test file for the report param parsers — applying everything from this module.
+Second, `vitest.config.ts`. We covered every field and the co-location convention.
 
-Next module is **H: Deployment** — running PrismApp on Vercel with a hosted Postgres database.
+Third, helper tests. We covered the `describe`/`it` structure, the `d()` date factory, and the focus on boundary cases.
+
+Fourth, schema parser tests. We covered the valid baseline with mutation, and `toThrow(HttpError)` versus `try/catch`.
+
+Fifth, mock strategy. `vi.mock` is for service tests. Logic that depends on the database belongs to integration tests.
+
+The exercise asks you to write a new test file for the report param parsers. You will apply everything from this module.
+
+The next module is **H: Deployment**.
+
+It covers running PrismApp on Vercel with a hosted Postgres database.

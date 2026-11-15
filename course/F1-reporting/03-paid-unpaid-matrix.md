@@ -13,15 +13,21 @@
 Example table. Rows = units (A-101, A-102, B-201 …). Columns = months (Jan–Dec). Cells: "Paid" (green), "Unpaid" (amber), "N/A" (grey). Totals row at the bottom showing collection vs expected amounts.
 
 **Narration:**
-The paid/unpaid matrix is the most complex report in PrismApp. Instead of showing individual transactions, it shows **coverage** — has each unit fulfilled its obligation for each period?
+The paid/unpaid matrix is the most complex report in PrismApp.
 
-Rows are units. Columns are months (for monthly contribution heads) or a single year column (for yearly heads). Each cell has one of three states:
+It does not show individual transactions. It shows **coverage**. Has each unit fulfilled its obligation for each period?
 
-- **Paid** — at least one contribution detail exists for this unit + this period + this head
-- **Unpaid** — no contribution detail exists, and the period is in the past or current year
-- **N/A** — the head is not applicable to this period (e.g., a yearly head doesn't have 12 month cells)
+Rows are units. Columns are months for monthly contribution heads. For yearly heads, there is a single year column.
 
-The report requires two filters: `refYear` and `headId`. Both are mandatory because the matrix is meaningless without knowing which head to check and which year to display.
+Each cell has one of three states:
+
+- **Paid**. At least one contribution detail exists for this unit, this period, and this head.
+- **Unpaid**. No contribution detail exists, and the period is in the past or current year.
+- **N/A**. The head does not apply to this period. For example, a yearly head does not have 12 month cells.
+
+The report requires two filters: `refYear` and `headId`.
+
+Both are mandatory. The matrix is meaningless without knowing which head to check and which year to display.
 
 **On-screen action / demo:**
 Open the app. Navigate to Reports → Paid/Unpaid Matrix. Set refYear to the current year, pick any head, click Refresh. Show the grid with colored cells.
@@ -42,11 +48,11 @@ The matrix is a coverage view. Each cell is computed, not stored. Paid/Unpaid st
 Side by side. Left: `periodType = MONTH` — table with 12 columns (Jan–Dec). Right: `periodType = YEAR` — table with 1 column (2024). Below: code snippet showing the branch in the service.
 
 **Narration:**
-Contribution heads have a `periodType` field — either `MONTH` or `YEAR`.
+Contribution heads have a `periodType` field. It is either `MONTH` or `YEAR`.
 
-For **MONTH** heads (like monthly maintenance): the matrix shows 12 columns, one per month. A unit is Paid for a month if a `ContributionDetail` exists with `refYear = selected year` and `refMonth = that month`.
+For **MONTH** heads, like monthly maintenance, the matrix shows 12 columns, one per month. A unit is Paid for a month if a `ContributionDetail` exists. It must have `refYear = selected year` and `refMonth = that month`.
 
-For **YEAR** heads (like annual building fund): the matrix shows one column for the year. A unit is Paid for the year if any `ContributionDetail` exists with `refYear = selected year`.
+For **YEAR** heads, like the annual building fund, the matrix shows one column for the year. A unit is Paid for the year if any `ContributionDetail` exists with `refYear = selected year`.
 
 The service checks this early:
 
@@ -55,14 +61,14 @@ if (!head) throw new HttpError(404, "NOT_FOUND", "Head not found");
 const isMonthly = head.periodType === "MONTH";
 ```
 
-Then when computing cell statuses:
+Then it computes the cell statuses:
 ```ts
 const months = isMonthly ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] : [0];
 ```
 
-For YEAR heads, `refMonth` is stored as `0` in the database (a convention for "full year").
+For YEAR heads, `refMonth` is stored as `0` in the database. This is a convention for "full year."
 
-The UI page uses `MONTH_COLUMN_KEYS` and `MONTH_COLUMN_LABELS` constants. For YEAR heads, it renders only the year column and hides the individual month columns.
+The UI page uses the constants `MONTH_COLUMN_KEYS` and `MONTH_COLUMN_LABELS`. For YEAR heads, it renders only the year column. It hides the individual month columns.
 
 **On-screen action / demo:**
 Open `contributions-reports.service.ts`. Find `getPaidUnpaidMatrixReport`. Show the `isMonthly` branch and the `months` variable.
@@ -89,19 +95,21 @@ Step-by-step flow diagram:
 6. Paginate the rows array in-memory
 
 **Narration:**
-The paid/unpaid matrix cannot be implemented as a single SQL query because the "all units" requirement doesn't naturally join with "paid details that may not exist". The service uses a different approach:
+The paid/unpaid matrix cannot be implemented as a single SQL query. The "all units" requirement does not naturally join with "paid details that may not exist." So the service uses a different approach.
 
-**Step 1**: Fetch every unit that matches the optional `blockId` filter.
+**Step 1.** Fetch every unit that matches the optional `blockId` filter.
 
-**Step 2**: Fetch all `ContributionDetail` records for this year + head, grouped into a lookup map: `paidByUnitMonth[unitId][month] = amount`.
+**Step 2.** Fetch all `ContributionDetail` records for this year and head. Group them into a lookup map: `paidByUnitMonth[unitId][month] = amount`.
 
-**Step 3**: Fetch the active `ContributionRate` for this head (the rate snapshot used for expected amount calculation).
+**Step 3.** Fetch the active `ContributionRate` for this head. This is the rate snapshot used for the expected amount calculation.
 
-**Step 4**: Loop every unit × every applicable month. For each combination:
-- If `paidByUnitMonth[unitId][month]` exists → status = `Paid`
-- Otherwise → status = `Unpaid`
+**Step 4.** Loop over every unit and every applicable month. For each combination:
+- If `paidByUnitMonth[unitId][month]` exists, the status is `Paid`.
+- Otherwise, the status is `Unpaid`.
 
-**Step 5**: Apply pagination to the in-memory rows array. This is different from the transactions report where pagination is applied in SQL via `skip/take`. Here:
+**Step 5.** Apply pagination to the in-memory rows array.
+
+This is different from the transactions report. There, pagination is applied in SQL via `skip/take`. Here the code is:
 ```ts
 const paginatedRows = allRows.slice(
   (params.page - 1) * params.pageSize,
@@ -130,7 +138,7 @@ Matrix = in-memory loop over all units × months. Totals are pre-pagination. Pag
 Three-row table: `payUnit` value, meaning, quantity formula, example. Below: the `roundTo2()` formula with an example calculation.
 
 **Narration:**
-Each contribution head has a `payUnit` field that controls how the expected amount is computed per unit:
+Each contribution head has a `payUnit` field. It controls how the expected amount is computed per unit:
 
 | `payUnit` | Meaning | Quantity |
 |-----------|---------|---------|
@@ -140,7 +148,7 @@ Each contribution head has a `payUnit` field that controls how the expected amou
 
 The service fetches unit area from the Unit record. For `payUnit=2`, it runs an additional query to count active residents per unit. For `payUnit=3`, quantity is always 1.
 
-Expected amount per cell:
+This is the expected amount per cell:
 ```ts
 expectedAmount += roundTo2(quantity * activeRate.rateValue);
 ```
@@ -152,9 +160,13 @@ function roundTo2(n: number): number {
 }
 ```
 
-This is important: floating-point arithmetic (`0.1 + 0.2 ≠ 0.3` in JavaScript) makes naive sums unreliable for money. By rounding to 2 decimal places at every multiplication and sum step, the service keeps amounts deterministic.
+This is important. Floating-point arithmetic makes naive sums unreliable for money. In JavaScript, `0.1 + 0.2 ≠ 0.3`.
 
-**Note for `payUnit=2`**: Because resident count can change over time, the expected amount for `payUnit=2` heads is **indicative** — it reflects the count at report-run time, not at payment time. The vault spec explicitly calls this out.
+The service rounds to 2 decimal places at every multiplication and sum step. This keeps amounts deterministic.
+
+**Note for `payUnit=2`**: The resident count can change over time. So the expected amount for `payUnit=2` heads is **indicative**.
+
+It reflects the count at report-run time, not at payment time. The vault spec explicitly calls this out.
 
 **On-screen action / demo:**
 Open `getPaidUnpaidMatrixReport`. Find the `payUnit` branch. Show the `roundTo2` function.

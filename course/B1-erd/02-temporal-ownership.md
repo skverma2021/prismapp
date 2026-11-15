@@ -19,15 +19,23 @@ Naive: ✓ Who owns it now? ✗ Who owned it in March 2024? ✗ How many times h
 Timeline: ✓ All of the above.
 
 **Narration:**
-When you first encounter the requirement "track who owns each flat," the obvious design is to add a `currentOwnerId` column to the Units table. It is a single column, it is a FK, it even has a clear name.
+Suppose the requirement is "track who owns each flat." The obvious design is to add a `currentOwnerId` column to the Units table.
+
+It is a single column. It is a FK. It even has a clear name.
 
 It answers exactly one question: who owns this flat right now?
 
-Now look at the rules. Rule O2: "An individual may own the same unit multiple times across different time periods." Rule O5: "Ownership continuity starts on `Units.inceptionDt`." These rules require you to reconstruct the full ownership history, not just the current state.
+Now look at the rules.
+
+Rule O2 says: "An individual may own the same unit multiple times across different time periods." Rule O5 says: "Ownership continuity starts on `Units.inceptionDt`."
+
+These rules require you to reconstruct the full ownership history, not just the current state.
 
 The naive design cannot do this. When a flat changes hands, you UPDATE the column. The previous owner is gone. The history is destroyed.
 
-This is the most common mistake in data modeling for systems that manage resources over time. The symptom appears late — usually when someone needs a historical report and discovers there is no data to support it.
+This is the most common mistake in data modeling for systems that manage resources over time.
+
+The symptom appears late. Usually someone needs a historical report and finds no data to support it.
 
 **On-screen action / demo:**
 Open `vault/V1/master-data-vision.md`. Navigate to Section C.3 — "Why Timelines, Not Just Foreign Keys." Read the first two sentences aloud.
@@ -67,17 +75,29 @@ Annotation band between the two tables: "Jul 01 – Aug 10, 2022 → Unit OWNED 
 **Narration:**
 Before we go further, look at the first row of the ownership table. The owner is `BUILDER_INVENTORY`. What is that?
 
-Rule O4 says a unit must always have exactly one active owner — not usually, not once it is sold — always. Including from the moment it enters the system on `inceptionDt`.
+Rule O4 says a unit must always have exactly one active owner. It does not say usually. It does not say once it is sold. It says always.
 
-But on `inceptionDt`, no real buyer exists. The flat has just been registered into the system. It may not even have been marketed yet. If we take O4 seriously, we need an owner from day zero.
+That includes the moment the unit enters the system on `inceptionDt`.
 
-`BUILDER_INVENTORY` is the system identity that fills this requirement. It is not a real person. It is the system's representation of the builder's de facto possession before any sale. When the first real buyer purchases the flat, the ownership transfer closes the `BUILDER_INVENTORY` row and opens a new row for that buyer. Unit creation and first-ownership-row creation are a single atomic operation — so no unit ever enters the database without an owner.
+But on `inceptionDt`, no real buyer exists. The flat has just been registered into the system. It may not even have been marketed yet.
 
-The ownership chain is unbroken from `inceptionDt` — not because the data happens to be clean, but because the system enforces it structurally.
+If we take O4 seriously, we need an owner from day zero.
 
-Now look at the residency table. Between July and August 2022, Ravi Kumar owns the flat but no one lives there. The unit is vacant. That is perfectly fine.
+`BUILDER_INVENTORY` is the system identity that fills this requirement. It is not a real person. It is the system's representation of the builder's de facto possession before any sale.
 
-This is the distinction that trips up many developers: **vacancy is a residency state, not an ownership state.** O4 says there must always be exactly one owner. R4 explicitly says a unit may have zero or one active resident. The two chains are independent. A vacant unit has an owner — it is just that no one is currently living there.
+When the first real buyer purchases the flat, the ownership transfer closes the `BUILDER_INVENTORY` row. It then opens a new row for that buyer.
+
+Unit creation and first-ownership-row creation are a single atomic operation. So no unit ever enters the database without an owner.
+
+The ownership chain is unbroken from `inceptionDt`. This is not because the data happens to be clean. It is because the system enforces it structurally.
+
+Now look at the residency table. Between July and August 2022, Ravi Kumar owns the flat, but no one lives there. The unit is vacant. That is perfectly fine.
+
+This distinction trips up many developers. **Vacancy is a residency state, not an ownership state.**
+
+O4 says there must always be exactly one owner. R4 explicitly says a unit may have zero or one active resident.
+
+The two chains are independent. A vacant unit still has an owner. It is just that no one is currently living there.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md`. Read O4 aloud: "A Unit must always have exactly one active owner." Then scroll to O6: "The first owner on inceptionDt is BUILDER_INVENTORY." Show the connection between the two rules. Then open `vault/01-Domain/ERD.md` → UnitOwners table. Then open `prisma/schema.prisma` → `UnitOwners` model and the `Unit` model's `create` logic to show the atomic first-row creation.
@@ -100,13 +120,21 @@ Split screen. Left: a database UNIQUE constraint definition (shown failing with 
 **Narration:**
 Why can we not just add a UNIQUE constraint to prevent two owners at the same time?
 
-Because UNIQUE constraints check for exact duplicate values in a column — not for ranges that overlap. Two ownership rows with different `fromDt` values would pass a UNIQUE check even if their date ranges overlap completely.
+UNIQUE constraints check for exact duplicate values in a column. They do not check for ranges that overlap.
 
-Consider: Row 1 is fromDt=2024-01-01, toDt=2024-12-31. Row 2 is fromDt=2024-06-01, toDt=NULL. Both rows have different fromDt values. UNIQUE does not catch this.
+Two ownership rows with different `fromDt` values would pass a UNIQUE check, even if their date ranges overlap completely.
 
-PostgreSQL has range types and exclusion constraints that can detect overlapping ranges, but they add schema complexity and are not universally portable. For this project, the enforcement lives in the service layer, inside a serializable transaction. The check runs before the write. If overlapping rows are found, the write is rejected.
+Consider this example. Row 1 is fromDt=2024-01-01, toDt=2024-12-31. Row 2 is fromDt=2024-06-01, toDt=NULL.
 
-This is not a weakness — it is correct separation of concerns. The schema enforces what schemas can enforce. The service enforces what requires business logic.
+Both rows have different fromDt values. UNIQUE does not catch this.
+
+PostgreSQL has range types and exclusion constraints that can detect overlapping ranges. But they add schema complexity, and they are not universally portable.
+
+For this project, the enforcement lives in the service layer, inside a serializable transaction. The check runs before the write. If overlapping rows are found, the write is rejected.
+
+This is not a weakness. It is correct separation of concerns.
+
+The schema enforces what schemas can enforce. The service enforces what needs business logic.
 
 **On-screen action / demo:**
 Open `src/modules/ownerships/ownerships.service.ts`. Navigate to the `createOwnership` or `transferOwnership` function. Point to the overlap-check query — the `findFirst` or `findMany` call that checks for existing rows in the date range before the `create`. Name the transaction wrapper.

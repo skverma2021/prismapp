@@ -25,10 +25,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Someone asks: 'why can't I just fix this payment amount directly?' Six months
-> later, someone else asks the exact same question. If the answer only ever lived in
-> a Slack thread, you're about to have the same debate twice. Today: the document
-> that prevents that."
+> "Someone asks: 'Why can I not just fix this payment amount directly?'
+>
+> Six months later, someone else asks the exact same question.
+>
+> If the answer only lived in a Slack thread, you will have the same debate twice.
+>
+> Today, we look at the document that prevents that."
 
 ---
 
@@ -38,12 +41,13 @@
 title, status, and "Context" section.
 
 **Narration:**
-> "The decision itself is simple to state: once a contribution payment is posted, it
-> can never be edited or deleted, by anyone, for any reason. Corrections happen by
-> adding a new, offsetting entry instead. Simple to state, but easy to second-guess
-> later under pressure — 'just this once, can we fix the typo directly?' An ADR
-> exists precisely for that moment: to have the reasoning already written down, so
-> the answer doesn't depend on who's in the room that day."
+> "The decision itself is simple to state.
+>
+> Once a contribution payment is posted, it can never be edited or deleted, by anyone, for any reason. Corrections happen by adding a new, offsetting entry instead.
+>
+> It is simple to state. But it is easy to second-guess later, under pressure. 'Just this once, can we fix the typo directly?'
+>
+> An ADR exists for exactly that moment. The reasoning is already written down. So the answer does not depend on who is in the room that day."
 
 ---
 
@@ -55,13 +59,15 @@ Known Gap (resolved by ADR-004) → Consequences → Alternatives Considered →
 Tasks.
 
 **Narration:**
-> "Notice the shape of this document — it's a template, not a one-off essay.
-> Context: what problem forced this decision. Decision: the actual rule, stated
-> plainly. Why: the reasoning. Then the specifics — what's allowed, what invariants
-> must hold. And two sections people often skip but shouldn't: consequences,
-> including the honest trade-offs, and alternatives considered — the options that
-> were rejected, and why. That last one is what stops the 'have we tried just doing
-> X instead' conversation from happening again a year later."
+> "Notice the shape of this document. It is a template, not a one-off essay.
+>
+> Context: what problem forced this decision. Decision: the actual rule, stated plainly. Why: the reasoning.
+>
+> Then come the specifics. What is allowed, and what invariants must hold.
+>
+> Two more sections are often skipped, but they should not be. The first is consequences, including the honest trade-offs. The second is alternatives considered. These are the options that were rejected, and why.
+>
+> That last section stops the 'have we tried doing X instead?' conversation from happening again a year later."
 
 ---
 
@@ -71,13 +77,13 @@ Tasks.
 "Trade-offs" subsections.
 
 **Narration:**
-> "A good ADR doesn't just sell the decision — it names the cost. Here: strong
-> auditability and safer horizontal scaling, because every write is append-only,
-> nothing is ever mutated in place. And honestly, more records to manage, and
-> reports that now have to compute net effects across original and compensating
-> entries instead of reading one row. Writing the downside down, in the same
-> document as the upside, is what makes the decision trustworthy instead of
-> sounding like marketing."
+> "A good ADR does not just sell the decision. It names the cost.
+>
+> Here, the benefits are strong auditability and safer horizontal scaling. Every write is append-only, so nothing is ever changed in place.
+>
+> And honestly, there are costs. There are more records to manage. And reports must now compute net effects across original and compensating entries, instead of reading one row.
+>
+> Writing the downside in the same document as the upside makes the decision trustworthy. Otherwise, it sounds like marketing."
 
 ---
 
@@ -87,13 +93,13 @@ Tasks.
 approval vs. V2+ maker-checker, and the "Maker-Checker Rollout Triggers" list.
 
 **Narration:**
-> "Not every related question gets answered in the same document, and that's a
-> feature, not a gap. This ADR explicitly defers a second question — should a
-> financial correction require a second person's approval — to a later phase, and
-> names the concrete triggers that would force that decision: a correction-count
-> threshold, a dollar-amount threshold, a compliance requirement. Deferring a
-> decision on purpose, with a stated trigger for revisiting it, is completely
-> different from just not thinking about it."
+> "Not every related question gets answered in the same document. That is a feature, not a gap.
+>
+> This ADR deliberately defers a second question to a later phase. Should a financial correction require a second person's approval?
+>
+> It also names the concrete triggers that would force that decision. A correction-count threshold. A dollar-amount threshold. A compliance requirement.
+>
+> Deferring a decision on purpose, with a stated trigger for revisiting it, is completely different from not thinking about it."
 
 ---
 
@@ -103,15 +109,17 @@ approval vs. V2+ maker-checker, and the "Maker-Checker Rollout Triggers" list.
 then successfully posting a compensating transaction referencing the original.
 
 **Narration:**
-> "Here's the decision enforced. No edit path exists for a posted contribution — not
-> hidden, not disabled, genuinely absent. A correction instead creates a new record
-> that references the original, with a reason code and full audit metadata. Anyone
-> reading the ledger later sees both the mistake and its correction, which is exactly
-> the point: the system's history stays honest, including its own errors. And the
-> ADR itself stays honest too: a gap found later in live use — a pending correction
-> that released the duplicate lock too early — was written into the same ADR as a
-> known gap, then closed by a follow-up ADR that extended it with partial
-> adjustments."
+> "Here is the decision, enforced.
+>
+> No edit path exists for a posted contribution. It is not hidden, and it is not disabled. It is genuinely absent.
+>
+> A correction creates a new record that references the original. It has a reason code and full audit metadata.
+>
+> Anyone reading the ledger later sees both the mistake and its correction. That is the point. The history of the system stays honest, including its own errors.
+>
+> The ADR itself stays honest too. A gap was found later in live use. A pending correction released the duplicate lock too early.
+>
+> That gap was written into the same ADR as a known gap. Then a follow-up ADR closed it, and extended it with partial adjustments."
 
 ---
 
@@ -120,11 +128,13 @@ then successfully posting a compensating transaction referencing the original.
 **Visual:** Talking head.
 
 **Narration:**
-> "You don't need an ADR for every choice — that's its own kind of waste. You need
-> one for the decisions that are expensive to get wrong, likely to be questioned
-> later, or genuinely have more than one reasonable answer. Immutability of money is
-> exactly that kind of decision. Writing it down once, in this shape, is cheaper than
-> re-litigating it every time someone new joins the project."
+> "You do not need an ADR for every choice. That is its own kind of waste.
+>
+> You need one for decisions that are expensive to get wrong, likely to be questioned later, or have more than one reasonable answer.
+>
+> Immutability of money is exactly that kind of decision.
+>
+> Writing it down once, in this shape, is cheaper than debating it again every time someone new joins the project."
 
 ---
 
@@ -133,9 +143,11 @@ then successfully posting a compensating transaction referencing the original.
 **Visual:** End card pointing to Episode B7.
 
 **Narration:**
-> "Next episode: how do you actually prove decisions like this one hold up — not by
-> reading the document again, but by testing the real workflow. Subscribe and I'll
-> see you there."
+> "Next episode, we ask how you prove that decisions like this one hold up.
+>
+> We do not read the document again. We test the real workflow.
+>
+> Subscribe, and I will see you there."
 
 ---
 

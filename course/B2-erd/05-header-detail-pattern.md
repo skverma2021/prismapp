@@ -23,11 +23,17 @@ Design 2 — "Three rows, one per month, same transactionId":
 **Narration:**
 Here is the scenario that forced the header + detail design.
 
-A resident makes a single bank transfer covering three months of maintenance. One transaction reference. One payment date. One person who paid. But three distinct period obligations, each of which needs independent duplicate protection.
+A resident makes a single bank transfer covering three months of maintenance. There is one transaction reference. There is one payment date. One person paid.
 
-The naive single-row design tries to pack everything into one row. The month list becomes a string, a JSON field, or a comma-separated value. The duplicate check for "has January been paid?" now requires parsing that field — which is not how a database constraint works.
+But there are three distinct period obligations. Each one needs independent duplicate protection.
 
-The naive multi-row design repeats the transaction metadata three times. If you need to correct the transaction reference, you must UPDATE three rows. If only two of the three rows are updated, the data is inconsistent.
+The naive single-row design packs everything into one row. The month list becomes a string, a JSON field, or a comma-separated value.
+
+The duplicate check for "has January been paid?" now requires parsing that field. That is not how a database constraint works.
+
+The naive multi-row design repeats the transaction metadata three times. Suppose you need to correct the transaction reference. You must UPDATE three rows.
+
+If only two of the three rows are updated, the data is inconsistent.
 
 Neither design is satisfactory. The correct design separates the transaction metadata from the per-period entries.
 
@@ -76,13 +82,21 @@ Two annotated table definitions.
 | 2003 | 501 | 148 (Mar 2026) | 1400 |
 
 **Narration:**
-The split is clean. Everything that is the same for all periods — the unit, the head, who paid, when, the transaction reference, the quantity — lives on the header. It is stored once.
+The split is clean.
 
-Everything that varies per period — which month, how much for that month — lives on the detail row. Three months means three rows.
+Everything that is the same for all periods lives on the header. That means the unit, the head, who paid, when, the transaction reference, and the quantity. It is stored once.
 
-The duplicate protection constraint is on the detail row: UNIQUE on `(contributionId's unitId, contributionHeadId, contributionPeriodId)`. Or more precisely, there is a unique constraint on the `ContributionDetails` table scoped to unit + head + period. If January has already been paid, inserting a new detail row for January for the same unit and head violates the constraint.
+Everything that varies per period lives on the detail row. That means which month, and how much for that month. Three months means three rows.
 
-The amount per period: for a per-sqft head, `amt = quantity × applicable_rate = 1250 × 1.12 = 1400`. This is calculated once, at write time, and stored. The rate row used for the calculation is the rate in effect at `transactionDateTime`. Once stored, it is never recalculated.
+The duplicate protection constraint is on the detail row. It is UNIQUE on `(contributionId's unitId, contributionHeadId, contributionPeriodId)`.
+
+More precisely, there is a unique constraint on the `ContributionDetails` table scoped to unit + head + period.
+
+Suppose January has already been paid. Inserting a new detail row for January for the same unit and head violates the constraint.
+
+Now the amount per period. For a per-sqft head, `amt = quantity × applicable_rate = 1250 × 1.12 = 1400`.
+
+This is calculated once, at write time, and stored. The rate row used for the calculation is the rate in effect at `transactionDateTime`. Once stored, it is never recalculated.
 
 **Teaching callout — the uniform formula:**
 Point out that maintenance (per sq ft), gym membership (per person), and common-hall rent (lump sum) all produce the same formula: `quantity × rate`. The `quantity` field is the abstraction that hides the measurement difference. A consequence students often miss: the Paid/Unpaid Matrix report needs no special-case logic per head type — every cell is a lookup for `(unitId, headId, periodId)`. The schema's uniformity is what keeps the reporting query simple.
@@ -120,13 +134,21 @@ For contribution id=501:
 Below: a callout — "If these two numbers disagree, the transaction was written incorrectly. The formula is a test you can run on any record."
 
 **Narration:**
-The amount distribution rule in the domain says: the sum of all detail amounts for a contribution must equal the total payable. This is not just an accounting rule — it is a built-in correctness check.
+The amount distribution rule in the domain says the sum of all detail amounts for a contribution must equal the total payable.
 
-Every time you write a contribution, you can verify it immediately: sum the detail amounts and compare to `quantity × rate × periodCount`. If they disagree, something went wrong in the write logic.
+This is not just an accounting rule. It is a built-in correctness check.
 
-This is the self-validating property of the header + detail model. The rule is derived from the data, not stored separately. You cannot pass this check by accident — the amounts must be explicitly distributed across periods correctly.
+Every time you write a contribution, you can verify it immediately. Sum the detail amounts. Then compare to `quantity × rate × periodCount`. If they disagree, something went wrong in the write logic.
 
-It is also the basis for the financial integrity rule: if contributions are immutable, then the only way to correct an error is a compensating transaction. The compensating entry creates a new set of header + detail rows with negative amounts. The sum of original plus compensating equals zero. The correction is visible and auditable.
+This is the self-validating property of the header + detail model. The rule is derived from the data, not stored separately.
+
+You cannot pass this check by accident. The amounts must be explicitly distributed across periods correctly.
+
+It is also the basis for the financial integrity rule. Contributions are immutable. So the only way to correct an error is a compensating transaction.
+
+The compensating entry creates a new set of header + detail rows with negative amounts. The sum of original plus compensating equals zero.
+
+The correction is visible and auditable.
 
 **On-screen action / demo:**
 Open `vault/01-Domain/Domain-Rules.md` → Financial Integrity Rules 4 — "Amount Consistency Rule." Read it aloud. Then open `vault/V1/contribution-vision.md` → Section C.2 — Compensating Transactions. Show how the correction model extends naturally from the header+detail split.

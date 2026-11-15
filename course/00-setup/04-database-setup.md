@@ -13,14 +13,16 @@
 Two-step flow: `prisma migrate dev` → creates all tables → then `prisma db seed` → inserts seed rows. Arrow between them. Below: a table listing what the seed creates.
 
 **Narration:**
-With `DATABASE_URL` pointing at an empty database, run:
+Make sure `DATABASE_URL` points at an empty database. Then run this command.
 
 ```bash
 npm run prisma:migrate:dev
 # This runs: prisma migrate dev
 ```
 
-Prisma reads `prisma/schema.prisma`, generates SQL, and applies all migrations from the `prisma/migrations/` folder. You will see output like:
+Prisma reads `prisma/schema.prisma` and generates SQL. Then it applies all migrations from the `prisma/migrations/` folder.
+
+You will see output like this.
 
 ```
 Applying migration `20260319114421_prismaapp`
@@ -35,7 +37,9 @@ The following migration(s) have been applied:
 ✔ Generated Prisma Client (v7.5.0) to ./node_modules/@prisma/client
 ```
 
-At the end, all database tables exist. No data is in them yet — they are empty structures.
+At the end, all database tables exist.
+
+No data is in them yet. They are empty structures.
 
 **On-screen action / demo:**
 Run `npm run prisma:migrate:dev` in the terminal. Show the migration output scrolling. Show the list of migrations applied (there are about 9 of them).
@@ -56,14 +60,14 @@ Run `npm run prisma:migrate:dev` in the terminal. Show the migration output scro
 Terminal showing `npm run prisma:seed` output, then a table listing what was created.
 
 **Narration:**
-After the tables exist, populate them with starting data:
+After the tables exist, fill them with starting data.
 
 ```bash
 npm run prisma:seed
 # This runs: node prisma/seed.mjs
 ```
 
-The seed script creates:
+The seed script creates the items in this table.
 
 | Category | What is created |
 |----------|----------------|
@@ -74,7 +78,7 @@ The seed script creates:
 | App users | Admin, Manager, and Read-Only accounts |
 | Gender types | Male, Female, Other |
 
-The demo app user passwords are set using `AUTH_SEED_PASSWORD` from your `.env` (default: `ChangeMe123!`).
+The demo app user passwords are set from `AUTH_SEED_PASSWORD` in your `.env`. The default value is `ChangeMe123!`.
 
 **On-screen action / demo:**
 Run `npm run prisma:seed`. Show the output confirming each category. Note the seeded user credentials in the output.
@@ -95,22 +99,26 @@ The seed runs once on a fresh database. Do not re-run it after you have added yo
 Screenshot of Prisma Studio in a browser: left sidebar showing table names, main panel showing rows in the `Block` table.
 
 **Narration:**
-Prisma includes a browser-based database browser called Prisma Studio. Run it with:
+Prisma includes a browser-based database browser called Prisma Studio. Run it with this command.
 
 ```bash
 npx prisma studio
 ```
 
-A browser tab opens at `http://localhost:5555`. You can browse every table, see the rows the seed created, and make manual edits during development.
+A browser tab opens at `http://localhost:5555`.
 
-Things worth checking after the seed:
-- **Block** — should show 3 rows: A, B, C
-- **Unit** — should show the seeded units
-- **ContributionHead** — should show the seeded heads
-- **ContributionPeriod** — should show the current year
-- **AppUser** — should show the seeded demo users
+You can browse every table. You can see the rows the seed created. You can also make manual edits during development.
 
-Prisma Studio is a development tool only. It directly reads and writes the database without going through the app's validation or access controls. Do not point it at a production database.
+Here are the things worth checking after the seed.
+- **Block**: should show 3 rows, A, B, C.
+- **Unit**: should show the seeded units.
+- **ContributionHead**: should show the seeded heads.
+- **ContributionPeriod**: should show the current year.
+- **AppUser**: should show the seeded demo users.
+
+Prisma Studio is a development tool only. It reads and writes the database directly. It does not use the validation or access controls of the app.
+
+Do not point it at a production database.
 
 **On-screen action / demo:**
 Run `npx prisma studio`. Switch to the browser. Click through Block, ContributionHead, and AppUser tables. Show the seeded rows.

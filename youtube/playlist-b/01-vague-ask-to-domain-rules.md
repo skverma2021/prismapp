@@ -25,9 +25,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "'Track who owns each flat.' That's a real sentence a client might actually say to
-> you. It is also completely useless as a starting point for writing code. Today:
-> how you turn a sentence like that into something you can actually build and test."
+> "'Track who owns each flat.'
+>
+> That is a real sentence a client might say to you. It is also useless as a starting point for writing code.
+>
+> Today, you will learn how to turn a sentence like that into something you can build and test."
 
 ---
 
@@ -38,11 +40,13 @@ next to ambiguous words: "who owns" (one owner? co-owners?), "each flat" (before
 it's sold? during a sale?), "track" (history, or just current state?).
 
 **Narration:**
-> "A one-line request like this hides a dozen real decisions. Can two people own a
-> flat at once? What happens the day it's built but not yet sold? What happens
-> during the week a sale is being processed? If you start writing a schema before
-> answering these, you're not doing requirements analysis — you're guessing, and the
-> guesses become bugs six months later when reality doesn't match your assumption."
+> "A one-line request like this hides a dozen real decisions.
+>
+> Can two people own a flat at once? What happens the day it is built but not yet sold? What happens during the week a sale is being processed?
+>
+> If you start writing a schema before you answer these questions, you are not doing requirements analysis. You are guessing.
+>
+> And the guesses become bugs six months later, when reality does not match your assumption."
 
 ---
 
@@ -52,13 +56,15 @@ it's sold? during a sale?), "track" (history, or just current state?).
 scrolled to the Ownership Rules section, highlighting rules `O3` and `O4`.
 
 **Narration:**
-> "Here's what that looks like once the ambiguity is resolved. Rule O3: a unit
-> cannot have more than one active owner at any time. Rule O4: a unit must always
-> have exactly one active owner. Notice these are two separate rules, not one —
-> because 'never more than one' and 'never zero' are genuinely different failure
-> modes, and a real system has to guard against both independently. Writing them
-> down as short, numbered, falsifiable statements is the whole trick. Each one reads
-> like something you could write a test for, because you can."
+> "Here is what that looks like once the ambiguity is resolved.
+>
+> Rule O3: a unit cannot have more than one active owner at any time.
+>
+> Rule O4: a unit must always have exactly one active owner.
+>
+> Notice that these are two separate rules, not one. 'Never more than one' and 'never zero' are different failure modes. A real system must guard against both independently.
+>
+> Writing them down as short, numbered, falsifiable statements is the whole trick. Each one reads like something you could write a test for. And you can."
 
 **On-screen action:** Cursor lingering on the rule text; optionally zoom on the rule
 numbers to emphasize the numbering convention.
@@ -71,13 +77,15 @@ numbers to emphasize the numbering convention.
 BUILDER_INVENTORY" callout.
 
 **Narration:**
-> "Rule O4 creates an immediate follow-up question: what satisfies 'exactly one
-> owner' on day zero, before any real buyer exists? This is where domain analysis
-> earns its keep — the answer isn't a null, and it isn't a special case sprinkled
-> through the code. It's a deliberate design decision, written down once, right next
-> to the rule it resolves: a system identity, `BUILDER_INVENTORY`, becomes the
-> owner of record from the moment the unit is created. One paragraph of domain
-> thinking here saves dozens of 'if owner is null' checks later."
+> "Rule O4 creates an immediate follow-up question.
+>
+> What satisfies 'exactly one owner' on day zero, before any real buyer exists?
+>
+> This is where domain analysis becomes valuable. The answer is not a null. And it is not a special case spread through the code.
+>
+> It is a deliberate design decision, written down once, right next to the rule it resolves. A system identity, `BUILDER_INVENTORY`, becomes the owner of record from the moment the unit is created.
+>
+> One paragraph of domain thinking here saves dozens of 'if owner is null' checks later."
 
 ---
 
@@ -88,12 +96,13 @@ Prisma schema field / API behavior it drives (e.g., unit creation atomically
 inserting the first ownership row).
 
 **Narration:**
-> "A domain rule by itself doesn't tell an implementer what to build — that's the
-> job of specification, the next step down. The rule says a unit must always have
-> an owner. The specification says: creating a unit and creating its first ownership
-> row must happen as a single atomic operation, so there is never even a millisecond
-> where the rule is false. That's the translation this whole channel keeps coming
-> back to: real problem, to rule, to spec, to code — never skipping a step."
+> "A domain rule by itself does not tell an implementer what to build. That is the job of specification, the next step down.
+>
+> The rule says a unit must always have an owner.
+>
+> The specification says that creating a unit and creating its first ownership row must happen as a single atomic operation. So there is never even a millisecond where the rule is false.
+>
+> This is the translation this channel keeps coming back to. Real problem, then rule, then spec, then code. Never skip a step."
 
 ---
 
@@ -103,13 +112,13 @@ inserting the first ownership row).
 a small inset.
 
 **Narration:**
-> "You could keep all of this in your head, or worse, only in the code. The cost of
-> writing it down separately is small — a few lines per rule. The payoff is large:
-> anyone, including an AI assistant, can be handed this file and correctly reason
-> about the system without reverse-engineering it from a thousand lines of
-> TypeScript. It's also the single best defense against a very common failure mode:
-> quietly weakening a rule while fixing an unrelated bug, because nobody wrote down
-> that the rule existed in the first place."
+> "You could keep all of this in your head. Or, worse, only in the code.
+>
+> The cost of writing it down separately is small. It is a few lines per rule.
+>
+> The payoff is large. Anyone, including an AI assistant, can read this file and reason correctly about the system. They do not need to work it out from a thousand lines of TypeScript.
+>
+> It is also the best defense against a common failure. Someone quietly weakens a rule while fixing an unrelated bug, because nobody wrote down that the rule existed."
 
 ---
 
@@ -118,9 +127,11 @@ a small inset.
 **Visual:** End card pointing to Episode B2.
 
 **Narration:**
-> "Next time, we go one level up from individual rules to the shape of the whole
-> system — why this app is built in layers, and what problem that actually solves.
-> Subscribe if you want to keep building this engineering muscle."
+> "Next time, we go one level up from individual rules to the shape of the whole system.
+>
+> We will see why this app is built in layers, and what problem that solves.
+>
+> Subscribe if you want to keep building these engineering skills."
 
 ---
 

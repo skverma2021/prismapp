@@ -27,10 +27,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "A Route Handler is just a file named `route.ts`, exporting functions named
-> after HTTP verbs. No router configuration, no separate `app.get(...)` call to
-> wire up — the file path and the export name *are* the route. Let's see the exact
-> shape this app uses, every single time."
+> "A Route Handler is just a file named `route.ts`. It exports functions named after HTTP verbs.
+>
+> There is no router configuration. There is no separate `app.get(...)` call to wire it up. The file path and the export name *are* the route.
+>
+> Let us see the exact shape this app uses, every single time."
 
 ---
 
@@ -65,11 +66,12 @@ export async function POST(request: NextRequest) {
 
 **Narration:**
 > "`GET /api/blocks` and `POST /api/blocks` are two exports in the same file.
-> `GET` checks the caller can read, then lists. `POST` checks the caller can
-> write, reads the JSON body, validates it, then creates. Same file, same request
-> type in, same `ok`/`fail` envelope out — this is Episode 8 from Playlist C's
-> discriminated union, showing up again here as the actual return type of every
-> handler in the app."
+>
+> `GET` checks that the caller can read. Then it lists. `POST` checks that the caller can write. Then it reads the JSON body, validates it, and creates.
+>
+> It is the same file, the same request type in, and the same `ok`/`fail` envelope out.
+>
+> This is the discriminated union from Episode 8 of Playlist C. Here it appears again as the actual return type of every handler in the app."
 
 ---
 
@@ -79,12 +81,13 @@ export async function POST(request: NextRequest) {
 `await request.json()` in `POST`.
 
 **Narration:**
-> "`NextRequest` extends the standard `Request` with a few conveniences —
-> `request.nextUrl` gives you a parsed URL object, so `GET` can read query string
-> filters without manually constructing a `URL`. `POST` doesn't need that; it needs
-> the body, so it calls the standard `request.json()`. Two different ways of
-> pulling input out of the same request type, chosen based on what each verb
-> actually carries — query parameters for a `GET`, a body for a `POST`."
+> "`NextRequest` extends the standard `Request` with a few conveniences.
+>
+> `request.nextUrl` gives you a parsed URL object. So `GET` can read query string filters without building a `URL` by hand.
+>
+> `POST` does not need that. It needs the body, so it calls the standard `request.json()`.
+>
+> These are two different ways to pull input out of the same request type. Each one fits what its verb carries. A `GET` carries query parameters. A `POST` carries a body."
 
 ---
 
@@ -93,26 +96,28 @@ export async function POST(request: NextRequest) {
 **Visual:** Open `app/api/contributions/route.ts`, lines 1–27.
 
 **Narration:**
-> "This isn't a one-off convention for blocks. `POST /api/contributions` follows
-> the identical shape: `requireMutationRole`, parse the body, call a service
-> function, return `ok(...)`. The only real difference is what comes back —
-> `ok(contribution, 201, warning)` passes through an optional warning message,
-> because creating a contribution can succeed *and* still have something worth
-> flagging, like paying for a period before the current owner's tenure started.
-> Same envelope, same status-code pattern, a small domain-specific addition."
+> "This is not a one-off convention for blocks.
+>
+> `POST /api/contributions` follows the identical shape. It calls `requireMutationRole`. It parses the body. It calls a service function. And it returns `ok(...)`.
+>
+> The only real difference is what comes back. `ok(contribution, 201, warning)` passes through an optional warning message.
+>
+> That is because creating a contribution can succeed *and* still have something worth flagging. One example is paying for a period before the current owner's tenure started.
+>
+> So we have the same envelope and the same status-code pattern. Plus a small domain-specific addition."
 
 ---
 
 ## Scene 4 — Why this consistency is the actual point (4:00–5:00)
 
 **Narration (talking head, no new code):**
-> "Nothing forces every route handler in a Next.js app to look like this — you
-> could write each one differently, with different error shapes, different status
-> code conventions. This app didn't. Every route handler: checks authorization
-> first, parses and validates input second, calls a service function third,
-> returns the same envelope type fourth. That means a developer who's read *one*
-> route handler in this app has effectively read the shape of all sixty-plus of
-> them."
+> "Nothing forces every route handler in a Next.js app to look like this.
+>
+> You could write each one differently. You could use different error shapes and different status code conventions. This app did not.
+>
+> Every route handler checks authorization first. It parses and validates input second. It calls a service function third. And it returns the same envelope type fourth.
+>
+> So a developer who has read *one* route handler in this app has effectively read the shape of all sixty-plus of them."
 
 ---
 
@@ -121,8 +126,11 @@ export async function POST(request: NextRequest) {
 **Visual:** End card pointing to Episode 4.
 
 **Narration:**
-> "We glossed over `requireReadRole` and `requireMutationRole` — two function
-> calls doing a lot of quiet work at the very top of every handler. That's next."
+> "We skipped over `requireReadRole` and `requireMutationRole`.
+>
+> These are two function calls at the very top of every handler. They do a lot of quiet work.
+>
+> That is next."
 
 ---
 

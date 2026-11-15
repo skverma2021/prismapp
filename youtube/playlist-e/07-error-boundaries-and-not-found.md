@@ -26,10 +26,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "A special file named `error.tsx` in any App Router folder becomes an error
-> boundary for everything inside that folder. This app has five of them, at
-> different depths, plus a `not-found.tsx` and a `global-error.tsx` — and each one
-> exists for a distinct reason, not out of habit."
+> "A special file named `error.tsx` in any App Router folder becomes an error boundary. It covers everything inside that folder.
+>
+> This app has five of them, at different depths. It also has a `not-found.tsx` and a `global-error.tsx`.
+>
+> Each one exists for a distinct reason. None exists out of habit."
 
 ---
 
@@ -57,12 +58,15 @@ export default function DashboardError({ error, reset }: { error: Error & { dige
 ```
 
 **Narration:**
-> "If any page under `(dashboard)` throws during rendering, this file catches it —
-> not the whole app, just this segment. The dashboard shell around it — the nav,
-> the header — never unmounts; only the broken page's area shows this fallback.
-> `reset()` is provided by Next.js and lets the user retry without a full reload.
-> `error.digest` is a server-generated reference ID, safe to show to the user
-> without leaking the actual error message or stack trace."
+> "If any page under `(dashboard)` throws during rendering, this file catches it.
+>
+> It does not catch it for the whole app. It catches it only for this segment.
+>
+> The dashboard shell around it never unmounts. That includes the nav and the header. Only the broken page's area shows this fallback.
+>
+> `reset()` is provided by Next.js. It lets the user retry without a full reload.
+>
+> `error.digest` is a server-generated reference ID. It is safe to show to the user. It does not leak the actual error message or stack trace."
 
 ---
 
@@ -73,11 +77,13 @@ export default function DashboardError({ error, reset }: { error: Error & { dige
 separately.
 
 **Narration:**
-> "This isn't one error boundary for the whole app — it's several, at different
-> route segments. Reports has its own, contributions has its own. A crash in the
-> reports section shows the reports-flavored fallback without affecting anything
-> else. Nesting is doing real work here: the closest `error.tsx` up the tree from
-> where the crash happened is the one that catches it."
+> "This is not one error boundary for the whole app. There are several, at different route segments.
+>
+> Reports has its own. Contributions has its own.
+>
+> A crash in the reports section shows the reports fallback. It does not affect anything else.
+>
+> Nesting does real work here. The closest `error.tsx` up the tree from the crash is the one that catches it."
 
 ---
 
@@ -86,13 +92,15 @@ separately.
 **Visual:** Open `app/global-error.tsx`, full file.
 
 **Narration:**
-> "`global-error.tsx` is the one exception to 'error boundaries don't affect the
-> rest of the app' — it only fires when the *root layout itself* throws, which
-> means it has to render its own `<html>` and `<body>`, because the layout that
-> would normally provide them is the thing that failed. This is also where Sentry
-> capture actually lives: `useEffect(() => Sentry.captureException(error), [error])`.
-> Every other, more specific `error.tsx` in this app catches and displays;
-> `global-error.tsx` is the last resort when even the shell couldn't render."
+> "`global-error.tsx` is the one exception to 'error boundaries do not affect the rest of the app.'
+>
+> It only fires when the *root layout itself* throws.
+>
+> That means it must render its own `<html>` and `<body>`. The layout that would normally provide them is the thing that failed.
+>
+> This is also where Sentry capture actually lives. It is `useEffect(() => Sentry.captureException(error), [error])`.
+>
+> Every other, more specific `error.tsx` in this app catches and displays. `global-error.tsx` is the last resort. It is used when even the shell could not render."
 
 ---
 
@@ -101,12 +109,13 @@ separately.
 **Visual:** Open `app/not-found.tsx`, full file.
 
 **Narration:**
-> "`not-found.tsx` isn't for exceptions at all — it's what Next.js renders when a
-> route genuinely doesn't exist, or when code explicitly calls `notFound()` for a
-> resource that's missing. No `error` prop, no `reset()` — because there's nothing
-> to retry, the thing you asked for simply isn't there. Same App Router
-> convention family as `error.tsx`, answering a different question: not 'something
-> broke,' but 'this doesn't exist.'"
+> "`not-found.tsx` is not for exceptions at all.
+>
+> Next.js renders it when a route genuinely does not exist. It also renders it when code explicitly calls `notFound()` for a missing resource.
+>
+> There is no `error` prop and no `reset()`. There is nothing to retry. The thing you asked for simply is not there.
+>
+> It is in the same App Router convention family as `error.tsx`. But it answers a different question. Not 'something broke,' but 'this does not exist.'"
 
 ---
 
@@ -115,9 +124,11 @@ separately.
 **Visual:** End card pointing to Episode 8.
 
 **Narration:**
-> "Every error boundary we've seen runs client-side, after something has already
-> gone wrong inside a request. Next episode looks at what runs *before* a request
-> even reaches a page — and what it takes to actually ship this app."
+> "Every error boundary we have seen runs client-side. It runs after something has already gone wrong inside a request.
+>
+> The next episode looks at what runs *before* a request even reaches a page.
+>
+> And it shows what it takes to actually ship this app."
 
 ---
 

@@ -22,10 +22,13 @@
 **Visual:** Screen recording — the login screen, then the signed-in `/home` page.
 
 **Narration:**
-> "In the last episodes you saw what this application does. Everything you saw
-> happened after one step we skipped: logging in. Before a single block, unit or
-> payment can appear, the application has to answer one question — who is
-> asking? Let's follow that, from an empty browser to a logged-in user."
+> "In the last episodes, you saw what this application does.
+>
+> Everything you saw happened after one step we skipped: logging in.
+>
+> Before a single block, unit, or payment can appear, the application has to answer one question. Who is asking?
+>
+> Let us follow that, from an empty browser to a logged-in user."
 
 ---
 
@@ -37,13 +40,15 @@ login form". Optional: browser dev tools → Application → Cookies, with no se
 (only the library's `next-auth.csrf-token` may appear).
 
 **Narration:**
-> "You type the address. Your browser has nothing from us yet — no cookie. The
-> request reaches the server, and before anything is drawn the server checks:
-> does this visitor have a session? There is none, so the page that comes back is
-> the login form. Notice who made that decision: the server, before the page was
-> sent. The browser never had to ask 'am I logged in?' and then wait. If you had
-> already been logged in, you would have been sent straight to the home page
-> instead."
+> "You type the address. Your browser has nothing from us yet. It has no cookie.
+>
+> The request reaches the server. Before anything is drawn, the server checks: does this visitor have a session?
+>
+> There is none. So the page that comes back is the login form.
+>
+> Notice who made that decision. The server made it, before the page was sent. The browser never had to ask 'am I logged in?' and then wait.
+>
+> If you had already been logged in, you would have been sent straight to the home page instead."
 
 **On-screen action:** Show the login page. Optionally show the banner that
 appears when you were sent here because you needed to sign in
@@ -59,21 +64,21 @@ route → box labeled "NextAuth (a library)" → three small callouts "authorize
 arrow labeled "max 10 attempts / 15 min".
 
 **Narration:**
-> "You type your email and password and press the button. The form hands them to
-> NextAuth, the sign-in library this app uses, and the request goes to one single
-> address that the library owns. Before it gets there it passes a small gatekeeper
-> that allows only ten attempts every fifteen minutes from one address, so
-> nobody can sit there guessing passwords.
+> "You type your email and password and press the button.
 >
-> Here is the part worth noticing: almost everything that happens next is the
-> library's job, not the application's. The application only supplies three small
-> pieces. First, how to check a login: look up the user by email in our own user
-> table — this is the first time the database is touched — reject anyone who is
-> unknown or switched off, and compare the password against a stored hash. The
-> password itself is never stored. Second and third, what to put in the session:
-> the user's id, their role and their display name. Wrong email and wrong password
-> give the same error on purpose, so nobody can use the form to find out which
-> email addresses exist."
+> The form hands them to NextAuth. This is the sign-in library that this app uses. The request goes to one single address that the library owns.
+>
+> Before it gets there, it passes a small gatekeeper. The gatekeeper allows only ten attempts every fifteen minutes from one address. So nobody can sit there guessing passwords.
+>
+> Here is the part worth noticing. Almost everything that happens next is the job of the library, not the application.
+>
+> The application only supplies three small pieces.
+>
+> First, how to check a login. We look up the user by email in our own user table. This is the first time the database is touched. We reject anyone who is unknown or switched off. And we compare the password against a stored hash. The password itself is never stored.
+>
+> Second and third, what to put in the session. These are the id of the user, their role, and their display name.
+>
+> Wrong email and wrong password give the same error on purpose. So nobody can use the form to find out which email addresses exist."
 
 **On-screen action:** Show a failed login (generic error), then a successful one.
 
@@ -89,14 +94,15 @@ appear after login (`next-auth.session-token`, HttpOnly ticked). Diagram: a smal
 box inside the cookie: "userId · role · displayName", with a lock icon over it.
 
 **Narration:**
-> "If the login succeeds, the library sets a cookie in your browser. This cookie
-> *is* your session. There is no table of sessions on the server to look up —
-> the cookie itself carries who you are and what role you have, and it is
-> encrypted with a secret key that only the server knows. The browser keeps it
-> and sends it back with every request. It is also marked HttpOnly, which means
-> scripts running on the page cannot read it, which protects it from a whole
-> class of attacks. The form then takes you to the home page — the one you saw in
-> Episode 1."
+> "If the login succeeds, the library sets a cookie in your browser. This cookie *is* your session.
+>
+> There is no table of sessions on the server to look up. The cookie itself carries who you are and what role you have. It is encrypted with a secret key that only the server knows.
+>
+> The browser keeps the cookie and sends it back with every request.
+>
+> The cookie is also marked HttpOnly. This means scripts running on the page cannot read it. That protects it from a whole class of attacks.
+>
+> The form then takes you to the home page. This is the page you saw in Episode 1."
 
 **On-screen action:** Show the cookie flags in dev tools. Optional: show that the
 login page now redirects straight to `/home` when you revisit it.
@@ -112,13 +118,17 @@ login page now redirects straight to `/home` when you revisit it.
 checks the cookie at both. A small label: "no cookie, or wrong role → turned away".
 
 **Narration:**
-> "From now on you are not logging in again. Every page you open and every data
-> request the page makes carries that same cookie, and the server checks it every
-> time — a page without a valid session sends you back to the login form, and a
-> data request without one gets a refusal, and a role that is not allowed gets a
-> different refusal. That is how a read-only user can look at the data but cannot
-> change it, even if they try the address directly. We'll take that apart
-> properly in the Next.js playlist. For now, hold on to the cookie."
+> "From now on, you are not logging in again.
+>
+> Every page you open carries that same cookie. Every data request the page makes carries it too. And the server checks it every time.
+>
+> A page without a valid session sends you back to the login form. A data request without a valid session gets a refusal. And a role that is not allowed gets a different refusal.
+>
+> That is how a read-only user can look at the data but cannot change it, even if they try the address directly.
+>
+> We will take that apart properly in the Next.js playlist.
+>
+> For now, hold on to the cookie."
 
 ---
 
@@ -127,9 +137,11 @@ checks the cookie at both. A small label: "no cookie, or wrong role → turned a
 **Visual:** End card pointing to Episode 7.
 
 **Narration:**
-> "You're in. In the next episode we click 'Blocks' and follow that one request —
-> with this cookie riding along — through every layer, all the way to the
-> database and back."
+> "You are in.
+>
+> In the next episode, we click 'Blocks' and follow that one request. The cookie rides along with it.
+>
+> We follow it through every layer, all the way to the database and back."
 
 ---
 
@@ -180,11 +192,18 @@ Clear the log, enter a **wrong** password and submit. Requests to point out:
 > | Call | Purpose | How it works |
 > |---|---|---|
 > | `GET /api/auth/providers` | Check that the provider name exists. | Returns a JSON map of the configured providers (`credentials`, plus Google/Microsoft if configured) with each `type` and URL. The `type` decides what `signIn` does next: `credentials` posts to `/api/auth/callback/credentials` and returns the result to the form (`redirect: false`). No secrets, no cookie. |
-> | `GET /api/auth/csrf` | Anti-forgery (CSRF) token, so a foreign site cannot make your browser submit a login. | The server creates a random token and sets the cookie `next-auth.csrf-token = token\|sha256(token + AUTH_SECRET)`. It returns the token as `{ "csrfToken": "..." }`. `signIn` sends it back as `csrfToken` in the POST body; the server verifies the cookie's hash and that cookie token = body token, and refuses the credentials login otherwise. |
+> | `GET /api/auth/csrf` | Anti-forgery (CSRF) token, so a foreign site cannot make your browser submit a login. | Let X be a random 32-byte token and H = sha256(X + AUTH_SECRET). The server sets the cookie `next-auth.csrf-token = X\|H` and returns only X in the body: `{ "csrfToken": "X" }` (H never leaves the cookie). `signIn` posts `csrfToken=X` in the body, while the browser separately sends the cookie `X\|H` in the `Cookie` header. The server checks that (1) H recomputed from the cookie's X equals H, so the cookie is not forged, and (2) the cookie's X equals the body's X. Both must pass, otherwise the credentials login is refused. |
 >
-> - Demo: copy `csrfToken` from the `csrf` response, find it as the left half of
->   the `next-auth.csrf-token` cookie (Application → Cookies), then find the same
->   value in the POST Payload.
+> - Demo: clear `next-auth.*` cookies first so the `csrf` response shows its
+>   `set-cookie`. Then match X in three places: (1) `csrf` → **Response** tab
+>   (body): `csrfToken` is X only; (2) Application → Cookies →
+>   `next-auth.csrf-token`: `X%7CH` (`%7C` is the URL-encoded `|`), so X is the
+>   part before `%7C`; (3) `credentials` POST → **Payload**: `csrfToken=X`. The
+>   cookie value from the `set-cookie` header is the same cookie as in
+>   Application, so it is not a separate check.
+> - Repeat calls: if the cookie is already valid, `csrf` returns the same X and
+>   sets **no** new cookie. A wrong email or password is fine for this demo,
+>   because the CSRF check runs before `authorize`.
 > - Narration, one sentence: "The library first checks the login method exists
 >   and fetches a one-time anti-forgery token." The details belong to Playlist E
 >   Episode 4.

@@ -26,9 +26,9 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Not every decision in this project is a technical one. Some of them are
-   risk decisions — and those ones, this project is explicit about, stay with
-   people."
+> "Not every decision in this project is a technical one.
+>
+> Some of them are risk decisions. And this project is explicit about those. They stay with people."
 
 ---
 
@@ -53,12 +53,13 @@ Model (Phased)" section.
 ```
 
 **Narration:**
-> "Financial corrections in this app today can be made by one authorized
-   person, alone. A future version requires two different people — one to
-   submit, one to approve. Both of those are real, buildable features. The
-   question of *which one this app should use right now* isn't a coding
-   question at all — it's a question about how much fraud risk this specific
-   society is willing to accept at its current size."
+> "Today, one authorized person can make a financial correction in this app, alone.
+>
+> A future version requires two different people. One submits, and one approves.
+>
+> Both of these are real features that we can build.
+>
+> But which one should this app use right now? That is not a coding question at all. It is a question about how much fraud risk this specific society is willing to accept at its current size."
 
 ---
 
@@ -77,13 +78,13 @@ Enable maker-checker when one or more of the following is true:
 ```
 
 **Narration:**
-> "Here's the part that's genuinely not AI's call to make: what those
-   thresholds should actually be, and whether a real incident has crossed
-   them. An AI assistant can implement the maker-checker workflow perfectly —
-   the state machine, the pending/approved/rejected statuses, the audit
-   fields. It cannot tell this specific society what dollar amount, or what
-   monthly correction count, represents an acceptable level of risk for them.
-   That's a business judgment, made by people who own the consequences."
+> "Here is the part that is genuinely not AI's decision. What should those thresholds be? And has a real incident crossed them?
+>
+> An AI assistant can implement the maker-checker workflow perfectly. The state machine. The pending, approved, and rejected statuses. The audit fields.
+>
+> But it cannot tell this specific society what dollar amount, or what monthly correction count, is an acceptable level of risk for them.
+>
+> That is a business judgment. It is made by people who own the consequences."
 
 ---
 
@@ -99,13 +100,13 @@ Open gap:
 ```
 
 **Narration:**
-> "Same shape of decision, different domain. The review found a real gap. It
-   didn't get silently fixed, and it didn't get silently ignored either — a
-   human decision was made to *accept* it, on the explicit condition that it
-   gets documented and revisited the moment this app stops being single-
-   tenant. Accepting a known risk, on the record, is itself a form of human
-   control — arguably a more honest one than pretending every gap must be
-   closed immediately."
+> "It is the same kind of decision in a different domain.
+>
+> The review found a real gap. It was not silently fixed. And it was not silently ignored either.
+>
+> A human decided to *accept* it. The condition was clear. It must be documented, and revisited the moment this app stops being single-tenant.
+>
+> Accepting a known risk, on the record, is itself a form of human control. It is arguably more honest than pretending every gap must be closed immediately."
 
 ---
 
@@ -114,12 +115,15 @@ Open gap:
 **Visual:** Talking head.
 
 **Narration:**
-> "Both examples share the same shape: AI can implement either option, and AI
-   can even lay out the trade-offs clearly. What it can't do is decide how
-   much risk a specific business, with specific finances and specific
-   customers, should be willing to carry. That decision needs someone who
-   answers for the consequences if it's wrong — and that's the actual
-   dividing line, not 'is this technically hard.'"
+> "Both examples share the same shape.
+>
+> AI can implement either option. AI can even lay out the trade-offs clearly.
+>
+> What it cannot do is decide how much risk a specific business should carry. That business has specific finances and specific customers.
+>
+> That decision needs someone who answers for the consequences if it is wrong.
+>
+> That is the actual dividing line. It is not 'is this technically hard.'"
 
 ---
 
@@ -128,9 +132,9 @@ Open gap:
 **Visual:** End card, final-episode pointer.
 
 **Narration:**
-> "One episode left in this playlist — pulling all of this together into what
-   it actually means to use AI without handing over your engineering
-   judgment."
+> "One episode is left in this playlist.
+>
+> It pulls all of this together. It shows what it means to use AI without handing over your engineering judgment."
 
 ---
 

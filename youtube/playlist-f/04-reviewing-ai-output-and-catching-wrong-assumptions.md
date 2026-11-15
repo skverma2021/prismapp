@@ -26,10 +26,9 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Every example in this episode is real, and two of them happened while
-> making *this exact channel*. Reviewing AI output isn't a theoretical skill
-> here — it's the thing that kept several confidently-wrong claims out of
-   videos you'd otherwise be watching right now."
+> "Every example in this episode is real. Two of them happened while making *this exact channel*.
+>
+> Reviewing AI output is not a theoretical skill here. It kept several confidently wrong claims out of the videos that you would otherwise be watching right now."
 
 ---
 
@@ -54,12 +53,11 @@ Open gap:
 ```
 
 **Narration:**
-> "This document literally states its own method in the header: an
-> AI-assisted formal pass. And look at what a *good* AI-assisted review
-   produces — not a blanket 'everything's fine,' but a specific, named gap,
-   with an honest judgment call about whether it actually matters right now.
-   The review didn't just find a gap; a human decided what to do about it —
-   document it, not silently patch around it."
+> "This document states its own method in the header. An AI-assisted formal pass.
+>
+> And look at what a *good* AI-assisted review produces. It is not a blanket 'everything is fine.' It is a specific, named gap. It also gives an honest judgment about whether the gap matters right now.
+>
+> The review did not only find a gap. A human decided what to do about it. Document it, and do not silently patch around it."
 
 ---
 
@@ -68,15 +66,15 @@ Open gap:
 **Visual:** A grep result across `package.json` for `zod` — no matches.
 
 **Narration:**
-> "Here's one from this channel's own production. This project's planning
-> document listed 'runtime validation versus compile-time typing' as a
-   TypeScript topic, and it's a completely reasonable thing to expect a
-   Next.js app to use a schema library like Zod for. It doesn't. A grep across
-   `package.json` turns up nothing. The actual pattern here is a hand-rolled
-   set of `unknown`-in, typed-out parser functions — a real, working answer,
-   just not the one a plausible assumption would have guessed. The script for
-   that episode had to be rewritten around what the code actually does, not
-   what a typical Next.js app usually does."
+> "Here is one from this channel's own production.
+>
+> This project's planning document listed 'runtime validation versus compile-time typing' as a TypeScript topic.
+> It is reasonable to expect a Next.js app to use a schema library like Zod for that. But this project does not.
+> A grep across `package.json` turns up nothing.
+>
+> The actual pattern is a hand-written set of parser functions. They take `unknown` in, and they give typed values out. It is a real, working answer. It is just not the one a plausible assumption would have guessed.
+>
+> So the script for that episode had to be rewritten. It follows what the code actually does, not what a typical Next.js app usually does."
 
 ---
 
@@ -86,13 +84,13 @@ Open gap:
 across `src/` and `app/` — no matches.
 
 **Narration:**
-> "Same story, different playlist. The plan for the PostgreSQL playlist listed
-   window functions as a likely topic — genuinely reasonable for a reporting-
-   heavy app. A grep across the entire codebase found none. Rather than force
-   an example that doesn't exist, that episode said so directly, and reframed
-   it honestly: 'the point where you'd reach for one, which hasn't arrived
-   yet.' The discipline here isn't cleverness — it's refusing to state a claim
-   before checking it against the actual repository."
+> "It is the same story in a different playlist.
+>
+> The plan for the PostgreSQL playlist listed window functions as a likely topic. That is reasonable for a reporting-heavy app. But a grep across the entire codebase found none.
+>
+> So that episode did not force an example that does not exist. It said so directly. It reframed the topic honestly: 'the point where you would reach for one, which has not arrived yet.'
+>
+> The discipline here is not cleverness. It is refusing to state a claim before checking it against the actual repository."
 
 ---
 
@@ -102,12 +100,13 @@ across `src/` and `app/` — no matches.
 with a note that it previously (incorrectly) read "40."
 
 **Narration:**
-> "And the smallest example, from literally the last piece of work before this
-   one: a video count that added up wrong — one trailer plus six plus four
-   sets of eight is thirty-nine, not forty. Nobody caught it until the count
-   was actually re-added, by hand, on screen. It's a tiny error. That's exactly
-   why it's a good example — the habit of re-checking arithmetic doesn't
-   depend on the mistake being dramatic to matter."
+> "The smallest example comes from the last piece of work before this one.
+>
+> A video count added up wrong. One trailer plus six plus four sets of eight is thirty-nine, not forty.
+>
+> Nobody caught it until the count was re-added by hand, on screen.
+>
+> It is a tiny error. That is exactly why it is a good example. The habit of re-checking arithmetic matters even when the mistake is not dramatic."
 
 ---
 
@@ -118,11 +117,13 @@ functions, video-count error — each with a checkmark labeled "caught before
 publishing."
 
 **Narration:**
-> "None of these were caught by asking AI to double-check itself. They were
-   caught by checking the *artifact* — the actual `package.json`, the actual
-   codebase, the actual arithmetic — against the claim. That's the one
-   transferable skill in this whole episode: don't review the explanation,
-   review the thing the explanation is about."
+> "None of these were caught by asking AI to double-check itself.
+>
+> They were caught by checking the *artifact* against the claim. The actual `package.json`. The actual codebase. The actual arithmetic.
+>
+> That is the one skill you can take from this whole episode.
+>
+> Do not review the explanation. Review the thing the explanation is about."
 
 ---
 
@@ -132,8 +133,10 @@ publishing."
 
 **Narration:**
 > "Reviewing what already exists is one half of working safely with AI.
-   The other half is asking it to explain code you don't understand yet —
-   and that's next."
+>
+> The other half is asking it to explain code you do not understand yet.
+>
+> That is next."
 
 ---
 

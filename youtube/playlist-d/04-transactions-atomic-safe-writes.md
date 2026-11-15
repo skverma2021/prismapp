@@ -27,11 +27,14 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Episode 3's overlap check reads existing ownership rows, decides they're fine,
-> and then writes a new one. But what if two requests do that at almost the same
-> instant? Both read 'no overlap' before either has written anything. Both proceed.
-> Now you have two owners for the same day. This episode is about closing that
-> gap."
+> "The overlap check from Episode 3 reads existing ownership rows. It decides they are fine. Then it writes a new one.
+>
+> But what if two requests do that at almost the same instant?
+> Both read 'no overlap' before either has written anything. Both proceed.
+>
+> Now you have two owners for the same day.
+>
+> This episode is about closing that gap."
 
 ---
 
@@ -42,11 +45,14 @@ reading the ownership table at the same millisecond, both seeing "no conflict,"
 both writing.
 
 **Narration:**
-> "This isn't theoretical — it's the normal failure mode of any 'check, then write'
-> logic that isn't wrapped in something atomic. Two separate database round-trips,
-> read then write, with nothing stopping a second process from slipping in between
-> them. The fix isn't smarter application code — it's telling Postgres to treat the
-> whole check-and-write sequence as one indivisible unit."
+> "This is not theoretical.
+> It is the normal failure mode of any 'check, then write' logic that is not wrapped in something atomic.
+>
+> There are two separate database round-trips, a read and then a write.
+> Nothing stops a second process from slipping in between them.
+>
+> The fix is not smarter application code.
+> The fix is to tell Postgres to treat the whole check-and-write sequence as one indivisible unit."
 
 ---
 
@@ -83,21 +89,27 @@ export function runSerializable<T>(work: (tx: Prisma.TransactionClient) => Promi
 ```
 
 **Narration:**
-> "Every check from Episode 3 — reference checks, the overlap check, the
-> continuity check — and the final `create`, all run against the same `tx` handle,
-> inside one transaction. If anything inside throws — and every one of those
-> helper functions throws an `HttpError` on failure — Postgres rolls back the whole
-> thing. No partial write, ever.
+> "Every check from Episode 3 runs against the same `tx` handle.
+> That includes the reference checks, the overlap check, and the continuity check. The final `create` runs there too.
+> All of it happens inside one transaction.
 >
-> But here is the subtle part. Being inside a transaction is not enough. At
-> Postgres's default level, called read committed, two requests can each read 'no
-> overlap' and then each write — I tested exactly that against the real database:
-> two simultaneous check-then-insert transactions, and both succeeded. Two rows.
-> At the `Serializable` level, Postgres notices that the two transactions depend on
-> each other's reads, lets one commit, and aborts the other. Our small
-> `runSerializable` helper catches that abort and simply runs the unit of work
-> again — this time the check sees the first row and rejects the second request
-> with the normal conflict error. One winner, one clean rejection, no duplicate."
+> If anything inside throws, Postgres rolls back the whole thing.
+> Every one of those helper functions throws an `HttpError` on failure.
+> So there is never a partial write.
+>
+> But here is the subtle part. Being inside a transaction is not enough.
+>
+> At Postgres's default level, called read committed, two requests can each read 'no overlap'. Then each can write.
+> I tested exactly that against the real database.
+> Two simultaneous check-then-insert transactions ran, and both succeeded. That gave two rows.
+>
+> At the `Serializable` level, Postgres notices that the two transactions depend on each other's reads.
+> It lets one commit, and it aborts the other.
+>
+> Our small `runSerializable` helper catches that abort and simply runs the unit of work again.
+> This time the check sees the first row. It rejects the second request with the normal conflict error.
+>
+> There is one winner, and one clean rejection. And there is no duplicate."
 
 ---
 
@@ -108,18 +120,21 @@ export function runSerializable<T>(work: (tx: Prisma.TransactionClient) => Promi
 `createContribution` transaction (~lines 419+).
 
 **Narration:**
-> "The identical pattern protects contributions. `ensureNoDuplicateContribution`
-> reads the existing `ContributionDetail` rows for this unit, head, and period —
-> counting only original payments and approved corrections — adds up their signed
-> amounts, and refuses to proceed if the net is still positive. You can't pay the
-> same maintenance head for the same unit and period twice, but a period that an
-> approved correction has fully offset can be billed again. That
-> check, the rate lookup, and the final `contribution.create` all run inside one
-> `db.$transaction` callback in `createContribution`, for the exact same reason as
-> ownership: reading 'has this already been paid?' and writing 'record this
-> payment' have to be one atomic, serializable operation, or two near-simultaneous
-> payment submissions could both slip through. With it, the second one is
-> retried, sees the first payment, and is rejected as a duplicate."
+> "The identical pattern protects contributions.
+>
+> `ensureNoDuplicateContribution` reads the existing `ContributionDetail` rows for this unit, head, and period.
+> It counts only original payments and approved corrections.
+> It adds up their signed amounts. And it refuses to proceed if the net is still positive.
+>
+> So you cannot pay the same maintenance head for the same unit and period twice.
+> But a period that an approved correction has fully offset can be billed again.
+>
+> That check, the rate lookup, and the final `contribution.create` all run inside one `db.$transaction` callback in `createContribution`.
+> The reason is the same as for ownership.
+> Reading 'has this already been paid?' and writing 'record this payment' must be one atomic, serializable operation.
+> Otherwise, two near-simultaneous payment submissions could both slip through.
+>
+> With it, the second one is retried, sees the first payment, and is rejected as a duplicate."
 
 ---
 
@@ -130,13 +145,16 @@ versus the array form used elsewhere for reads
 (`const [items, totalItems] = await db.$transaction([...])`).
 
 **Narration:**
-> "Prisma actually gives you two forms of `$transaction`. The callback form — what
-> we just saw — is for when later steps depend on earlier results, like using a
-> looked-up rate to compute an amount. The array form batches independent
-> queries — a page of results plus its total count, say — so they execute against
-> one consistent database snapshot without one query's result depending on
-> another's. Same guarantee, atomicity, applied to two different problems: safe
-> writes, and consistent reads."
+> "Prisma gives you two forms of `$transaction`.
+>
+> The callback form is what we just saw.
+> It is for when later steps depend on earlier results. One example is using a looked-up rate to compute an amount.
+>
+> The array form batches independent queries. One example is a page of results plus its total count.
+> They execute against one consistent database snapshot. No query's result depends on another.
+>
+> It is the same guarantee, atomicity, applied to two different problems.
+> Safe writes, and consistent reads."
 
 ---
 
@@ -145,9 +163,10 @@ versus the array form used elsewhere for reads
 **Visual:** End card pointing to Episode 5.
 
 **Narration:**
-> "We've been reading these where-clauses filter by unit, by date range, by head —
-> and every one of those filters exists because an index backs it. Next episode:
-> how the indexes from Episode 2 actually earn their keep."
+> "We have been reading where-clauses that filter by unit, by date range, and by head.
+> Every one of those filters exists because an index backs it.
+>
+> Next episode, we see how the indexes from Episode 2 actually become useful."
 
 ---
 

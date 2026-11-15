@@ -25,10 +25,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "'Contribution records should be immutable' is a requirement. It's also
-> completely useless to hand an AI assistant as-is — immutable how, enforced
-> where, and what happens when a payment genuinely needs correcting? This
-> episode is about the document that closes that gap: the specification."
+> "'Contribution records should be immutable' is a requirement.
+>
+> It is also useless to hand to an AI assistant as it is. Immutable how? Enforced where? And what happens when a payment genuinely needs correcting?
+>
+> This episode is about the document that closes that gap. The specification."
 
 ---
 
@@ -53,12 +54,11 @@ rules require immutability after posting.
 ```
 
 **Narration:**
-> "This is what a specification looks like in practice — an Architecture
-> Decision Record, or ADR. The requirement, 'financial records must be
-> auditable,' turns into five numbered, testable decisions. Notice decision 5
-> especially: it doesn't pretend to answer a question this project isn't ready
-> to answer yet — it phases the answer, explicitly, instead of leaving it
-> vague."
+> "This is what a specification looks like in practice. It is an Architecture Decision Record, or ADR.
+>
+> The requirement, 'financial records must be auditable,' turns into five numbered, testable decisions.
+>
+> Notice decision 5 especially. It does not pretend to answer a question this project is not ready to answer yet. It phases the answer explicitly, instead of leaving it vague."
 
 ---
 
@@ -78,12 +78,13 @@ rules require immutability after posting.
 ```
 
 **Narration:**
-> "This is the part that turns a decision into a specification an AI assistant
-> can actually build against: an explicit allowed list and an explicit
-> not-allowed list. Compare this to just saying 'make it immutable' — an
-> assistant, or a new engineer, could reasonably guess that a soft-delete flag
-> satisfies that. This document closes that guess off directly, in writing,
-> before anyone starts implementing."
+> "This part turns a decision into a specification that an AI assistant can build against.
+>
+> It has an explicit allowed list. And it has an explicit not-allowed list.
+>
+> Compare this to just saying 'make it immutable.' An assistant, or a new engineer, could reasonably guess that a soft-delete flag satisfies that.
+>
+> This document closes that guess off directly, in writing, before anyone starts implementing."
 
 ---
 
@@ -100,12 +101,13 @@ rules require immutability after posting.
 ```
 
 **Narration:**
-> "A good specification doesn't just say what was decided — it says what
-> *wasn't* chosen, and why. This matters enormously for AI-assisted work
-> specifically: without this section, a later prompt like 'add an edit button
-> for corrections' could easily reintroduce the exact design the team already
-> rejected, because the rejection was never written down anywhere the
-> assistant — or the next engineer — could see it."
+> "A good specification does not only say what was decided. It also says what was *not* chosen, and why.
+>
+> This matters a lot for AI-assisted work.
+>
+> Without this section, a later prompt like 'add an edit button for corrections' could bring back the exact design the team already rejected.
+>
+> That can happen because the rejection was never written down. Neither the assistant nor the next engineer could see it."
 
 ---
 
@@ -125,11 +127,11 @@ When specs conflict, use this order:
 ```
 
 **Narration:**
-> "One more piece a specification layer needs once you have more than one
-> document: a rule for what wins when two of them disagree. This project
-> states that order explicitly, so that an AI assistant reading these files
-> — or a person — resolves a conflict the same way every time, instead of
-> picking whichever document it happened to open first."
+> "Once you have more than one document, a specification layer needs one more piece.
+>
+> It needs a rule for which document wins when two of them disagree.
+>
+> This project states that order explicitly. So an AI assistant, or a person, resolves a conflict the same way every time. It does not pick whichever document it happened to open first."
 
 ---
 
@@ -150,11 +152,13 @@ list.
 ```
 
 **Narration:**
-> "And this is the handoff point into the next stage of the pipeline — data
-> model. Notice this list reads almost like a table definition already. That's
-> not an accident. A specification this concrete is what makes the next
-> step — generating an actual implementation candidate — something AI can do
-> reliably instead of guessing at what 'auditable' was supposed to mean."
+> "This is the handoff point into the next stage of the pipeline. The data model.
+>
+> Notice that this list reads almost like a table definition already. That is not an accident.
+>
+> A specification this concrete makes the next step reliable. That step is generating an actual implementation candidate.
+>
+> AI can do it without guessing what 'auditable' was supposed to mean."
 
 ---
 
@@ -163,9 +167,9 @@ list.
 **Visual:** End card, next-episode pointer.
 
 **Narration:**
-> "Next: what it actually looks like to take a specification like this one and
-> generate a real implementation candidate from it — and what still needs a
-> human eye before it ships."
+> "Next, we will take a specification like this one and generate a real implementation candidate from it.
+>
+> And we will see what still needs a human eye before it ships."
 
 ---
 

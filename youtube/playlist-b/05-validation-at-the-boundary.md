@@ -24,9 +24,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Here's an uncomfortable fact: the frontend you wrote is not a security boundary.
-> Anyone can skip it entirely and send whatever they want straight to your API. So
-> where does validation actually have to live? Today, the boundary."
+> "Here is an uncomfortable fact. The frontend you wrote is not a security boundary.
+>
+> Anyone can skip it entirely and send whatever they want straight to your API.
+>
+> So where does validation actually have to live?
+>
+> Today, we look at the boundary."
 
 ---
 
@@ -37,12 +41,13 @@ an arrow to a server gate on the right labeled "Boundary validation — mandator
 authoritative."
 
 **Narration:**
-> "Client-side validation is genuinely useful — instant feedback, no round trip, a
-> better experience. But it's UX, not security. It runs in code the user controls,
-> in a browser the user controls. The validation that actually protects the system
-> runs again, unconditionally, the moment a request lands on the server — before
-> authorization, before any business logic touches it. If the server doesn't check
-> it, it isn't checked."
+> "Client-side validation is useful. It gives instant feedback, needs no round trip, and makes a better experience.
+>
+> But it is UX, not security. It runs in code the user controls, in a browser the user controls.
+>
+> The validation that protects the system runs again, unconditionally, when a request lands on the server. It runs before authorization. And it runs before any business logic touches the request.
+>
+> If the server does not check it, it is not checked."
 
 ---
 
@@ -53,14 +58,15 @@ body (e.g. creating an ownership record: `unitId` positive integer, `individualI
 positive integer, `fromDt` a valid date, `toDt` nullable date).
 
 **Narration:**
-> "Boundary validation checks shape first: is this actually a number where a number
-> is expected, is this a real date, is this field present at all. That's the cheap,
-> mechanical layer — reject garbage before it costs a database round trip. Business
-> rule validation is a separate, more expensive layer that comes after: does this
-> date range actually overlap an existing ownership record. Both are 'validation,'
-> but they run at different costs and different points in the request, and it's
-> worth keeping that distinction explicit rather than lumping every check into one
-> function."
+> "Boundary validation checks shape first. Is this a number where a number is expected? Is this a real date? Is this field present at all?
+>
+> That is the cheap, mechanical layer. We reject garbage before it costs a database round trip.
+>
+> Business rule validation is a separate, more expensive layer. It comes after. For example, does this date range overlap an existing ownership record?
+>
+> Both are 'validation.' But they run at different costs and at different points in the request.
+>
+> It is worth keeping that distinction explicit, instead of putting every check into one function."
 
 ---
 
@@ -70,12 +76,11 @@ positive integer, `fromDt` a valid date, `toDt` nullable date).
 Details" example showing per-field `details` array (`fromDt`, `toDt` reasons).
 
 **Narration:**
-> "This is where validation connects straight back to the API contract from a
-> couple of episodes ago. A validation failure doesn't just return 'bad request' —
-> it returns `VALIDATION_ERROR` with a `details` array naming the exact fields and
-> reasons: `fromDt` must be less than or equal to `toDt`. That precision is what
-> lets a form show the error next to the actual field that's wrong, instead of a
-> generic banner the user has to guess about."
+> "Here, validation connects back to the API contract from a few episodes ago.
+>
+> A validation failure does not just return 'bad request.' It returns `VALIDATION_ERROR` with a `details` array. The array names the exact fields and reasons. For example, `fromDt` must be less than or equal to `toDt`.
+>
+> That precision lets a form show the error next to the field that is wrong. The user does not have to guess from a generic banner."
 
 ---
 
@@ -86,12 +91,15 @@ Details" example showing per-field `details` array (`fromDt`, `toDt` reasons).
 or `null`.
 
 **Narration:**
-> "One more principle worth naming: when input is ambiguous or incomplete, the
-> system fails the request rather than guessing a default. It would be easy to let a
-> missing `toDt` silently become `null` and move on — but for an ownership record,
-> `null` `toDt` has a specific meaning: 'currently active.' Silently defaulting a
-> missing field into a meaningful value is exactly how subtle data corruption
-> happens. Reject it, and make the caller be explicit."
+> "Here is one more principle. When input is ambiguous or incomplete, the system fails the request. It does not guess a default.
+>
+> It would be easy to let a missing `toDt` quietly become `null` and move on.
+>
+> But for an ownership record, a `null` `toDt` has a specific meaning. It means 'currently active.'
+>
+> Silently turning a missing field into a meaningful value is exactly how subtle data corruption happens.
+>
+> So we reject it, and we make the caller be explicit."
 
 ---
 
@@ -100,11 +108,11 @@ or `null`.
 **Visual:** Talking head.
 
 **Narration:**
-> "It's tempting to think 'validation' is just picking a library and writing some
-> schemas. The actual engineering decision is upstream of that: deciding what
-> 'valid' means for each field, in the context of the rules from earlier episodes,
-> and deciding to fail loudly and specifically instead of guessing. The library is
-> just the tool that expresses a decision you already had to make."
+> "It is tempting to think 'validation' just means picking a library and writing some schemas.
+>
+> The real engineering decision comes before that. You decide what 'valid' means for each field, using the rules from earlier episodes. And you decide to fail loudly and specifically, instead of guessing.
+>
+> The library is only the tool that expresses a decision you already had to make."
 
 ---
 
@@ -113,9 +121,11 @@ or `null`.
 **Visual:** End card pointing to Episode B6.
 
 **Narration:**
-> "Next time, we look at a decision that goes further than validation — deciding
-> that some records, once written, can never be changed at all, and why that's
-> sometimes the safest possible design. Subscribe and I'll see you there."
+> "Next time, we look at a decision that goes further than validation.
+>
+> Some records, once written, can never be changed at all. We will see why that is sometimes the safest possible design.
+>
+> Subscribe, and I will see you there."
 
 ---
 

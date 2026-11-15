@@ -26,10 +26,15 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Who owns this unit? Easy question — until someone asks 'who owned it in March
-> last year, during that dispute?' If your schema only stores the *current* owner,
-> that question is unanswerable. PrismApp never overwrites an owner. It closes a
-> row and opens a new one. Let's see exactly how."
+> "Who owns this unit? That is an easy question.
+>
+> But then someone asks, 'Who owned it in March last year, during that dispute?'
+> If your schema only stores the *current* owner, that question has no answer.
+>
+> PrismApp never overwrites an owner.
+> It closes a row and opens a new one.
+>
+> Let us see exactly how."
 
 ---
 
@@ -38,10 +43,13 @@
 **Visual:** A hypothetical `Unit.currentOwnerId` column, crossed out.
 
 **Narration:**
-> "The naive version is one foreign key on `Unit` — `currentOwnerId` — updated in
-> place every time ownership changes. It works for 'who owns it now,' and for
-> nothing else. Every previous owner is gone the moment you overwrite that column.
-> No history, no audit trail, no way to answer 'who owned it on this date.'"
+> "The naive version is one foreign key on `Unit`, called `currentOwnerId`.
+> It is updated in place every time ownership changes.
+>
+> This works for 'who owns it now', and for nothing else.
+> Every previous owner is gone the moment you overwrite that column.
+>
+> There is no history. There is no audit trail. And there is no way to answer 'who owned it on this date'."
 
 ---
 
@@ -69,11 +77,16 @@ model UnitOwner {
 
 **Narration:**
 > "Instead of one row per unit, `UnitOwner` is one row *per ownership period*.
-> `fromDt` is always set. `toDt` is nullable — and `toDt: null` specifically means
-> 'this ownership hasn't ended, it's the active one.' Changing owners never
-> updates a row in place; it closes the old row by setting its `toDt`, and inserts
-> a brand-new row for the new owner starting the next day. The whole history stays
-> queryable, forever. `UnitResident` uses the exact same shape for residency."
+>
+> `fromDt` is always set. `toDt` is nullable.
+> `toDt: null` specifically means 'this ownership has not ended'. It is the active one.
+>
+> Changing owners never updates a row in place.
+> It closes the old row by setting its `toDt`. Then it inserts a brand-new row for the new owner, starting the next day.
+>
+> The whole history stays queryable, forever.
+>
+> `UnitResident` uses the exact same shape for residency."
 
 ---
 
@@ -97,12 +110,16 @@ export function rangesOverlap(
 ```
 
 **Narration:**
-> "A nullable end date is convenient to store, but awkward to compare — 'null' isn't
-> a number you can subtract. `rangesOverlap` treats an open `toDt` as
-> positive infinity, which turns 'is this range still open' into ordinary date
-> math. It's a pure function — no database, no `tx`, nothing but two date ranges in
-> and a boolean out — which is exactly why it's pulled out of the service file and
-> into its own module: it's trivial to unit-test in isolation."
+> "A nullable end date is convenient to store, but awkward to compare.
+> 'null' is not a number you can subtract.
+>
+> So `rangesOverlap` treats an open `toDt` as positive infinity.
+> That turns 'is this range still open' into ordinary date math.
+>
+> It is a pure function. It has no database and no `tx`. Two date ranges go in, and a boolean comes out.
+>
+> That is exactly why it lives in its own module, not in the service file.
+> It is trivial to unit-test in isolation."
 
 ---
 
@@ -112,15 +129,17 @@ export function rangesOverlap(
 `ensureOwnershipContinuity`, lines ~35–80.
 
 **Narration:**
-> "Overlap prevention alone isn't enough — two ownership rows could still leave a
-> gap, a week where a unit legally has no owner, which shouldn't be possible.
-> `ensureOwnershipContinuity` sorts every ownership row by `fromDt`, checks that the
-> very first row starts on the unit's own inception date, and then walks the
-> timeline row by row confirming each next `fromDt` is exactly one day after the
-> previous row's `toDt`. No gaps, no overlaps, and the timeline always starts where
-> the unit itself started. This is business logic that a `@@unique` or `@@index`
-> alone could never express — it needs to read the whole timeline to judge one new
-> row."
+> "Overlap prevention alone is not enough.
+> Two ownership rows could still leave a gap. That would be a week where a unit legally has no owner, which should not be possible.
+>
+> `ensureOwnershipContinuity` sorts every ownership row by `fromDt`.
+> It checks that the very first row starts on the unit's own inception date.
+> Then it walks the timeline row by row. It confirms that each next `fromDt` is exactly one day after the previous row's `toDt`.
+>
+> So there are no gaps and no overlaps. And the timeline always starts where the unit itself started.
+>
+> This is business logic that a `@@unique` or `@@index` alone could never express.
+> It needs to read the whole timeline to judge one new row."
 
 ---
 
@@ -130,11 +149,13 @@ export function rangesOverlap(
 ~136–144.
 
 **Narration:**
-> "This isn't a one-off trick for ownership. `ContributionRate` uses the identical
-> `fromDt` / nullable-`toDt` shape to track how a maintenance rate has changed over
-> time — which rate applied on any given transaction date is just 'the row whose
-> range contains that date.' One temporal pattern, reused everywhere something in
-> this domain legitimately changes over time instead of just existing."
+> "This is not a one-off trick for ownership.
+>
+> `ContributionRate` uses the identical `fromDt` and nullable `toDt` shape.
+> It tracks how a maintenance rate has changed over time.
+> Which rate applied on any given transaction date is just 'the row whose range contains that date'.
+>
+> It is one temporal pattern, reused everywhere something in this domain legitimately changes over time."
 
 ---
 
@@ -143,9 +164,12 @@ export function rangesOverlap(
 **Visual:** End card pointing to Episode 4.
 
 **Narration:**
-> "Overlap and continuity checks both have to read existing rows before deciding
-> whether a new row is safe to write. That read-then-write gap is exactly where
-> race conditions live — and that's what transactions are for, next."
+> "Overlap and continuity checks both read existing rows before they decide.
+> They decide whether a new row is safe to write.
+>
+> That gap between reading and writing is exactly where race conditions live.
+>
+> And that is what transactions are for. They are next."
 
 ---
 

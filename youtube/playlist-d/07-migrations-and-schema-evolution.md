@@ -26,10 +26,12 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "`schema.prisma` describes the database you want. A migration is the recorded,
-> reversible-in-principle set of SQL statements that actually gets you there from
-> whatever database you currently have. Editing the schema file changes nothing by
-> itself — the migration is the real event."
+> "`schema.prisma` describes the database you want.
+>
+> A migration is the recorded set of SQL statements that actually gets you there. It is reversible in principle. It starts from whatever database you currently have.
+>
+> Editing the schema file changes nothing by itself.
+> The migration is the real event."
 
 ---
 
@@ -53,13 +55,16 @@
 ```
 
 **Narration:**
-> "This isn't a demo — it's the actual migration history of a real, growing
-> application. Read the names in order and you're reading the app's history:
-> the initial schema, then contribution corrections, then rate provenance
-> tracking, then auth users, then an audit log, then an entire new complaint
-> module, then bookings. Each folder is a timestamped, one-way step — nobody
-> goes back and edits `20260319114421_prismaapp` after the fact. If something
-> needs to change, it's a *new* migration on top."
+> "This is not a demo.
+> It is the actual migration history of a real, growing application.
+>
+> Read the names in order, and you are reading the history of the app.
+> First the initial schema. Then contribution corrections. Then rate provenance tracking. Then auth users. Then an audit log. Then an entire new complaint module. And then bookings.
+>
+> Each folder is a timestamped, one-way step.
+> Nobody goes back and edits `20260319114421_prismaapp` after the fact.
+>
+> If something needs to change, it is a *new* migration on top."
 
 ---
 
@@ -87,15 +92,18 @@ CHECK (
 ```
 
 **Narration:**
-> "This one lives in `migration-drafts/`, outside the real `migrations/` folder
-> Prisma actually tracks — which is exactly the point. It's a fully written
-> proposal for a future non-linear pricing feature, complete with a Postgres
-> `CHECK` constraint restricting `pricingMode` to five known values, and a `JSONB`
-> column for a flexible pricing breakdown. Both are genuinely Postgres-specific
-> capabilities — `CHECK` constraints and `JSONB` don't exist in every database
-> engine. But the comment at the top says it plainly: draft only, do not run
-> automatically. Writing the migration and deciding to apply it are two separate,
-> deliberate steps."
+> "This one lives in `migration-drafts/`. That is outside the real `migrations/` folder that Prisma tracks.
+> And that is exactly the point.
+>
+> It is a fully written proposal for a future non-linear pricing feature.
+> It has a Postgres `CHECK` constraint that restricts `pricingMode` to five known values. And it has a `JSONB` column for a flexible pricing breakdown.
+>
+> Both are genuinely Postgres-specific capabilities.
+> `CHECK` constraints and `JSONB` do not exist in every database engine.
+>
+> But the comment at the top says it plainly: draft only, do not run automatically.
+>
+> Writing the migration and deciding to apply it are two separate, deliberate steps."
 
 ---
 
@@ -123,12 +131,17 @@ async function seedGenderTypes() {
 ```
 
 **Narration:**
-> "A migration runs once. A seed script has no such guarantee — someone will run
-> `prisma db seed` against a database that already has this data, probably more
-> than once. `upsert` is what makes that safe: if a row with this `id` already
-> exists, update it; otherwise create it. No duplicate gender types, no crash on
-> the second run. That's the actual bar for a seed script: idempotent, not
-> 'assume a blank database.'"
+> "A migration runs once.
+> A seed script has no such guarantee.
+>
+> Someone will run `prisma db seed` against a database that already has this data. Probably more than once.
+>
+> `upsert` is what makes that safe.
+> If a row with this `id` already exists, update it. Otherwise, create it.
+>
+> So there are no duplicate gender types, and no crash on the second run.
+>
+> That is the actual bar for a seed script. It must be idempotent. It must not 'assume a blank database'."
 
 ---
 
@@ -149,9 +162,10 @@ export default defineConfig({
 ```
 
 **Narration:**
-> "One small config file ties the schema, the migrations folder, and the seed
-> command together, so `prisma migrate` and `prisma db seed` both know exactly
-> what to run without anyone remembering a separate command by hand."
+> "One small config file ties together the schema, the migrations folder, and the seed command.
+>
+> So `prisma migrate` and `prisma db seed` both know exactly what to run.
+> Nobody has to remember a separate command by hand."
 
 ---
 
@@ -160,9 +174,10 @@ export default defineConfig({
 **Visual:** End card pointing to Episode 8.
 
 **Narration:**
-> "All of this assumes the app can actually reach the database in the first
-> place — and reach it exactly once per instance, not once per request. That's
-> the last episode in this playlist."
+> "All of this assumes the app can actually reach the database in the first place.
+> It also assumes the app reaches it exactly once per instance, not once per request.
+>
+> That is the last episode in this playlist."
 
 ---
 

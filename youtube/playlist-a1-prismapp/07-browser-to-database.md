@@ -22,10 +22,11 @@
 frozen/zoomed at the moment of the click.
 
 **Narration:**
-> "You just clicked a link. You are already logged in — Episode 6 showed how that
-> cookie got into your browser. Before the table of blocks appears on screen, that
-> one click passes through about half a dozen distinct layers of this application.
-> Let's follow it, one layer at a time."
+> "You just clicked a link. You are already logged in. Episode 6 showed how that cookie got into your browser.
+>
+> Before the table of blocks appears on screen, that one click passes through about half a dozen distinct layers of this application.
+>
+> Let us follow it, one layer at a time."
 
 ---
 
@@ -35,12 +36,13 @@ frozen/zoomed at the moment of the click.
 Handler box, with a small cookie icon labeled on the arrow.
 
 **Narration:**
-> "The page you land on, `/blocks`, is a client component — it manages its own
-> filter and pagination state in the browser. The moment it mounts, it fires a
-> `fetch` request to `/api/blocks`. That request automatically carries your session
-> cookie — the one created when you logged in, in the previous episode — because the
-> browser attaches it, you never touch it in code. This is a genuinely
-> ordinary HTTP GET request; nothing exotic happens yet."
+> "The page you land on, `/blocks`, is a client component. It manages its own filter and pagination state in the browser.
+>
+> The moment it mounts, it fires a `fetch` request to `/api/blocks`.
+>
+> That request automatically carries your session cookie. This is the cookie created when you logged in, in the previous episode. The browser attaches it, so you never touch it in code.
+>
+> This is a genuinely ordinary HTTP GET request. Nothing exotic happens yet."
 
 **On-screen action:** Browser dev tools network tab, showing the outgoing request
 and its cookie header.
@@ -53,12 +55,13 @@ and its cookie header.
 `requireReadRole()` → parse query params → call service.
 
 **Narration:**
-> "Inside the route handler, the very first thing that happens is an authorization
-> check — not a business logic check, an *authorization* check. No session, no
-> minimum role, no data. Fail here, and the request never gets near the database:
-> unauthenticated requests get a 401, insufficient-role requests get a 403. Only
-> after that gate passes does the handler even look at the query string — page
-> number, page size, search text."
+> "Inside the route handler, the very first thing that happens is an authorization check. It is not a business logic check. It is an *authorization* check.
+>
+> No session, no minimum role, no data.
+>
+> If it fails here, the request never gets near the database. Unauthenticated requests get a 401. Insufficient-role requests get a 403.
+>
+> Only after that gate passes does the handler look at the query string. That means page number, page size, and search text."
 
 ---
 
@@ -68,13 +71,15 @@ and its cookie header.
 to a separate Service box. Callout text: "No SQL lives here."
 
 **Narration:**
-> "Here's a design rule worth calling out explicitly: the route handler itself
-> contains no database code at all. It authenticates, it parses input, and it calls
-> a service function. All of the actual logic — building the query, applying
-> filters, deciding what 'valid' means — lives in that service layer, in its own
-> file, completely decoupled from HTTP concerns. That separation is what makes this
-> logic testable without spinning up a web server, and reusable if a second entry
-> point — a script, a background job — ever needs the same behavior."
+> "Here is a design rule worth calling out explicitly.
+>
+> The route handler itself contains no database code at all.
+>
+> It authenticates. It parses input. And it calls a service function.
+>
+> All of the actual logic lives in that service layer, in its own file. This includes building the query, applying filters, and deciding what 'valid' means. It is completely decoupled from HTTP concerns.
+>
+> That separation makes this logic testable without starting a web server. It also makes the logic reusable if a second entry point ever needs the same behavior, such as a script or a background job."
 
 ---
 
@@ -84,13 +89,15 @@ to a separate Service box. Callout text: "No SQL lives here."
 PostgreSQL cylinder, with a small SQL snippet floating on the arrow into Postgres.
 
 **Narration:**
-> "The service asks Prisma for two things at once, in a single transaction: the
-> actual rows, and a total count for pagination. Prisma translates that into real
-> SQL — a `SELECT` with a `WHERE`, a `LIMIT`, and an `OFFSET` — and sends it to
-> PostgreSQL over a connection pool. PostgreSQL runs the query and returns rows. On
-> the way back, Prisma turns those raw rows into typed objects the rest of the
-> TypeScript code can rely on. This is the one and only place in the whole request
-> where SQL exists."
+> "The service asks Prisma for two things at once, in a single transaction. It asks for the actual rows, and for a total count for pagination.
+>
+> Prisma translates that into real SQL. It is a `SELECT` with a `WHERE`, a `LIMIT`, and an `OFFSET`. Prisma sends it to PostgreSQL over a connection pool.
+>
+> PostgreSQL runs the query and returns rows.
+>
+> On the way back, Prisma turns those raw rows into typed objects. The rest of the TypeScript code can rely on them.
+>
+> This is the one and only place in the whole request where SQL exists."
 
 ---
 
@@ -101,13 +108,17 @@ Handler → `ok(data)` / `NextResponse.json` → Browser → `setState` → re-r
 table. A dashed alternate path shows an error branching to `fail(...)`.
 
 **Narration:**
-> "The service hands a plain object back to the route handler, which wraps it in a
-> consistent envelope — always the same shape, success or failure — and sends it as
-> JSON. Back in the browser, the fetch call resolves, the component updates its
-> state, and React re-renders the table. If anything went wrong anywhere in that
-> chain — a validation failure, a not-found, a conflict — the same envelope shape is
-> used for the error, just with success set to false and an error code attached. The
-> client checks one field to know which path it's on. One contract, every screen."
+> "The service hands a plain object back to the route handler.
+>
+> The handler wraps it in a consistent envelope. The envelope always has the same shape, for success or failure. Then the handler sends it as JSON.
+>
+> Back in the browser, the fetch call resolves. The component updates its state. And React re-renders the table.
+>
+> Now suppose anything went wrong anywhere in that chain. It could be a validation failure, a not-found, or a conflict. Then the same envelope shape is used for the error. Success is set to false, and an error code is attached.
+>
+> The client checks one field to know which path it is on.
+>
+> One contract, every screen."
 
 **On-screen action:** Browser dev tools — show the actual JSON response body for a
 successful request.
@@ -121,14 +132,17 @@ successful request.
 PostgreSQL → Response → Re-render`.
 
 **Narration:**
-> "That's the whole architecture, in motion, for a single click. Every screen in
-> this application follows this exact same shape — the specifics change, the
-> pipeline doesn't. And that consistency is exactly why the rest of this channel
-> can go deep on individual pieces without starting from zero each time: when we
-> talk about TypeScript, we'll be talking about the types flowing through this
-> pipeline. When we talk about Prisma and PostgreSQL, we'll be talking about this
-> exact transaction step. When we talk about Next.js, we'll be talking about this
-> exact client-to-route-handler boundary."
+> "That is the whole architecture, in motion, for a single click.
+>
+> Every screen in this application follows this exact same shape. The specifics change. The pipeline does not.
+>
+> That consistency is why the rest of this channel can go deep on individual pieces without starting from zero each time.
+>
+> When we talk about TypeScript, we will talk about the types flowing through this pipeline.
+>
+> When we talk about Prisma and PostgreSQL, we will talk about this exact transaction step.
+>
+> When we talk about Next.js, we will talk about this exact client-to-route-handler boundary."
 
 ---
 
@@ -138,9 +152,11 @@ PostgreSQL → Response → Re-render`.
 TypeScript, PostgreSQL & Prisma, Next.js, AI-Augmented Development.
 
 **Narration:**
-> "That wraps up the first playlist — you now know what this application does and
-> roughly how it's built. From here, we go deep, one layer at a time. Subscribe so
-> you don't miss where we start."
+> "That wraps up the first playlist. You now know what this application does and roughly how it is built.
+>
+> From here, we go deep, one layer at a time.
+>
+> Subscribe, so you do not miss where we start."
 
 ---
 

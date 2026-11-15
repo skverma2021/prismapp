@@ -1,38 +1,80 @@
-Here is an introductory tour of the Society Management System, the application used as our case study. The application is built around a society called MSH, or Magadh Signature Homes. Inspired by the heritage of Magadh, the society consists of three blocks: Nalanda for learning, Rajgir for harmony, and Vaishali for Buddhism, Jainism and prosperity. Magadh Signature Homes applies technology to enable community living that is secure, transparent, and well connected.
+Here is an introductory tour of the Society Management System. It is the application we use as our case study.
+
+The application is built around a society called MSH, or Magadh Signature Homes. The society is inspired by the heritage of Magadh.
+
+It has three blocks. Nalanda stands for learning. Rajgir stands for harmony. And Vaishali stands for Buddhism, Jainism, and prosperity.
+
+Magadh Signature Homes uses technology for community living that is secure, transparent, and well connected.
 
 Here is the login screen.  
 [login]  
 After a successful login, the home page is displayed next.  
 [Home Page]  
-What you see depends on who you are. The app has three roles: Society Admin, Manager, and Read-Only. Admins and managers can record and change data; read-only users can look, but not change anything, and sensitive details like mobile numbers and emails are masked for them. These rules are enforced on the server, not just by hiding buttons on the screen.  
+What you see depends on who you are.
+
+The app has three roles. They are Society Admin, Manager, and Read-Only.
+
+Admins and managers can record and change data. Read-only users can look, but they cannot change anything. Sensitive details, like mobile numbers and emails, are masked for them.
+
+These rules are enforced on the server. They are not only enforced by hiding buttons on the screen.  
 
 We will start with the block management page.  
 [the Blocks page]  
 The three blocks are Nalanda, Rajgir, and Vaishali.  
 [the browse page]  
-Now we choose Nalanda and look into the units or flats within this block.  
+Now we choose Nalanda. We look at the units, or flats, in this block.  
 [the page for units belonging to Nalanda block]  
-A list of units is shown, with links to define ownership, residency, and contributions for each unit.  
+A list of units is shown. Each unit has links to define ownership, residency, and contributions.  
 
-Everyone in the system, owners, residents, even people who only pay a bill, is a person in one common list. A person is not the same thing as a flat, and not every person is an owner or a resident.  
+Everyone in the system is a person in one common list. This includes owners, residents, and even people who only pay a bill.
+
+A person is not the same thing as a flat. And not every person is an owner or a resident.  
 [individuals page]  
 We will select ownership for flat 1001 in the Nalanda block.  
 [ownership page]  
-This page allows you to assign the owner and view all details related to ownership, including current and historical records. From here, you can also navigate to residency, contribution, or transaction pages for the selected unit. We will now choose residency.  
-[residency page]  
-Like ownership, this section allows you to record residency details for the selected flat and review its residency history. Ownership and residency represent two different ways in which individuals are linked to a flat, and both are timelines, not single fields. The app keeps the history, and it refuses to record two owners for the same flat on the same day.  
+On this page, you can assign the owner. You can also view all details related to ownership, including current and historical records.
 
-Next is the contribution system for monthly maintenance, gym, swimming pool, annual celebrations, feasts, and similar expenses. We begin from the home page, which contains a link for contribution capture.  
+From here, you can go to the residency, contribution, or transaction pages for the selected unit.
+
+We will now choose residency.  
+[residency page]  
+Like ownership, this section lets you record residency details for the selected flat. You can also review its residency history.
+
+Ownership and residency are two different ways to link a person to a flat. Both are timelines, not single fields.
+
+The app keeps the history. And it refuses to record two owners for the same flat on the same day.  
+
+Next is the contribution system. It covers monthly maintenance, gym, swimming pool, annual celebrations, feasts, and similar expenses.
+
+We begin from the home page. It has a link for contribution capture.  
 [Contribution Capture Page]  
-Then we choose the contribution type, the unit making the payment, the payer, the transaction ID, and the months covered by the payment, and the process is complete. Notice what we did not type: the amount. The app works it out from the rate in force on the day of payment and, for maintenance, the flat's area, and locks it in. And the system will not let the same flat pay the same head for the same month twice.  
+We choose the contribution type. We choose the unit making the payment. We choose the payer. We enter the transaction ID. And we choose the months covered by the payment.
+
+Then the process is complete.
+
+Notice what we did not type: the amount.
+
+The app works it out from the rate in force on the day of payment. For maintenance, it also uses the area of the flat. Then it locks the amount in.
+
+And the system will not let the same flat pay the same head for the same month twice.  
 [paid unpaid matrix]  
-This matrix allows filtering by year, contribution type, and block. It displays payment amounts across months for all units in the selected block.  
+This matrix can be filtered by year, contribution type, and block. It shows payment amounts across months for all units in the selected block.  
 [a posted contribution]  
-Now the part that matters most for trust. Once a payment is recorded, it cannot be edited or deleted, not by an admin, not through the API. If a mistake has to be fixed, the app does what an accountant would do: it adds a new, linked entry that offsets the original, either in full or just for part of the amount, with a reason.  
+Now the part that matters most for trust.
+
+Once a payment is recorded, it cannot be edited or deleted. Not by an admin. Not through the API.
+
+If a mistake must be fixed, the app does what an accountant would do. It adds a new, linked entry that offsets the original. The offset can be for the full amount or for part of it. And it needs a reason.  
 [correction form]  
-That correction is not final on its own. A second person, a different admin, has to approve it before it counts.  
+That correction is not final on its own. A second person, a different admin, must approve it before it counts.  
 [pending corrections page, then transactions report]  
-Every step is recorded: who did it, in what role, and when. The report shows the original payment and the correction side by side, so the history tells the true story, including the mistake.  
+Every step is recorded. The app records who did it, in what role, and when.
+
+The report shows the original payment and the correction side by side. So the history tells the true story, including the mistake.  
 
 [complaints page]  
-The home page also shows a summary of complaints, including open complaints, breached deadlines, and the oldest unresolved issues. A view-all option opens a page for creating and browsing all complaints. An authorized user can select any complaint ID to update its status or add relevant notes.
+The home page also shows a summary of complaints. It shows open complaints, breached deadlines, and the oldest unresolved issues.
+
+A view-all option opens a page for creating and browsing all complaints.
+
+An authorized user can select any complaint ID. Then they can update its status or add relevant notes.

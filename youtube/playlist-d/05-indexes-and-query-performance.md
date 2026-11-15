@@ -26,10 +26,12 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "An index isn't free — every one you add slows down writes a little, to speed up
-> a matching read a lot. So the only good reason to add one is a real query that
-> needs it. Let's line up the indexes in this schema against the actual queries
-> that use them."
+> "An index is not free.
+> Every index you add slows down writes a little, to speed up a matching read a lot.
+>
+> So the only good reason to add one is a real query that needs it.
+>
+> Let us line up the indexes in this schema against the actual queries that use them."
 
 ---
 
@@ -39,10 +41,12 @@
 contribution head, depositor, and a date range.
 
 **Narration:**
-> "Here's a real screen: the contributions transactions report. A user can filter
-> by unit, by block, by which contribution head, by who deposited it, and by a
-> date range. Every one of those is a `WHERE` clause condition — and every one of
-> them needs to not scan the entire `contributions` table to answer."
+> "Here is a real screen: the contributions transactions report.
+>
+> A user can filter by unit, by block, and by which contribution head. They can filter by who deposited it, and by a date range.
+>
+> Every one of those is a `WHERE` clause condition.
+> And every one of them must answer without scanning the entire `contributions` table."
 
 ---
 
@@ -62,13 +66,17 @@ model Contribution {
 ```
 
 **Narration:**
-> "Four indexes, four filters. `unitId` combined with `contributionHeadId`, because
-> the report often filters by both together — a compound index like this is faster
-> for that combined lookup than two separate single-column indexes would be.
-> `contributionHeadId` alone, for when only the head matters. `transactionDateTime`
-> for the date-range filter. `depositedBy` for filtering by who paid. None of these
-> exist because 'more indexes seemed safer' — each one maps to a filter a real user
-> screen actually offers."
+> "There are four indexes, for four filters.
+>
+> First, `unitId` combined with `contributionHeadId`. The report often filters by both together.
+> A compound index like this is faster for that combined lookup than two separate single-column indexes.
+>
+> Second, `contributionHeadId` alone, for when only the head matters.
+> Third, `transactionDateTime`, for the date-range filter.
+> And fourth, `depositedBy`, for filtering by who paid.
+>
+> None of these exist because 'more indexes seemed safer'.
+> Each one maps to a filter that a real user screen actually offers."
 
 ---
 
@@ -78,15 +86,17 @@ model Contribution {
 `where` object inside `getContributionTransactionsReport`, ~lines 200–220.
 
 **Narration:**
-> "And here's the other half — the actual query. `params.headId` becomes
-> `contributionHeadId`, `params.unitId` becomes `unitId`, `params.blockId` reaches
-> through the relation to `unit.blockId`, `params.depositedBy` becomes
-> `depositedBy`, and the date range becomes a `gte`/`lte` range on
-> `transactionDateTime`. Every field in this `where` object has a matching index
-> back in the schema. If a new filter got added to this report — say, filtering by
-> `correctionStatus` — and nobody added a matching index, that's the moment this
-> report would start getting slow as the table grows, and nobody would notice until
-> it did."
+> "Here is the other half: the actual query.
+>
+> `params.headId` becomes `contributionHeadId`. `params.unitId` becomes `unitId`.
+> `params.blockId` reaches through the relation to `unit.blockId`. `params.depositedBy` becomes `depositedBy`.
+> And the date range becomes a `gte` and `lte` range on `transactionDateTime`.
+>
+> Every field in this `where` object has a matching index back in the schema.
+>
+> Now suppose someone adds a new filter to this report, for example `correctionStatus`. And nobody adds a matching index.
+> That is the moment this report would start getting slow as the table grows.
+> And nobody would notice until it did."
 
 ---
 
@@ -97,11 +107,13 @@ next to the overlap-check query from Episode 3/4 that reads `unitOwner.findMany(
 where: { unitId, ... } })`.
 
 **Narration:**
-> "This isn't unique to reports. Episode 4's overlap check runs on every single
-> ownership write — so its index isn't optional, it's on the hot path for every
-> ownership transaction this app processes. The rule is the same either way: an
-> index should exist because a specific, identifiable query needs it, and you
-> should be able to point at that query."
+> "This is not unique to reports.
+>
+> The overlap check from Episode 4 runs on every single ownership write.
+> So its index is not optional. It is on the hot path for every ownership transaction this app processes.
+>
+> The rule is the same either way.
+> An index should exist because a specific, identifiable query needs it. And you should be able to point at that query."
 
 ---
 
@@ -110,9 +122,11 @@ where: { unitId, ... } })`.
 **Visual:** End card pointing to Episode 6.
 
 **Narration:**
-> "Filtering fast is half the reporting problem. The other half is turning
-> hundreds of matching rows into one total, one count, one summary — and that's
-> next."
+> "Filtering fast is half the reporting problem.
+>
+> The other half is turning hundreds of matching rows into one total, one count, and one summary.
+>
+> That is next."
 
 ---
 

@@ -21,9 +21,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Every society has the same money problem: a per square foot per month payment for maintenance, 
-> a flat fee for an annual event, or a per person per month payment for using a service — and once someone's paid, that
-> record has to be trustworthy forever. Today, the engine that makes that true."
+> "Every society has the same money problem.
+>
+> There is a per square foot, per month payment for maintenance. There is a flat fee for an annual event. And there is a per person, per month payment for using a service.
+>
+> Once someone has paid, that record must be trustworthy forever.
+>
+> Today, we look at the engine that makes that true."
 
 ---
 
@@ -33,14 +37,15 @@
 then `/contribution-periods`. Diagram: three stacked boxes — Head, Rate, Period.
 
 **Narration:**
-> "Three building blocks. A contribution head is *what* you're paying for —
-> maintenance, a gym fee, a one-off event charge — and it defines how the amount is
-> measured: by area, by number of people, or a flat lump sum. A contribution rate is
-> the *price* for that head over a date range — rates change over time, so each rate
-> has a start date and, usually, an end date once it's superseded. A contribution
-> period is simply a calendar bucket — a specific month, or an entire year — that a
-> payment gets attached to. Heads answer 'what.' Rates answer 'how much, and since
-> when.' Periods answer 'for when.'"
+> "There are three building blocks.
+>
+> A contribution head is *what* you are paying for. It might be maintenance, a gym fee, or a one-off event charge. It also defines how the amount is measured: by area, by number of people, or as a flat lump sum.
+>
+> A contribution rate is the *price* for that head over a date range. Rates change over time. So each rate has a start date and, usually, an end date once a newer rate replaces it.
+>
+> A contribution period is a calendar bucket. It is a specific month, or an entire year, that a payment gets attached to.
+>
+> Heads answer 'what.' Rates answer 'how much, and since when.' Periods answer 'for when.'"
 
 ---
 
@@ -51,14 +56,19 @@ period count`. Screen recording — a payment capture screen for a per-square-fo
 maintenance charge, auto-filling the unit's area.
 
 **Narration:**
-> "Every payment, no matter the head, resolves to the same formula: quantity times
-> the applicable rate, times however many periods are being paid at once. Quantity
-> depends on the head's measurement type — for an area-based head, the app pulls the
-> unit's square footage automatically, no manual entry. For a per-person head, an
-> operator enters how many people are using the service, but only if the unit
-> currently has at least one active resident — you can't bill a per-person service on
-> an empty flat. For a flat fee, quantity is simply one. Same formula, three
-> different inputs — that consistency is what keeps the reporting simple later."
+> "Every payment, whatever the head, resolves to the same formula.
+>
+> Quantity times the applicable rate, times the number of periods paid at once.
+>
+> Quantity depends on the measurement type of the head.
+>
+> For an area-based head, the app pulls the square footage of the unit automatically. There is no manual entry.
+>
+> For a per-person head, an operator enters how many people use the service. But this only works if the unit currently has at least one active resident. You cannot bill a per-person service on an empty flat.
+>
+> For a flat fee, quantity is simply one.
+>
+> It is the same formula with three different inputs. That consistency keeps the reporting simple later."
 
 ---
 
@@ -69,13 +79,15 @@ marked slightly after the boundary, arrow pointing to the *new* rate even though
 period being paid for is *before* the boundary.
 
 **Narration:**
-> "Here's a subtle rule that surprises people the first time they hit it. Which rate
-> applies isn't decided by the period you're paying for — it's decided by the date
-> the payment is actually made. If you're settling January's dues in April, and the
-> rate went up in February, you pay April's rate, not January's. That's a deliberate
-> policy, not a bug, and when it happens the app shows a non-blocking warning so the
-> resident and the operator both see it happening, rather than it being silently
-> applied."
+> "Here is a subtle rule that surprises people the first time they meet it.
+>
+> The period you are paying for does not decide which rate applies. The date the payment is actually made decides it.
+>
+> Suppose you settle the dues of January in April, and the rate went up in February. Then you pay the rate of April, not the rate of January.
+>
+> That is a deliberate policy, not a bug.
+>
+> When it happens, the app shows a non-blocking warning. So the resident and the operator both see it, and it is never applied silently."
 
 ---
 
@@ -86,15 +98,15 @@ edit/delete option), then a compensating correction flow creating a new offsetti
 entry.
 
 **Narration:**
-> "Once a contribution is recorded, it cannot be edited or deleted — not by an admin,
-> not through the API, not ever. If a mistake needs fixing, the system creates a
-> compensating transaction — a new entry that offsets the original — so the ledger
-> always tells the true story of what happened, including the mistake and its
-> correction. A correction can reverse the whole payment, or give back just part of
-> it — say a rate concession — as long as it never exceeds what is still correctable.
-> This is exactly how real accounting systems behave, and for the same
-> reason: an editable financial record isn't trustworthy, no matter how good your
-> intentions are."
+> "Once a contribution is recorded, it cannot be edited or deleted. Not by an admin. Not through the API. Not ever.
+>
+> If a mistake needs fixing, the system creates a compensating transaction. This is a new entry that offsets the original.
+>
+> So the ledger always tells the true story of what happened, including the mistake and its correction.
+>
+> A correction can reverse the whole payment. Or it can give back just part of it, for example a rate concession. But it can never exceed what is still correctable.
+>
+> This is exactly how real accounting systems behave. And the reason is the same: an editable financial record is not trustworthy, however good your intentions are."
 
 ---
 
@@ -104,15 +116,19 @@ entry.
 twice; show the rejection.
 
 **Narration:**
-> "One more safeguard: the same unit can't be billed twice for the same head and the
-> same period. That sounds obvious, but it has to be enforced at the data layer, not
-> just in the UI — otherwise a double-click, a network retry, or two operators
-> working at once could double-charge a resident. There's one deliberate exception:
-> if every entry for a unit-head-period combination nets out to zero — because an
-> approved correction fully offset the original — the system allows a fresh entry for
-> that same period. A correction still waiting for approval doesn't count, and neither
-> does a partial adjustment, because the period is still partly paid. Net zero really
-> means nothing was ever actually paid."
+> "Here is one more safeguard.
+>
+> The same unit cannot be billed twice for the same head and the same period.
+>
+> That sounds obvious. But it must be enforced at the data layer, not just in the UI. Otherwise a double-click, a network retry, or two operators working at once could double-charge a resident.
+>
+> There is one deliberate exception.
+>
+> Suppose every entry for a unit-head-period combination nets out to zero, because an approved correction fully offset the original. Then the system allows a fresh entry for that same period.
+>
+> A correction that still waits for approval does not count. A partial adjustment does not count either, because the period is still partly paid.
+>
+> Net zero really means that nothing was ever actually paid."
 
 ---
 
@@ -122,11 +138,13 @@ twice; show the rejection.
 units down the side, colored cells for paid vs. unpaid.
 
 **Narration:**
-> "All of these rules exist in service of one outcome: a report someone can trust.
-> This paid/unpaid matrix answers 'who hasn't paid maintenance this year' at a
-> glance, and every number behind it traces back to an immutable, rate-locked,
-> duplicate-checked transaction. That traceability is the entire point of everything
-> we just walked through."
+> "All of these rules exist for one outcome: a report someone can trust.
+>
+> This paid/unpaid matrix answers 'who has not paid maintenance this year' at a glance.
+>
+> And every number behind it traces back to a transaction that is immutable, rate-locked, and duplicate-checked.
+>
+> That traceability is the entire point of everything we just covered."
 
 ---
 
@@ -135,9 +153,11 @@ units down the side, colored cells for paid vs. unpaid.
 **Visual:** End card pointing to Episode 5.
 
 **Narration:**
-> "Next episode, we leave money behind and look at complaints — a different kind of
-> integrity problem: keeping a workflow honest as it moves through multiple people
-> and multiple states. Subscribe, and I'll see you there."
+> "Next episode, we leave money behind and look at complaints.
+>
+> This is a different kind of integrity problem. It is about keeping a workflow honest as it moves through multiple people and multiple states.
+>
+> Subscribe, and I will see you there."
 
 ---
 

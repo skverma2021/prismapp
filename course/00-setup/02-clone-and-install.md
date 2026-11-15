@@ -13,22 +13,24 @@
 Terminal window showing three commands: `git clone`, `cd prismapp`, `npm install`. Output lines beneath each. Clean, step-focused.
 
 **Narration:**
-With your tools installed, clone the repository:
+With your tools installed, clone the repository.
 
 ```bash
 git clone https://github.com/YOUR_ACCOUNT/prismapp.git
 cd prismapp
 ```
 
-If you are using a fork (recommended for the exercises), replace `YOUR_ACCOUNT` with your GitHub username. If you are using the original repository as read-only, use the course instructor's URL.
+If you use a fork, replace `YOUR_ACCOUNT` with your GitHub username. A fork is recommended for the exercises. If you use the original repository as read-only, use the course instructor's URL.
 
-Once inside the folder, install dependencies:
+Once you are inside the folder, install the dependencies.
 
 ```bash
 npm install
 ```
 
-This downloads all packages listed in `package.json`. The first run takes a minute or two depending on your internet speed.
+This downloads all packages listed in `package.json`.
+
+The first run takes a minute or two. The time depends on your internet speed.
 
 **On-screen action / demo:**
 Run these three commands in the terminal. Show the progress output of `npm install`.
@@ -49,20 +51,24 @@ Clone, change directory, install. Three commands.
 Flow diagram: `npm install` → downloads packages → triggers `postinstall` → runs `prisma generate` → writes generated client to `node_modules/@prisma/client`.
 
 **Narration:**
-After all packages are downloaded, npm automatically runs the `postinstall` script defined in `package.json`:
+After all packages are downloaded, npm automatically runs the `postinstall` script. It is defined in `package.json`.
 
 ```json
 "postinstall": "prisma generate"
 ```
 
-`prisma generate` reads your `prisma/schema.prisma` file and writes TypeScript types and a database client into `node_modules/@prisma/client`. This generated code is what lets you write:
+`prisma generate` reads your `prisma/schema.prisma` file. It writes TypeScript types and a database client into `node_modules/@prisma/client`.
+
+This generated code lets you write the following.
 
 ```ts
 import { db } from "@/lib/db";
 const blocks = await db.block.findMany();
 ```
 
-If `prisma generate` has not run, those import paths do not exist and TypeScript will report hundreds of errors. The `postinstall` hook ensures generate runs automatically — you do not need to remember to run it manually.
+If `prisma generate` has not run, those import paths do not exist. TypeScript will then report hundreds of errors.
+
+The `postinstall` hook runs generate for you. You do not need to remember to run it manually.
 
 **On-screen action / demo:**
 After `npm install` finishes, show `node_modules/@prisma/client` in the file tree. Show one of the generated type files briefly.
@@ -83,7 +89,7 @@ After `npm install` finishes, show `node_modules/@prisma/client` in the file tre
 Annotated directory tree. Key folders highlighted with a brief label next to each.
 
 **Narration:**
-Before going further, orient yourself in the repository:
+Before going further, find your way around the repository.
 
 ```
 prismapp/
@@ -106,9 +112,11 @@ prismapp/
 └── package.json            # Scripts and dependencies
 ```
 
-The `vault/` folder contains the domain rules, ERD, API specifications, and reporting specs that drive the implementation. Sections A and B of the course explain how to read these documents.
+The `vault/` folder contains the domain rules, the ERD, the API specifications, and the reporting specs. These documents drive the implementation.
 
-The `course/` folder is the course itself — slides, scripts, and notes. It is not part of the running application.
+Sections A and B of the course explain how to read them.
+
+The `course/` folder is the course itself. It holds slides, scripts, and notes. It is not part of the running application.
 
 **On-screen action / demo:**
 Open VS Code with `code .` from the project root. Show the Explorer panel. Click into `app/`, `src/modules/`, and `prisma/` briefly.

@@ -27,11 +27,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Every component in the App Router is a Server Component by default — it renders
-> on the server and ships no JavaScript to the browser for itself. `"use client"`
-> opts a file back into the old model: it runs in the browser, can use `useState`,
-> `useEffect`, event handlers. This episode is about where this app actually draws
-> that line, and why."
+> "Every component in the App Router is a Server Component by default.
+>
+> It renders on the server. It ships no JavaScript to the browser for itself.
+>
+> `"use client"` opts a file back into the old model. The file runs in the browser. It can use `useState`, `useEffect`, and event handlers.
+>
+> This episode is about where this app draws that line. And it explains why."
 
 ---
 
@@ -41,13 +43,15 @@
 1, pointing out the absence of `"use client"` at the top of either file.
 
 **Narration:**
-> "Both layouts from last episode have no `"use client"` line. Neither needs one —
-> `RootLayout` just awaits a session and renders `<html>`; `DashboardLayout` just
-> awaits an auth check and renders its children. No state, no event handlers, no
-> browser APIs. That's the actual test: does this component need to hold state,
-> respond to clicks, or use a browser-only API? If not, it can stay a Server
-> Component — and get to do things client components can't, like `await` a
-> database call directly."
+> "Both layouts from last episode have no `"use client"` line. Neither needs one.
+>
+> `RootLayout` just awaits a session and renders `<html>`. `DashboardLayout` just awaits an auth check and renders its children.
+>
+> There is no state, no event handlers, and no browser APIs.
+>
+> That is the real test. Does this component need to hold state, respond to clicks, or use a browser-only API?
+>
+> If not, it can stay a Server Component. And it can do things client components cannot, like `await` a database call directly."
 
 ---
 
@@ -66,11 +70,15 @@ const [editingId, setEditingId] = useState<string | null>(null);
 ```
 
 **Narration:**
-> "Compare that to the blocks page. It has a text input bound to `createDescription`,
-> a table row that flips into an edit form when you click it, buttons that submit
-> fetch requests — all of that needs `useState` and `onClick` handlers running in
-> the browser. The moment a component needs interactivity like that, it has to be
-> a Client Component, and `"use client"` is how you say so."
+> "Now compare that to the blocks page.
+>
+> It has a text input bound to `createDescription`. It has a table row that turns into an edit form when you click it. And it has buttons that submit fetch requests.
+>
+> All of that needs `useState` and `onClick` handlers running in the browser.
+>
+> The moment a component needs this kind of interactivity, it must be a Client Component.
+>
+> And `"use client"` is how you say so."
 
 ---
 
@@ -81,11 +89,13 @@ const [editingId, setEditingId] = useState<string | null>(null);
 several more — roughly twenty files in total.
 
 **Narration:**
-> "This isn't an exception — nearly every page under `(dashboard)` starts with
-> `"use client"`, because nearly every one of them is an interactive browse-and-edit
-> screen: search boxes, sortable columns, inline forms. The two layouts are the
-> quiet exception, because a layout's whole job here is an auth check and a shell —
-> no interactivity required."
+> "This is not an exception.
+>
+> Nearly every page under `(dashboard)` starts with `"use client"`. That is because nearly every one is an interactive browse-and-edit screen. They have search boxes, sortable columns, and inline forms.
+>
+> The two layouts are the quiet exception. A layout's whole job here is an auth check and a shell.
+>
+> So it needs no interactivity."
 
 ---
 
@@ -110,12 +120,13 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
 ```
 
 **Narration:**
-> "Error boundaries are a slightly different case: Next.js requires `error.tsx`
-> files to be Client Components, full stop — because they need to catch errors
-> that happen during client-side rendering too, not just on the server. This one
-> uses that requirement anyway: the `useEffect` reports the error to Sentry the
-> moment it renders in the browser. Same directive, but here it's mandatory, not a
-> choice about interactivity."
+> "Error boundaries are a slightly different case.
+>
+> Next.js requires `error.tsx` files to be Client Components, with no exceptions. They must also catch errors that happen during client-side rendering, not just on the server.
+>
+> This one uses that requirement anyway. The `useEffect` reports the error to Sentry the moment it renders in the browser.
+>
+> It is the same directive. But here it is mandatory. It is not a choice about interactivity."
 
 ---
 
@@ -124,9 +135,11 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
 **Visual:** End card pointing to Episode 3.
 
 **Narration:**
-> "Every one of these client pages still needs to talk to a server somehow — none
-> of them can query the database directly from the browser. That's what Route
-> Handlers are for, next."
+> "Every one of these client pages still needs to talk to a server somehow.
+>
+> None of them can query the database directly from the browser.
+>
+> That is what Route Handlers are for. They are next."
 
 ---
 

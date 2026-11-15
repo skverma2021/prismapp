@@ -26,12 +26,13 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "'Are you logged in' and 'are you allowed to do this' sound like one question,
-> but this app answers it twice, differently, depending on who's asking. A browser
-> loading a dashboard page gets redirected to sign in. An API route hit directly,
-> without a session, gets a `401` JSON response. Same underlying session, two
-> different mechanisms, because a browser and a fetch call need different
-> answers."
+> "'Are you logged in' and 'are you allowed to do this' sound like one question.
+>
+> But this app answers it twice. It answers differently, depending on who is asking.
+>
+> A browser loading a dashboard page gets redirected to sign in. An API route hit directly, without a session, gets a `401` JSON response.
+>
+> It is the same underlying session. But there are two different mechanisms. A browser and a fetch call need different answers."
 
 ---
 
@@ -59,13 +60,17 @@ export async function requireServerAppSession(options?: { allowedRoles?: UserRol
 ```
 
 **Narration:**
-> "This is what Episode 1's `DashboardLayout` actually calls. No session? Call
-> Next.js's `redirect()` straight to `/`, carrying an `auth=required` query
-> parameter so the sign-in page can show a banner explaining why you landed there.
-> Wrong role for this section? Redirect again, with `auth=denied`. Notice there's
-> no JSON response anywhere here — `redirect()` throws a special Next.js signal
-> that aborts rendering and sends an HTTP redirect instead. That's the right
-> behavior for a page a person is navigating to in a browser."
+> "This is what the `DashboardLayout` from Episode 1 actually calls.
+>
+> Is there no session? Then it calls Next.js's `redirect()` straight to `/`. It carries an `auth=required` query parameter. So the sign-in page can show a banner that explains why you landed there.
+>
+> Is the role wrong for this section? Then it redirects again, with `auth=denied`.
+>
+> Notice that there is no JSON response anywhere here.
+>
+> `redirect()` throws a special Next.js signal. The signal aborts rendering and sends an HTTP redirect instead.
+>
+> That is the right behavior for a page a person navigates to in a browser."
 
 ---
 
@@ -75,15 +80,17 @@ export async function requireServerAppSession(options?: { allowedRoles?: UserRol
 from `next-auth/jwt`.
 
 **Narration:**
-> "A `fetch()` call from a client component can't follow a redirect the way a
-> browser navigation can — it would just get a redirect response back as data,
-> which isn't useful. So route handlers use a different check entirely:
-> `getAuthContext` calls `getToken` from `next-auth/jwt` directly against the
-> request's cookies, decodes the session JWT, and returns a typed `AuthContext`
-> with the user's `role`. No session? No valid token? The function that wraps this
-> — `requireReadRole` / `requireMutationRole`, called at the top of every route
-> handler in Episode 3 — throws an `HttpError` with a `401`, which flows straight
-> into that same `fail(fromUnknownError(...))` pattern we've already seen."
+> "A `fetch()` call from a client component cannot follow a redirect the way a browser navigation can.
+>
+> It would just get a redirect response back as data. That is not useful.
+>
+> So route handlers use a different check entirely.
+>
+> `getAuthContext` calls `getToken` from `next-auth/jwt` directly against the request's cookies. It decodes the session JWT. Then it returns a typed `AuthContext` with the user's `role`.
+>
+> What if there is no session, or no valid token? The wrapper functions are `requireReadRole` and `requireMutationRole`. We saw them at the top of every route handler in Episode 3.
+>
+> They throw an `HttpError` with a `401`. That flows straight into the same `fail(fromUnknownError(...))` pattern we have already seen."
 
 ---
 
@@ -94,13 +101,15 @@ one to `getServerAuthSession()` (used by layouts/pages), one to `getToken()` (us
 by route handlers).
 
 **Narration:**
-> "Both checks ultimately read the same encrypted session cookie the browser sends
-> with every request — there's exactly one source of truth for 'who is this.'
-> `getServerAuthSession()` is next-auth's higher-level helper, convenient for
-> Server Components that just want a session object. `getToken()` is the
-> lower-level JWT decode, used inside route handlers because it doesn't assume a
-> React rendering context. Same cookie, same secret, two APIs suited to two
-> different callers."
+> "Both checks ultimately read the same encrypted session cookie. The browser sends it with every request.
+>
+> So there is exactly one source of truth for 'who is this.'
+>
+> `getServerAuthSession()` is the higher-level helper from next-auth. It is convenient for Server Components that just want a session object.
+>
+> `getToken()` is the lower-level JWT decode. Route handlers use it because it does not assume a React rendering context.
+>
+> It is the same cookie and the same secret. But there are two APIs, suited to two different callers."
 
 ---
 
@@ -110,13 +119,15 @@ by route handlers).
 1, next to `requireMutationRole` from Episode 3's route handlers.
 
 **Narration:**
-> "Notice both layers ask two questions, not one: is there a session at all
-> (authentication), and does *this* session's role permit *this* action
-> (authorization). A `READ_ONLY` user has a perfectly valid session — they're
-> authenticated — but `requireMutationRole` still rejects their `POST` request.
-> Keeping those as two separate checks, both enforced server-side, means the UI
-> can hide a button for a read-only user as a convenience, but the actual
-> protection never depends on the UI cooperating."
+> "Notice that both layers ask two questions, not one.
+>
+> First, is there a session at all? That is authentication. Second, does *this* session's role permit *this* action? That is authorization.
+>
+> A `READ_ONLY` user has a perfectly valid session. They are authenticated. But `requireMutationRole` still rejects their `POST` request.
+>
+> These are two separate checks, and both are enforced server-side.
+>
+> So the UI can hide a button for a read-only user as a convenience. But the actual protection never depends on the UI cooperating."
 
 ---
 
@@ -125,9 +136,9 @@ by route handlers).
 **Visual:** End card pointing to Episode 5.
 
 **Narration:**
-> "Every one of these protected pages eventually needs to submit a form back to
-> one of these protected route handlers. How that submission actually happens,
-> client-side, is next."
+> "Every one of these protected pages eventually needs to submit a form back to one of these protected route handlers.
+>
+> How that submission actually happens, client-side, is next."
 
 ---
 

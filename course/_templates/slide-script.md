@@ -20,9 +20,13 @@
 Be specific enough that someone else could build the PPT from this description alone.]
 
 **Narration (what you say):**
-[Write the full spoken script in natural, conversational language.
+[Write the full spoken script in short, natural sentences, for voice-over.
 Avoid reading bullet points aloud — the narration adds context the slide does not show.
-Aim for 60–120 words per slide. Pause markers: `[pause]`]
+Aim for 60–120 words per slide.
+Rules: one idea per sentence, about 20 words or fewer. Subject and verb first.
+No em-dashes or parenthetical asides. No idioms. Keep technical terms exactly as written.
+Pause markers: leave a BLANK LINE where the presenter should pause and breathe.
+Do not use `[pause]`.]
 
 **On-screen action / demo:**
 [Exactly what to do on screen while narrating this slide, if anything.

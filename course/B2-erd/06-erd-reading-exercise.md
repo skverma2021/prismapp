@@ -122,17 +122,29 @@ Rule: C4 means no `update` or `delete` operation exists in the service for notes
 | C6 (who filed + when) | DB: `reportedById` FK + `createdAt` default |
 
 **Narration:**
-Here is the sample answer — and this time, you can verify it by opening `prisma/schema.prisma` right now.
+Here is the sample answer. This time, you can verify it by opening `prisma/schema.prisma` right now.
 
-Four tables: `ComplaintCategory`, `ComplaintPriority`, `Complaint`, and `ComplaintNote`. Let me explain each.
+There are four tables. They are `ComplaintCategory`, `ComplaintPriority`, `Complaint`, and `ComplaintNote`. Let me explain each one.
 
-`ComplaintCategory` and `ComplaintPriority` come from rule C2. Categories and priorities are user-managed lookups. The MC can add a new category — "Maintenance", "Security", "Electrical" — without touching the code. Using a separate table instead of an enum is the right call any time the domain says "the user controls this list."
+`ComplaintCategory` and `ComplaintPriority` come from rule C2. Categories and priorities are user-managed lookups.
 
-`Complaint` handles rules C1, C3, C5, and C6 together. Rule C1 is a simple FK. Rule C3 gives us a `status` string with an allowlist enforced in the service — not a DB constraint. Rule C5 gives us a nullable FK for `assignedToId`. Rule C6 gives us `reportedById` and `createdAt`.
+The MC can add a new category without touching the code. Examples are "Maintenance", "Security", and "Electrical."
 
-`ComplaintNote` handles rule C4. Append-only means no `updatedAt` column — there is nothing to update. The service has no update or delete operation for notes. This is the same discipline as `ContributionDetail` — immutability is a service-layer contract, not a DB constraint.
+A separate table is the right choice, not an enum, whenever the domain says "the user controls this list."
 
-The pattern you should notice: immutability is expressed through the *absence* of operations in the service, not through a DB constraint. The database allows any write; the service refuses to offer one.
+`Complaint` handles rules C1, C3, C5, and C6 together.
+
+Rule C1 is a simple FK. Rule C3 gives us a `status` string. The service enforces an allowlist, not a DB constraint.
+
+Rule C5 gives us a nullable FK for `assignedToId`. Rule C6 gives us `reportedById` and `createdAt`.
+
+`ComplaintNote` handles rule C4. Append-only means no `updatedAt` column, because there is nothing to update.
+
+The service has no update or delete operation for notes. This is the same discipline as `ContributionDetail`. Immutability is a service-layer contract, not a DB constraint.
+
+Notice this pattern. Immutability is expressed through the *absence* of operations in the service, not through a DB constraint.
+
+The database allows any write. The service refuses to offer one.
 
 **On-screen action / demo:**
 Open `prisma/schema.prisma` and scroll to the CMM section (search for `ComplaintCategory`). Read each model aloud and point to the rule it implements.
@@ -168,11 +180,21 @@ Below: a closing line — "The CMM exercise showed two new patterns composing wi
 **Narration:**
 Let us close the module.
 
-Five patterns — now seven, after the CMM exercise. Every one of them was derived from a domain rule, not from a preference or a framework recommendation. The timeline pattern came from the ownership overlap rule. The pre-seeded calendar came from the current-year constraint. The append-only rate history came from the financial immutability rule. The header + detail split came from the multi-period payment rule. And the CMM patterns came from rules C2 and C4.
+We now have five patterns, and seven after the CMM exercise. Every one of them was derived from a domain rule. None came from a preference or a framework recommendation.
 
-The most important point: these patterns compose. When the CMM exercise gave you `ComplaintNote`, you had already seen the append-only principle in `ContributionDetail`. When it gave you `ComplaintCategory`, you had already seen user-managed lookups in contribution heads. The new domain did not require a new pattern — it required recognising the rule type and applying the pattern you already knew.
+The timeline pattern came from the ownership overlap rule. The pre-seeded calendar came from the current-year constraint. The append-only rate history came from the financial immutability rule.
 
-This is the skill this module aimed to build. Not a set of tables to memorise. A set of rule-type-to-pattern mappings that work across every domain you will ever encounter.
+The header + detail split came from the multi-period payment rule. And the CMM patterns came from rules C2 and C4.
+
+The most important point is that these patterns compose.
+
+The CMM exercise gave you `ComplaintNote`. You had already seen the append-only principle in `ContributionDetail`.
+
+It also gave you `ComplaintCategory`. You had already seen user-managed lookups in contribution heads.
+
+The new domain did not need a new pattern. It needed you to recognise the rule type and apply the pattern you already knew.
+
+This is the skill this module aimed to build. It is not a set of tables to memorise. It is a set of rule-type-to-pattern mappings that work across every domain you will meet.
 
 Open the ERD for any system you work on and ask: what rule produced this table? If nobody can answer, the design has a gap.
 

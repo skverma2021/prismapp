@@ -25,11 +25,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "We've spent this playlist watching AI explore requirements, draft specs,
-   generate a candidate design, get reviewed and corrected, and get asked to
-   explain code and write tests. This last episode is about the rules that
-   made all of that safe to do — the ones written down in this project's own
-   operating document, not improvised as we went."
+> "In this playlist, we watched AI explore requirements and draft specs. We watched it generate a candidate design. We watched it get reviewed and corrected. And we asked it to explain code and write tests.
+>
+> This last episode is about the rules that made all of that safe to do.
+>
+> Those rules are written down in this project's own operating document. They were not improvised as we went."
 
 ---
 
@@ -53,13 +53,13 @@
 ```
 
 **Narration:**
-> "Notice what kind of rules these actually are. They're not 'always ask AI
-   before coding' — they're constraints on the *outcome*, regardless of who or
-   what produces the code. Rule 5 especially: an AI assistant could generate
-   perfectly clean, perfectly idiomatic code that quietly bypasses a domain
-   rule, because it doesn't know that rule exists unless it's told to check.
-   Writing the rule down where both people and AI can read it is what closes
-   that gap."
+> "Notice what kind of rules these are.
+>
+> They are not 'always ask AI before coding.' They are constraints on the *outcome*, no matter who or what produces the code.
+>
+> Look at rule 5 especially. An AI assistant could generate perfectly clean, idiomatic code that quietly bypasses a domain rule. It would not know that rule exists unless it is told to check.
+>
+> Writing the rule down, where both people and AI can read it, closes that gap."
 
 ---
 
@@ -80,13 +80,13 @@ For every task:
 ```
 
 **Narration:**
-> "This is essentially the whole playlist, compressed into six lines: read the
-   spec, read the framework's own rules, propose the smallest change, test it,
-   verify it, and then — this is the step that's easy to skip — say out loud
-   what you assumed and what's still unfinished. That last step is where
-   engineering judgment actually shows up. It's the moment where a human has
-   to decide whether the assumptions an AI-assisted change made are
-   acceptable, not just whether the code runs."
+> "This is essentially the whole playlist, compressed into six lines.
+>
+> Read the spec. Read the framework's own rules. Propose the smallest change. Test it. Verify it.
+>
+> And then say out loud what you assumed and what is still unfinished. This is the step that is easy to skip.
+>
+> That last step is where engineering judgment actually shows up. A human has to decide whether the assumptions of an AI-assisted change are acceptable. It is not enough that the code runs."
 
 ---
 
@@ -96,13 +96,13 @@ For every task:
 one word ("what," "how," "with what," "how responsibly").
 
 **Narration:**
-> "Zoom out, and this playlist connects to everything before it. Playlist A
-   showed the real application. Playlist B showed how it was engineered.
-   C, D, and E showed the specific technologies that engineering was built
-   with. And this playlist showed something a little different: not another
-   technology, but a way of working — the discipline that made it safe to move
-   quickly through all the others without quietly breaking something a domain
-   rule depended on."
+> "Let us zoom out. This playlist connects to everything before it.
+>
+> Playlist A showed the real application. Playlist B showed how it was engineered. C, D, and E showed the specific technologies that the engineering was built with.
+>
+> And this playlist showed something a little different. It is not another technology. It is a way of working.
+>
+> It is the discipline that made it safe to move quickly through all the others. And it did this without quietly breaking something that a domain rule depended on."
 
 ---
 
@@ -112,13 +112,12 @@ one word ("what," "how," "with what," "how responsibly").
 
 **Narration:**
 > "AI made almost every episode in this channel faster to research and write.
-   It did not decide which security gap was acceptable to leave open, which
-   correction workflow this app should use today, or which rejected design
-   belonged in a permanent record so nobody proposes it again. Those calls
-   came from people, using AI to see the options clearly — not from AI
-   deciding on its own. That division of labor is the actual subject of this
-   playlist, and it's the same division this whole channel has been an
-   example of, six playlists in."
+>
+> It did not decide which security gap was acceptable to leave open. It did not decide which correction workflow this app should use today. And it did not decide which rejected design belonged in a permanent record, so nobody proposes it again.
+>
+> Those decisions came from people. They used AI to see the options clearly. AI did not decide on its own.
+>
+> That division of labor is the actual subject of this playlist. And it is the same division that this whole channel has shown, across six playlists."
 
 ---
 
@@ -127,9 +126,11 @@ one word ("what," "how," "with what," "how responsibly").
 **Visual:** End card — channel identity card, subscribe animation.
 
 **Narration:**
-> "That closes the channel's first full arc — A through F, all grounded in one
-   real application. If a second application joins this channel, every one of
-   these playlists keeps growing with it, using exactly this same method."
+> "That closes the channel's first full arc. Playlists A through F, all grounded in one real application.
+>
+> If a second application joins this channel, every one of these playlists keeps growing with it.
+>
+> It will use exactly this same method."
 
 ---
 

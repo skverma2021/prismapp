@@ -22,12 +22,13 @@
 of it) — no talking head yet.
 
 **Narration:**
-> "Here is an introductory tour of the Society Management System, the application
-> used as our case study. The application is built around a society called MSH, or
-> Magadh Signature Homes. Inspired by the heritage of Magadh, the society consists
-> of three blocks: Nalanda for learning, Rajgir for harmony, and Vaishali for
-> Buddhism, Jainism and prosperity. Magadh Signature Homes applies technology to
-> enable community living that is secure, transparent, and well connected."
+> "Here is an introductory tour of the Society Management System. It is the application we use as our case study.
+>
+> The application is built around a society called MSH, or Magadh Signature Homes. The society is inspired by the heritage of Magadh.
+>
+> It has three blocks. Nalanda stands for learning. Rajgir stands for harmony. And Vaishali stands for Buddhism, Jainism, and prosperity.
+>
+> Magadh Signature Homes uses technology for community living that is secure, transparent, and well connected."
 >
 > [login]
 
@@ -39,14 +40,17 @@ of it) — no talking head yet.
 Homes — 3 Blocks, dozens of Units, Owners, Residents, Monthly Contributions".
 
 **Narration:**
-> "Picture an apartment complex — three towers, call them Nalanda, Vaishali, and
-> Rajgir. Each has a number of flats. People own those flats. Some of those owners
-> live there; some rent them out to someone else. Every month, money changes hands
-> for maintenance and other services. And every so often, someone has a complaint —
-> a leaking pipe, a broken gate. Somebody has to track all of that, correctly, for
-> years. And when money is involved, 'correctly' has to mean something you can
-> prove, not just something you believe. That's the real-world problem behind this
-> app."
+> "Picture an apartment complex with three towers. Call them Nalanda, Vaishali, and Rajgir.
+>
+> Each tower has a number of flats. People own those flats. Some owners live there. Some rent their flats to someone else.
+>
+> Every month, money changes hands for maintenance and other services. And every so often, someone has a complaint. It might be a leaking pipe or a broken gate.
+>
+> Somebody has to track all of that, correctly, for years.
+>
+> And when money is involved, 'correctly' must mean something you can prove. It cannot be only something you believe.
+>
+> That is the real-world problem behind this app."
 
 ---
 
@@ -61,11 +65,13 @@ Society Admin.
 >
 > [Home Page]
 >
-> "What you see depends on who you are. The app has three roles — Society Admin,
-> Manager, and Read-Only. Admins and managers can record and change data;
-> read-only users can look, but not change anything, and sensitive details like
-> mobile numbers and emails are masked for them. These rules are enforced on the
-> server, not just by hiding buttons on the screen."
+> "What you see depends on who you are.
+>
+> The app has three roles. They are Society Admin, Manager, and Read-Only.
+>
+> Admins and managers can record and change data. Read-only users can look, but they cannot change anything. Sensitive details, like mobile numbers and emails, are masked for them.
+>
+> These rules are enforced on the server. They are not only enforced by hiding buttons on the screen."
 
 ---
 
@@ -82,12 +88,11 @@ Society Admin.
 >
 > [the browse page]
 >
-> "Now we choose Nalanda and look into the units or flats within this block."
+> "Now we choose Nalanda. We look at the units, or flats, in this block."
 >
 > [the page for units belonging to Nalanda block]
 >
-> "A list of units is shown, with links to define ownership, residency, and
-> contributions for each unit."
+> "A list of units is shown. Each unit has links to define ownership, residency, and contributions."
 
 ---
 
@@ -98,9 +103,9 @@ recommended), then `/ownerships` for flat 1001 in Nalanda, then `/residencies` f
 the same unit.
 
 **Narration:**
-> "Everyone in the system — owners, residents, even people who only pay a bill — is
-> a person in one common list. A person is not the same thing as a flat, and not
-> every person is an owner or a resident."
+> "Everyone in the system is a person in one common list. This includes owners, residents, and even people who only pay a bill.
+>
+> A person is not the same thing as a flat. And not every person is an owner or a resident."
 >
 > [individuals page]
 >
@@ -108,18 +113,19 @@ the same unit.
 >
 > [ownership page]
 >
-> "This page allows you to assign the owner and view all details related to
-> ownership, including current and historical records. From here, you can also
-> navigate to residency, contribution, or transaction pages for the selected unit.
+> "On this page, you can assign the owner. You can also view all details related to ownership, including current and historical records.
+>
+> From here, you can go to the residency, contribution, or transaction pages for the selected unit.
+>
 > We will now choose residency."
 >
 > [residency page]
 >
-> "Like ownership, this section allows you to record residency details for the
-> selected flat and review its residency history. Ownership and residency
-> represent two different ways in which individuals are linked to a flat — and
-> both are timelines, not single fields. The app keeps the history, and it refuses
-> to record two owners for the same flat on the same day."
+> "Like ownership, this section lets you record residency details for the selected flat. You can also review its residency history.
+>
+> Ownership and residency are two different ways to link a person to a flat. Both are timelines, not single fields.
+>
+> The app keeps the history. And it refuses to record two owners for the same flat on the same day."
 
 ---
 
@@ -135,42 +141,43 @@ the same unit.
    original and the correction side by side.
 
 **Narration:**
-> "Next is the contribution system for monthly maintenance, gym, swimming pool,
-> annual celebrations, feasts, and similar expenses. We begin from the home page,
-> which contains a link for contribution capture."
+> "Next is the contribution system. It covers monthly maintenance, gym, swimming pool, annual celebrations, feasts, and similar expenses.
+>
+> We begin from the home page. It has a link for contribution capture."
 >
 > [Contribution Capture Page]
 >
-> "Then we choose the contribution type, the unit making the payment, the payer,
-> the transaction ID, and the months covered by the payment, and the process is
-> complete. Notice what we did not type: the amount. The app works it out from the
-> rate in force on the day of payment and, for maintenance, the flat's area, and
-> locks it in. And the system will not let the same flat pay the same head for the
-> same month twice."
+> "We choose the contribution type. We choose the unit making the payment. We choose the payer. We enter the transaction ID. And we choose the months covered by the payment.
+>
+> Then the process is complete.
+>
+> Notice what we did not type: the amount.
+>
+> The app works it out from the rate in force on the day of payment. For maintenance, it also uses the area of the flat. Then it locks the amount in.
+>
+> And the system will not let the same flat pay the same head for the same month twice."
 >
 > [paid unpaid matrix]
 >
-> "This matrix allows filtering by year, contribution type, and block. It displays
-> payment amounts across months for all units in the selected block."
+> "This matrix can be filtered by year, contribution type, and block. It shows payment amounts across months for all units in the selected block."
 >
 > [a posted contribution]
 >
-> "Now the part that matters most for trust. Once a payment is recorded, it cannot
-> be edited or deleted — not by an admin, not through the API. If a mistake has to
-> be fixed, the app does what an accountant would do: it adds a new, linked entry
-> that offsets the original, either in full or just for part of the amount, with a
-> reason."
+> "Now the part that matters most for trust.
+>
+> Once a payment is recorded, it cannot be edited or deleted. Not by an admin. Not through the API.
+>
+> If a mistake must be fixed, the app does what an accountant would do. It adds a new, linked entry that offsets the original. The offset can be for the full amount or for part of it. And it needs a reason."
 >
 > [correction form]
 >
-> "That correction is not final on its own. A second person — a different admin —
-> has to approve it before it counts."
+> "That correction is not final on its own. A second person, a different admin, must approve it before it counts."
 >
 > [pending corrections page, then transactions report]
 >
-> "Every step is recorded: who did it, in what role, and when. The report shows the
-> original payment and the correction side by side, so the history tells the true
-> story, including the mistake."
+> "Every step is recorded. The app records who did it, in what role, and when.
+>
+> The report shows the original payment and the correction side by side. So the history tells the true story, including the mistake."
 
 ---
 
@@ -180,10 +187,11 @@ the same unit.
 complaints browse/create page, then a complaint detail page.
 
 **Narration:**
-> "The home page also shows a summary of complaints, including open complaints,
-> breached deadlines, and the oldest unresolved issues. A view-all option opens a
-> page for creating and browsing all complaints. An authorized user can select any
-> complaint ID to update its status or add relevant notes."
+> "The home page also shows a summary of complaints. It shows open complaints, breached deadlines, and the oldest unresolved issues.
+>
+> A view-all option opens a page for creating and browsing all complaints.
+>
+> An authorized user can select any complaint ID. Then they can update its status or add relevant notes."
 
 ---
 
@@ -192,13 +200,15 @@ complaints browse/create page, then a complaint detail page.
 **Visual:** Talking head.
 
 **Narration:**
-> "What you just saw is the finished behavior, not the code. That's on purpose — in
-> this playlist, we're building the mental model of the application before we touch
-> a single file. Two ideas to carry forward: people and flats are linked by
-> timelines, not fields, and money records are never rewritten — they are only
-> corrected by adding to them. In the next episode, we'll zoom into the core
-> model — blocks, units, and individuals — and start looking at why ownership and
-> residency are treated as relationships, not just fields."
+> "What you just saw is the finished behavior, not the code.
+>
+> That is on purpose. In this playlist, we build the mental model of the application before we touch a single file.
+>
+> Here are two ideas to carry forward. People and flats are linked by timelines, not fields. And money records are never rewritten. They are only corrected by adding to them.
+>
+> In the next episode, we will zoom into the core model. That means blocks, units, and individuals.
+>
+> We will also start looking at why ownership and residency are treated as relationships, not just fields."
 
 ---
 
@@ -207,8 +217,9 @@ complaints browse/create page, then a complaint detail page.
 **Visual:** End card pointing to Episode 2.
 
 **Narration:**
-> "Subscribe if you want to follow this build from the ground up, and I'll see you in
-> Episode 2."
+> "Subscribe if you want to follow this build from the ground up.
+>
+> I will see you in Episode 2."
 
 ---
 

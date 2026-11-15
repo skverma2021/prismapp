@@ -26,10 +26,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "Every API route in this app returns exactly one of two shapes — never a third,
-> never a partial mix of both. That guarantee has a name: a discriminated union.
-> This is the episode that ties this whole playlist together, so let's see the
-> real type."
+> "Every API route in this app returns exactly one of two shapes. It never returns a third shape. It never returns a partial mix of both.
+>
+> That guarantee has a name: a discriminated union.
+>
+> This episode ties the whole playlist together. So let us see the real type."
 
 ---
 
@@ -53,13 +54,13 @@ export type ApiEnvelope<T> =
 ```
 
 **Narration:**
-> "This is a union of two object shapes, and `ok` is the discriminant — the field
-> whose literal value tells TypeScript which branch it's looking at. Check
-> `payload.ok === true`, and inside that block, TypeScript knows `payload.data`
-> exists as `T`. Check `payload.ok === false` instead, and `data` isn't even
-> offered — only `error` is. Notice the generic `<T>` from Episode 5, back again:
-> the envelope shape is reused for every entity in the app, `T` filled in per
-> route."
+> "This is a union of two object shapes. The field `ok` is the discriminant. Its literal value tells TypeScript which branch it is looking at.
+>
+> Check `payload.ok === true`. Inside that block, TypeScript knows that `payload.data` exists as `T`.
+>
+> Check `payload.ok === false` instead. Now `data` is not even offered. Only `error` is.
+>
+> Notice the generic `<T>` from Episode 5, back again. The envelope shape is reused for every entity in the app, with `T` filled in per route."
 
 ---
 
@@ -84,10 +85,11 @@ export function fail(error: HttpError): Response {
 ```
 
 **Narration:**
-> "Two functions, one per branch of the union. Every route handler in this app
-> calls exactly one of these to build its response — never hand-assembles the
-> `{ ok, data }` shape itself. That's what makes the discriminant trustworthy on
-> the client: it's produced in exactly one place, not fifty."
+> "There are two functions, one for each branch of the union.
+>
+> Every route handler in this app calls exactly one of them to build its response. No handler assembles the `{ ok, data }` shape by hand.
+>
+> That is what makes the discriminant trustworthy on the client. It is produced in exactly one place, not fifty."
 
 ---
 
@@ -119,13 +121,11 @@ export class HttpError extends Error {
 ```
 
 **Narration:**
-> "`HttpError` is a real `Error` subclass, so `throw` and `instanceof` both work on
-> it exactly like Episode 3 showed. Its `code` is a literal union from Episode 1 —
-> a closed set of error codes, not an open `string` — so every catch site can
-> `switch` on it exhaustively if it wants to. `fromUnknownError`, from Episode 3,
-> is the function that guarantees every possible thrown value — a Prisma error, a
-> connectivity failure, a plain `Error`, anything — ends up as one of these before
-> `fail()` ever sees it."
+> "`HttpError` is a real `Error` subclass. So `throw` and `instanceof` both work on it, exactly as Episode 3 showed.
+>
+> Its `code` is a literal union from Episode 1. It is a closed set of error codes, not an open `string`. So every catch site can `switch` on it exhaustively if it wants to.
+>
+> `fromUnknownError`, from Episode 3, guarantees something important. Every possible thrown value ends up as one of these before `fail()` ever sees it. That includes a Prisma error, a connectivity failure, a plain `Error`, or anything else."
 
 ---
 
@@ -150,11 +150,11 @@ export function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
 ```
 
 **Narration:**
-> "`payload.ok` is checked once, and TypeScript narrows the rest of the block
-> accordingly. `options.onSuccess(payload.data)` only compiles because, past that
-> `if`, TypeScript has already ruled out the `ok: false` branch — `data` is
-> guaranteed to exist. `toErrorMessage` does the same narrowing in reverse, reading
-> `payload.error?.message` only in the branch where it's actually legal to."
+> "`payload.ok` is checked once. TypeScript narrows the rest of the block accordingly.
+>
+> `options.onSuccess(payload.data)` only compiles because of that `if`. Past it, TypeScript has already ruled out the `ok: false` branch. So `data` is guaranteed to exist.
+>
+> `toErrorMessage` does the same narrowing in reverse. It reads `payload.error?.message` only in the branch where that is legal."
 
 ---
 
@@ -163,12 +163,13 @@ export function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
 **Visual:** Talking head.
 
 **Narration:**
-> "Look at what this one pattern leans on: a literal union for error codes, a
-> generic envelope type, `unknown` narrowed into a custom error class, and
-> `async`/`await` carrying it all through a request. None of these features exist
-> in isolation — this is what 'a real application' actually looks like when you
-> add them up. That's this playlist's whole point: not syntax for its own sake, but
-> the shape a real system takes when it uses TypeScript properly."
+> "Look at what this one pattern uses.
+>
+> A literal union for error codes. A generic envelope type. `unknown`, narrowed into a custom error class. And `async`/`await`, carrying it all through a request.
+>
+> None of these features exist in isolation. This is what a real application looks like when you add them up.
+>
+> That is the whole point of this playlist. It is not syntax for its own sake. It is the shape that a real system takes when it uses TypeScript properly."
 
 ---
 
@@ -178,9 +179,9 @@ export function toErrorMessage<T>(payload: ApiEnvelope<T>, fallback: string) {
 scripted episode); point instead to Playlist D or back to Playlist A1/B.
 
 **Narration:**
-> "That's TypeScript in this app, end to end — from a single literal type to the
-> full response envelope every route returns. Subscribe to keep following the
-> build, and I'll see you in the next playlist."
+> "That is TypeScript in this app, from end to end. We went from a single literal type to the full response envelope that every route returns.
+>
+> Subscribe to keep following the build. I will see you in the next playlist."
 
 ---
 

@@ -24,9 +24,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "If you've only ever read about microservices, a plain layered monolith might
-> sound like the boring choice. It is. That's exactly why it's the right one here —
-> and today I want to walk through the actual reasoning, not just assert it."
+> "If you have only read about microservices, a plain layered monolith might sound boring.
+>
+> It is. And that is exactly why it is the right choice here.
+>
+> Today I want to walk through the actual reasoning, not just state the conclusion."
 
 ---
 
@@ -37,14 +39,13 @@
 services connected by network calls.
 
 **Narration:**
-> "This application is a single deployable unit — one Next.js app, one database.
-> Inside it, responsibilities are still separated cleanly: UI routes, API route
-> handlers, domain services per module, and the Prisma layer. That internal
-> separation is what makes it 'modular.' The 'monolith' part just means we don't pay
-> the cost of network calls, distributed transactions, and service discovery for
-> problems this application doesn't actually have yet. Distributed complexity is a
-> tool for a specific problem — team scale, independent deployability — not a
-> default you reach for because it looks more serious on a resume."
+> "This application is a single deployable unit. It is one Next.js app and one database.
+>
+> Inside it, responsibilities are still separated cleanly. There are UI routes, API route handlers, domain services per module, and the Prisma layer. That internal separation is what makes it 'modular.'
+>
+> The 'monolith' part means we do not pay for network calls, distributed transactions, and service discovery. We do not have those problems yet.
+>
+> Distributed complexity is a tool for a specific problem, such as team scale or independent deployability. It is not a default choice because it looks more serious on a resume."
 
 ---
 
@@ -54,13 +55,13 @@ services connected by network calls.
 `src/modules/blocks/`, and `prisma/schema.prisma` side by side.
 
 **Narration:**
-> "The boundaries that matter aren't between servers — they're between layers, in
-> the same codebase. Route handlers under `app/api/` own HTTP concerns:
-> authentication, parsing input, shaping the response. Domain services under
-> `src/modules/<domain>/` own business rules and are the only code allowed to call
-> Prisma. Nothing else reaches into the database directly. If you want to know
-> whether a rule like 'no overlapping ownership' is enforced, there's exactly one
-> place to look — the service — not a search across the whole codebase."
+> "The boundaries that matter are not between servers. They are between layers, in the same codebase.
+>
+> Route handlers under `app/api/` own HTTP concerns. They handle authentication, parse input, and shape the response.
+>
+> Domain services under `src/modules/<domain>/` own business rules. They are the only code allowed to call Prisma. Nothing else reaches into the database directly.
+>
+> So suppose you want to know whether a rule like 'no overlapping ownership' is enforced. There is exactly one place to look. It is the service, not the whole codebase."
 
 ---
 
@@ -70,13 +71,13 @@ services connected by network calls.
 state, all pointing to one shared PostgreSQL box.
 
 **Narration:**
-> "One architectural rule matters more than it looks: application servers must be
-> stateless. Nothing about a user's session or an in-progress request is held in
-> server memory between requests — it all lives in the database or the signed
-> session cookie. This isn't an abstract best practice here; it's a deployment
-> requirement. On Vercel, your code can run on a different server instance for every
-> single request. If you'd cached something in a local variable expecting it to
-> still be there next time, it simply won't be."
+> "One architectural rule matters more than it looks. Application servers must be stateless.
+>
+> Nothing about a user's session or an in-progress request stays in server memory between requests. It all lives in the database or the signed session cookie.
+>
+> This is not an abstract best practice here. It is a deployment requirement.
+>
+> On Vercel, your code can run on a different server instance for every single request. Suppose you cached something in a local variable and expected it to be there next time. It will not be."
 
 ---
 
@@ -86,13 +87,15 @@ state, all pointing to one shared PostgreSQL box.
 rejected, with a callout: "unique constraint, not just a UI check."
 
 **Narration:**
-> "Statelessness has a sharp edge for financial writes: if a request can be retried
-> — a flaky network, a double-click, a browser back-button — the same payment could
-> get submitted twice. The architectural answer isn't 'ask the user nicely not to
-> double-click.' It's a real database-level uniqueness constraint on unit, head, and
-> period, so even a retried request lands as a rejected duplicate, not a second
-> payment. Good architecture assumes retries will happen and designs for them, rather
-> than hoping they won't."
+> "Statelessness has a sharp edge for financial writes.
+>
+> A request can be retried. A network may be flaky, a user may double-click, or a browser may go back. Then the same payment could be submitted twice.
+>
+> The architectural answer is not to ask the user nicely not to double-click. The answer is a database-level uniqueness constraint on unit, head, and period.
+>
+> So even a retried request lands as a rejected duplicate, not a second payment.
+>
+> Good architecture assumes retries will happen, and designs for them."
 
 ---
 
@@ -101,13 +104,15 @@ rejected, with a callout: "unique constraint, not just a UI check."
 **Visual:** Talking head.
 
 **Narration:**
-> "The trade-off is real: a monolith like this is simpler to build, simpler to
-> reason about, and simpler to deploy — one build, one deploy target. What it doesn't
-> give you is independent scaling of one module, or a different team owning a
-> different service with its own release schedule. For a project at this stage,
-> that's the correct trade to make. The moment those constraints stop being true —
-> real multi-team ownership, wildly different load per module — is the moment this
-> decision deserves to be revisited, not before."
+> "The trade-off is real.
+>
+> A monolith like this is simpler to build, simpler to reason about, and simpler to deploy. It has one build and one deploy target.
+>
+> It does not give you independent scaling of one module. It also does not let a different team own a different service with its own release schedule.
+>
+> For a project at this stage, that is the correct trade to make.
+>
+> Revisit the decision when those constraints stop being true. For example, when several teams own different modules, or when load differs widely per module. Not before."
 
 ---
 
@@ -116,10 +121,11 @@ rejected, with a callout: "unique constraint, not just a UI check."
 **Visual:** End card pointing to Episode B3.
 
 **Narration:**
-> "Now that we know the shape of the system, next episode we design the actual
-> contract at its edge — how the API talks to the outside world, and why that
-> contract gets designed before the code that fulfills it. Subscribe and I'll see
-> you there."
+> "Now we know the shape of the system.
+>
+> Next episode, we design the actual contract at its edge. We will see how the API talks to the outside world. And we will see why that contract is designed before the code that fulfills it.
+>
+> Subscribe, and I will see you there."
 
 ---
 

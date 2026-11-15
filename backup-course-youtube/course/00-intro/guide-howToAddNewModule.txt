@@ -1,0 +1,418 @@
+User: How do I explain the current project to an user with elementary-level understanding of NextJS-Prisma-PostgreSQL and who intends to migrate to an intermediate-level? 
+
+Please suggest a plan for understanding the project with a reference to its design, concepts, specific lines that implement them in the codebase. As I understand a lot has gone in to building followed by the testing, fixing bugs, and hardening. The aim is to arm someone with knowledge so that he/she can create another project.
+
+
+
+
+
+
+
+GitHub Copilot: Here is a structured learning plan. Each section introduces one concept, then points to the exact file and lines where it lives. The Blocks module is the simplest and is used as the reference "first module to read" throughout.
+
+
+
+\---
+
+
+
+\## PrismApp Learning Guide: Elementary → Intermediate
+
+
+
+\### How to use this guide
+
+Read each layer in order. \*\*Do not skip to the UI before understanding the backend.\*\* Each section has a "concept" paragraph, then a "read this code" list. After each section, try to explain in your own words what happens. If you can, you're ready for the next.
+
+
+
+\---
+
+
+
+\### Layer 1 — Database: Schema and Prisma Setup
+
+
+
+\*\*Concept:\*\* Everything starts with the database. Prisma defines the schema in one file, generates a TypeScript client from it, and manages migrations (SQL files that evolve the schema over time). The seed script populates initial/master data.
+
+
+
+\*\*Read this code:\*\*
+
+
+
+| What | File | Lines | What to notice |
+
+|------|------|-------|----------------|
+
+| Generator + datasource | schema.prisma | 1–7 | `provider = "postgresql"` — this single line picks the database engine |
+
+| Simplest model | schema.prisma | 9–18 | `Block` has `@id`, `@default(uuid())`, `@unique`, `@@map("blocks")` — each decorator is a database constraint |
+
+| Model with composite unique + index | schema.prisma | 20–35 | `Unit` has `@@unique(\[blockId, description])` (no two units with same name in a block) and `@@index(\[blockId])` for query speed |
+
+| Relations \& onDelete | schema.prisma | 30 | `onDelete: Restrict` — Prisma won't let you delete a block that still has units |
+
+| Migration folder | migrations | — | Each subfolder is a timestamped migration with a `migration.sql` file. Open any one to see the raw SQL Prisma generated |
+
+| Seed script | seed.mjs | 1–40 | Uses `upsert` pattern: insert if missing, skip if exists. This makes the seed idempotent (safe to run repeatedly) |
+
+
+
+\*\*Try this:\*\* Run `npx prisma studio` to browse the live database in a GUI. Correlate what you see with the schema file.
+
+
+
+\---
+
+
+
+\### Layer 2 — Database Connection Singleton
+
+
+
+\*\*Concept:\*\* In development, Next.js hot-reloads your code frequently. If every reload creates a new database connection, you exhaust the connection pool. The singleton pattern reuses one connection across reloads.
+
+
+
+\*\*Read this code:\*\*
+
+
+
+| What | File | Lines | What to notice |
+
+|------|------|-------|----------------|
+
+| Global declaration | db.ts | 4–6 | `declare global { var prisma }` — attaches to Node's global so it survives reloads |
+
+| Conditional reuse | db.ts | 17–26 | In non-production: `global.prisma = db`. In production: a fresh client each time (serverless functions are ephemeral anyway) |
+
+| Dev-only query logging | db.ts | 21 | `log: \["query", "error", "warn"]` in dev; only `\["error"]` in production |
+
+
+
+\*\*Key takeaway:\*\* Every service file imports `{ db }` from this one file. There is never a second `new PrismaClient()` anywhere else.
+
+
+
+\---
+
+
+
+\### Layer 3 — Module Structure (The Blocks Module as Template)
+
+
+
+\*\*Concept:\*\* Each domain entity gets its own module folder under modules. A module has exactly two concerns: \*\*schemas\*\* (input parsing + validation) and \*\*service\*\* (business logic + database calls). Route handlers import from these — they never touch the database directly.
+
+
+
+\*\*Read these three files in order:\*\*
+
+
+
+\#### 3a. Schemas — input parsing
+
+
+
+| What | File | Lines | What to notice |
+
+|------|------|-------|----------------|
+
+| TypeScript types for inputs | blocks.schemas.ts | 3–9 | `CreateBlockInput` and `UpdateBlockInput` — plain types, no Prisma dependency |
+
+| Parse + validate | blocks.schemas.ts | 11–21 | `parseCreateBlockInput` — takes `unknown`, throws `HttpError(400)` if bad. This is the \*\*trust boundary\*\* between the internet and your code |
+
+| At-least-one-field guard | blocks.schemas.ts | 31–33 | PATCH requires at least one field — prevents empty updates |
+
+
+
+\#### 3b. Service — business logic + database
+
+
+
+| What | File | Lines | What to notice |
+
+|------|------|-------|----------------|
+
+| Pagination with transaction | blocks.service.ts | 37–48 | `db.$transaction(\[findMany, count])` — runs both queries atomically so count matches the items |
+
+| Case-insensitive search | blocks.service.ts | 26–32 | `contains: q, mode: "insensitive"` — Prisma's way to do `ILIKE` |
+
+| 404 guard | blocks.service.ts | 59–63 | `getBlockById` throws `HttpError(404)` if not found — every getById in the app follows this pattern |
+
+| Page size cap | blocks.service.ts | 13–15 | `MAX\_PAGE\_SIZE = 100` — prevents clients from requesting the entire table |
+
+| Pagination return shape | blocks.service.ts | 50–58 | `{ items, page, pageSize, totalItems, totalPages, hasNext, hasPrev }` — every list endpoint returns this same shape |
+
+
+
+\#### 3c. Route handlers — HTTP glue
+
+
+
+| What | File | Lines | What to notice |
+
+|------|------|-------|----------------|
+
+| GET + POST on collection | route.ts | 1–28 | Each exported function name (`GET`, `POST`) is a Next.js convention — it becomes the HTTP method handler |
+
+| Auth before logic | route.ts | 9 | `await requireReadRole(request)` — first line in every try block. Fails fast with 401/403 |
+
+| Uniform error handling | route.ts | 13 | `return fail(fromUnknownError(error, getRequestId(request)))` — every handler uses this exact line |
+
+| GET, PATCH, DELETE by ID | \[app/api/blocks/\[id]/route.ts](app/api/blocks/%5Bid%5D/route.ts#L1-L35) | 1–35 | `\[id]` folder = dynamic route. `params.id` comes from the URL |
+
+
+
+\*\*Pattern to memorize:\*\* `route handler → auth guard → parse input → call service → ok(data)` or `catch → fail(fromUnknownError(error))`. Every one of the 33 routes follows this.
+
+
+
+\---
+
+
+
+\### Layer 4 — API Response Envelope and Error Handling
+
+
+
+\*\*Concept:\*\* Every API response has the same JSON shape: `{ ok: true, data }` for success, `{ ok: false, error: { code, message } }` for failure. This makes the frontend predictable — one shape to parse, always.
+
+
+
+| What | File | Lines | What to notice |
+
+|------|------|-------|----------------|
+
+| Error codes | api-response.ts | 1–9 | `ApiErrorCode` union: VALIDATION\_ERROR, UNAUTHORIZED, FORBIDDEN, NOT\_FOUND, CONFLICT, etc. — stable, machine-readable codes |
+
+| HttpError class | api-response.ts | 7–15 | Custom error: status (number) + code (string) + message. This is what services throw |
+
+| `ok()` and `fail()` | api-response.ts | 144–156 | Two functions that build the envelope. All 33 route handlers call one of these |
+
+| Prisma error mapping | api-response.ts | 97–135 | `P2002` (unique constraint violation) → 409 CONFLICT. This converts database errors to user-friendly HTTP responses |
+
+| Request-ID extraction | api-response.ts | 17–19 | `getRequestId(request)` — reads the `x-request-id` header for traceability |
+
+
+
+\---
+
+
+
+\### Layer 5 — Authentication and Authorization
+
+
+
+\*\*Concept:\*\* Two separate concerns. \*\*AuthN\*\* = "who are you?" (handled by NextAuth + JWT). \*\*AuthZ\*\* = "are you allowed to do this?" (role check). The system has three roles: `SOCIETY\_ADMIN`, `MANAGER`, `READ\_ONLY`.
+
+
+
+| What | File | Lines | What to notice |
+
+|------|------|-------|----------------|
+
+| Role definitions | user-role.ts | 1–33 | `MUTATION\_ROLES = \["SOCIETY\_ADMIN", "MANAGER"]`, `READ\_ACCESS\_ROLES` includes all three |
+
+| Auth guard functions | authz.ts | 79–89 | `requireReadRole` and `requireMutationRole` — one line each, delegates to `requireRole` |
+
+| JWT token extraction | authz.ts | 49–67 | `getAuthContext` — parses the JWT, extracts userId + role, throws 401 if missing |
+
+| Server-side session guard | layout.tsx | 5–8 | `requireServerAppSession` — redirects unauthenticated users before any dashboard page renders |
+
+| Proxy: request-ID injection | proxy.ts | 1–22 | Middleware that runs on every `/api/\*` request. Generates UUID, attaches to headers. This is how errors in logs can be traced back to a specific request |
+
+
+
+\---
+
+
+
+\### Layer 6 — Frontend: Shared Components
+
+
+
+\*\*Concept:\*\* Instead of writing table/filter/pagination code on every page, the app extracts them into shared components. A page composes these building blocks.
+
+
+
+| What | File | What to notice |
+
+|------|------|----------------|
+
+| Shared data table | data-table.tsx | Generic `DataTable<T>` — you pass columns (header + render function) and items. Used on every browse page |
+
+| Filter bar | browse-filter-bar.tsx | Style constants (`BTN\_PRIMARY`, `INPUT\_CLASS`) ensure visual consistency. Children slot for per-page filters |
+
+| Pagination | pagination-controls.tsx | Previous/Next with disabled state. Same component on all 8+ pages |
+
+| Error/success notices | notice-stack.tsx | Composes `InlineNotice` for three states: load error, submit error, submit success |
+
+| Navigation links | context-link-chips.tsx | Cross-entity navigation: "Show units in this block" etc. |
+
+| URL state sync | url-query-state.ts | `pushQueryState` — updates the browser URL without a page reload. Filters survive page refreshes |
+
+
+
+\---
+
+
+
+\### Layer 7 — A Complete Page (Blocks as Example)
+
+
+
+\*\*Concept:\*\* A page is a Client Component that composes the shared building blocks. It uses two custom hooks: `useBrowseState` (fetching, pagination, search) and `useCrudActions` (create, update, delete with loading states).
+
+
+
+| What | File | Lines | What to notice |
+
+|------|------|-------|----------------|
+
+| Client directive | page.tsx | 1 | `"use client"` — this page needs interactivity (forms, state) |
+
+| Browse hook | page.tsx | 14–23 | `useBrowseState({ endpoint: "/api/blocks", ... })` — one line configures all fetch/filter/sort/paginate behavior |
+
+| Role-gated UI | page.tsx | 11 | `canMutate = session.role !== "READ\_ONLY"` — hides create/edit/delete buttons for read-only users (backend enforces too) |
+
+| Create flow | page.tsx | 97–115 | Form → `handleCreate` → `crud.create(body)` → invalidate lookups → reset form |
+
+| Inline edit | page.tsx | 125–185 | DataTable columns render either display or edit mode per row. Save calls `handleUpdate` |
+
+
+
+\---
+
+
+
+\### Layer 8 — The Dashboard Shell and Layout
+
+
+
+\*\*Concept:\*\* Next.js layouts wrap pages. The dashboard layout enforces auth (server-side redirect if not logged in), then renders the shell component (nav sidebar, header, breadcrumbs, session display).
+
+
+
+| What | File | What to notice |
+
+|------|------|----------------|
+
+| Server auth guard | layout.tsx | `requireServerAppSession` runs before any child renders — unauthenticated users never see dashboard HTML |
+
+| Shell with session | dashboard-shell.tsx | Uses `useSafeAuthSession()` — handles expired sessions gracefully instead of crashing |
+
+| Nav items with role scoping | navigation.ts | Each nav item specifies which roles can see it |
+
+
+
+\---
+
+
+
+\### Layer 9 — How Everything Connects (Request Lifecycle)
+
+
+
+Trace one request end-to-end to see all layers working together:
+
+
+
+```
+
+1\. User clicks "Save" on a new block
+
+2\. Browser calls POST /api/blocks with JSON body
+
+3\. proxy.ts intercepts → generates x-request-id → attaches to headers
+
+4\. app/api/blocks/route.ts POST handler runs:
+
+&#x20;  a. requireMutationRole(request) — checks JWT, verifies SOCIETY\_ADMIN or MANAGER
+
+&#x20;  b. request.json() — reads body
+
+&#x20;  c. parseCreateBlockInput(payload) — validates input, throws 400 if bad
+
+&#x20;  d. createBlock(input) — calls db.block.create()
+
+&#x20;  e. ok(data, 201) — wraps in { ok: true, data }
+
+&#x20;  f. If anything threw: fail(fromUnknownError(error, getRequestId(request)))
+
+5\. Browser receives { ok: true, data: { id, description, ... } }
+
+6\. useCrudActions hook updates local state, triggers refetch
+
+```
+
+
+
+\---
+
+
+
+\### How to Use This to Build Your Own Project
+
+
+
+Once you understand the layers above, building a new project means:
+
+
+
+1\. \*\*Design your schema\*\* in schema.prisma — models, constraints, indexes, relations
+
+2\. \*\*Create a module\*\* for each entity under `src/modules/<name>/` — one `schemas.ts` (input types + parsing), one `service.ts` (business logic + Prisma calls)
+
+3\. \*\*Add route handlers\*\* under `app/api/<name>/route.ts` — always: auth guard → parse → service → ok/fail
+
+4\. \*\*Copy the shared components\*\* — DataTable, BrowseFilterBar, PaginationControls, NoticeStack
+
+5\. \*\*Build pages\*\* under `app/(dashboard)/<name>/page.tsx` — use `useBrowseState` + `useCrudActions` hooks
+
+6\. \*\*Add the nav item\*\* to navigation.ts
+
+
+
+The patterns are identical for every entity. The only things that change are the field names, the validation rules, and the business logic.
+
+
+
+\---
+
+
+
+\### Recommended Reading Order for Self-Study
+
+
+
+| Order | Files | Time |
+
+|-------|-------|------|
+
+| 1 | schema.prisma (full file) | 30 min |
+
+| 2 | db.ts | 5 min |
+
+| 3 | api-response.ts | 20 min |
+
+| 4 | blocks.schemas.ts → blocks.service.ts → route.ts → route.ts | 30 min |
+
+| 5 | authz.ts + user-role.ts | 15 min |
+
+| 6 | proxy.ts | 5 min |
+
+| 7 | All files in master-data | 20 min |
+
+| 8 | page.tsx (the simplest page) | 20 min |
+
+| 9 | contributions (complex module — temporal rules, immutability, corrections) | 45 min |
+
+| 10 | Domain-Rules.md (understand the "why" behind the code) | 30 min |
+
+
+
+\*\*Total: roughly 3.5 hours\*\* for a complete walkthrough. After this, the learner should be able to add a new entity end-to-end by following the Blocks pattern.
+

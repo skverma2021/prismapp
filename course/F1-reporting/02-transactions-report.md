@@ -34,7 +34,7 @@ All filter parsing happens in `parseTransactionsReportParams`. That function thr
 - `sortBy` value not in the allowed list
 - `pageSize` exceeding 100
 
-Validation is synchronous — no database roundtrip is needed to validate filter parameters.
+Validation is synchronous. No database roundtrip is needed to validate filter parameters.
 
 **On-screen action / demo:**
 Open `contributions-reports.service.ts`. Read `parseTransactionsReportParams` (lines 100–149). Show each validation check.
@@ -55,14 +55,14 @@ Parameters are validated before any query runs. Bad parameters return a `400` im
 Code block showing the `db.$transaction([...])` call with five named items: `items`, `totalItems`, `totalAmountAggregate`, `unitRows`, `payerRows`. Arrow from each to what it returns.
 
 **Narration:**
-Inside `getContributionTransactionsReport`, the function runs five queries simultaneously using `db.$transaction`:
+Inside `getContributionTransactionsReport`, the function runs five queries together using `db.$transaction`:
 
 ```ts
 const [items, totalItems, totalAmountAggregate, unitRows, payerRows] =
   await db.$transaction([...]);
 ```
 
-Each serves a specific purpose:
+Each query serves a specific purpose:
 
 | Query | Returns | Purpose |
 |-------|---------|---------|
@@ -72,9 +72,11 @@ Each serves a specific purpose:
 | `contribution.findMany` with `distinct: ["unitId"]` | Distinct unit IDs | `distinctUnitsCount` total |
 | `contribution.findMany` with `distinct: ["depositedBy"]` | Distinct depositor IDs | `distinctPayersCount` total |
 
-The critical point: `totalAmountAggregate`, `unitRows`, and `payerRows` are computed over **all** matching rows, not just the current page. This is how totals remain accurate across pagination.
+The critical point is this. `totalAmountAggregate`, `unitRows`, and `payerRows` are computed over **all** matching rows, not just the current page.
 
-If you only counted the items on the current page, the total amount would change as you paginated — which would be wrong.
+This is how totals remain accurate across pagination.
+
+Suppose you only counted the items on the current page. Then the total amount would change as you paginated. That would be wrong.
 
 **On-screen action / demo:**
 Open `getContributionTransactionsReport` at line ~200. Read the `db.$transaction` array. Point out that `items` has `skip` and `take` but the other three do not.
@@ -115,9 +117,11 @@ The service function returns a structured object:
 }
 ```
 
-The UI page receives this and renders it directly. It does not recalculate totals. It does not re-aggregate. The business logic — what "total amount" means — lives in the service, not the component.
+The UI page receives this and renders it directly. It does not recalculate totals. It does not re-aggregate.
 
-Each row in `items` is a mapped object that flattens the Prisma include chains into a clean flat structure. For example:
+The business logic lives in the service, not the component. This includes what "total amount" means.
+
+Each row in `items` is a mapped object. It flattens the Prisma include chains into a clean flat structure. For example:
 
 ```ts
 block: detail.contribution.unit.block.description,

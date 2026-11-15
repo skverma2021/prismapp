@@ -13,16 +13,18 @@
 Browser address bar showing: `.../paid-unpaid-matrix?refYear=2024&headId=3&blockId=1`. Two scenarios side-by-side: "Without URL state" (filter lost on refresh/share) vs "With URL state" (filter preserved).
 
 **Narration:**
-Report pages have filters. Users change filters, run the report, then:
-- Refresh the page (does it remember the filters?)
-- Copy the URL to share with a colleague (do the filters come with it?)
-- Use the browser back button (does it restore the previous filter set?)
+Report pages have filters. Users change filters and run the report. Then they might do one of three things:
+- Refresh the page. Does it remember the filters?
+- Copy the URL to share with a colleague. Do the filters come with it?
+- Use the browser back button. Does it restore the previous filter set?
 
-Without URL state, the answer to all three is "no". React component state (`useState`) is erased on every page load. If you store filters only in `useState`, they vanish on refresh.
+Without URL state, the answer to all three is "no".
+
+React component state (`useState`) is erased on every page load. If you store filters only in `useState`, they vanish on refresh.
 
 With URL state, filters are stored in the query string. The URL encodes the current report configuration. A refresh re-reads the URL. Sharing the URL shares the exact filter set.
 
-In PrismApp, both report pages use a `pushQueryState` utility to write filters to the URL, and `parseMatrixState` / `parseTransactionsState` to read them back on mount.
+In PrismApp, both report pages use a `pushQueryState` utility to write filters to the URL. They use `parseMatrixState` and `parseTransactionsState` to read them back on mount.
 
 **On-screen action / demo:**
 Open the paid/unpaid matrix page. Set some filters and run the report. Look at the address bar — the URL changed. Copy and open in a new tab — filters are preserved. Refresh — filters are still there.
@@ -45,7 +47,7 @@ Code flow diagram: `useSearchParams()` → `parseMatrixState()` → `useState(in
 **Narration:**
 The paid/unpaid matrix UI page implements this pattern in two steps.
 
-**Hydration on mount** (reading from URL on first render):
+**Hydration on mount** means reading from the URL on first render:
 
 ```ts
 const searchParams = useSearchParams();
@@ -56,9 +58,9 @@ useEffect(() => {
 }, []); // run once on mount
 ```
 
-`parseMatrixState` reads the URL query string and returns a `FiltersState` object with the current values (or defaults if a param is absent).
+`parseMatrixState` reads the URL query string. It returns a `FiltersState` object with the current values, or defaults if a param is absent.
 
-**Writing to URL on filter change:**
+**Writing to the URL on filter change:**
 
 ```ts
 function updateFilter(key: keyof FiltersState, value: string) {
@@ -68,9 +70,11 @@ function updateFilter(key: keyof FiltersState, value: string) {
 }
 ```
 
-`pushQueryState` uses `window.history.pushState` (or `router.push` with `{shallow: true}`) to update the URL without causing a full page navigation. The filter state and the URL stay in sync.
+`pushQueryState` uses `window.history.pushState`, or `router.push` with `{shallow: true}`. It updates the URL without causing a full page navigation. The filter state and the URL stay in sync.
 
-Important: the `useEffect` for hydration runs once, on mount. If you run it on every filter change, you create a loop — state update → URL update → state update → loop.
+Important: the `useEffect` for hydration runs once, on mount.
+
+Suppose you run it on every filter change. You create a loop. A state update causes a URL update, which causes a state update, and so on.
 
 **On-screen action / demo:**
 Open `app/reports/contributions/paid-unpaid-matrix/page.tsx`. Show the `useSearchParams` import. Find the `useEffect` hydration block. Find `pushQueryState` calls.
@@ -97,9 +101,11 @@ The matrix report requires `refYear` and `headId`. If either is missing, the "Re
 const canRun = filters.headId !== "" && !!session.userId;
 ```
 
-`session.userId` is checked because the report fetch needs an authenticated session. If the session has expired, `canRun` is false and the user sees a session notice rather than a broken report.
+`session.userId` is checked because the report fetch needs an authenticated session.
 
-The page also maintains three separate loading booleans:
+If the session has expired, `canRun` is false. The user sees a session notice rather than a broken report.
+
+The page also keeps three separate loading booleans:
 
 | Boolean | When true |
 |---------|-----------|
@@ -107,9 +113,11 @@ The page also maintains three separate loading booleans:
 | `reportLoading` | Fetching the matrix report after "Refresh" |
 | `csvLoading` | Fetching and downloading the CSV |
 
-Why three? Because a CSV export in progress should not prevent the user from re-running the report with different filters. And "options loading" on first render should not block the Refresh button once options are loaded.
+Why three? A CSV export in progress should not prevent the user from re-running the report with different filters.
 
-A single `isLoading` boolean would be simpler but would cause poor UX: the entire page would be locked whenever any async operation was running.
+And "options loading" on first render should not block the Refresh button once the options are loaded.
+
+A single `isLoading` boolean would be simpler. But it would give poor UX. The entire page would be locked whenever any async operation was running.
 
 **On-screen action / demo:**
 Open `paid-unpaid-matrix/page.tsx`. Show `canRun`. Show the three `useState` booleans for loading. Show how the "Export CSV" button checks `csvLoading` separately.

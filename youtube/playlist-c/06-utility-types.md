@@ -27,10 +27,11 @@
 **Visual:** Talking head.
 
 **Narration:**
-> "A lot of TypeScript's built-in utility types exist to answer one question: I
-> already have a type or a value — can I get a new type out of it instead of
-> writing it again by hand? Today, two real examples from this app: `Record`, and
-> deriving a union from an object's own keys."
+> "Many of TypeScript's built-in utility types answer one question.
+>
+> I already have a type or a value. Can I get a new type from it, instead of writing it again by hand?
+>
+> Today you will see two real examples from this app. The first is `Record`. The second is deriving a union from an object's own keys."
 
 ---
 
@@ -52,13 +53,13 @@ if (role) {
 ```
 
 **Narration:**
-> "`where` starts as an empty object, and fields get added conditionally — you
-> can't know its exact keys ahead of time. `Record<string, unknown>` types it as
-> 'an object with string keys, values of unknown shape' — flexible enough for that,
-> while still being an object, not `any`. You still can't call `.toUpperCase()` on
-> a value without narrowing it first. Same pattern in the browse hook's `filters:
-> Record<string, string>` — an arbitrary set of filter keys, every value
-> guaranteed to be a `string`."
+> "`where` starts as an empty object. Fields are added conditionally, so you cannot know its exact keys ahead of time.
+>
+> `Record<string, unknown>` types it as 'an object with string keys and values of unknown shape'. That is flexible enough for this job. It is still an object, not `any`.
+>
+> You still cannot call `.toUpperCase()` on a value without narrowing it first.
+>
+> The browse hook uses the same pattern in `filters: Record<string, string>`. It holds an arbitrary set of filter keys. Every value is guaranteed to be a `string`."
 
 ---
 
@@ -79,15 +80,17 @@ export type CorrectionStatus = (typeof CORRECTION_STATUS)[keyof typeof CORRECTIO
 ```
 
 **Narration:**
-> "This is worth slowing down on, because it reads backwards the first time you see
-> it. `typeof CORRECTION_STATUS` is the *type* of that object — three properties,
-> each with a literal string value, thanks to `as const`. `keyof` on that gives you
-> the union of its property names: `"POSTED" | "PENDING" | "REJECTED"`. Indexing
-> back into the object type with that union gives you the union of its *values* —
-> which, because of `as const`, happen to be the exact same three strings. The
-> result: a type derived entirely from one object literal. Add a fourth status to
-> the object, and the type gains it automatically — no second list to remember to
-> update."
+> "This is worth slowing down on, because it feels backwards the first time you see it.
+>
+> `typeof CORRECTION_STATUS` is the *type* of that object. It has three properties. Each has a literal string value, thanks to `as const`.
+>
+> `keyof` on that gives you the union of its property names: `"POSTED" | "PENDING" | "REJECTED"`.
+>
+> Now index back into the object type with that union. You get the union of its *values*. Because of `as const`, they are the exact same three strings.
+>
+> The result is a type derived entirely from one object literal.
+>
+> Add a fourth status to the object, and the type gains it automatically. There is no second list to remember to update."
 
 ---
 
@@ -112,14 +115,13 @@ export type UpdateAppUserInput = {
 ```
 
 **Narration:**
-> "If `UpdateAppUserInput` were exactly `CreateAppUserInput` with every field made
-> optional, `Partial<CreateAppUserInput>` would be the right tool — one line, fully
-> derived. But it isn't a match here: update drops `individualId` entirely and adds
-> `isActive`, which create never had. So this app writes it out by hand instead.
-> That's the actual judgment call with utility types: use them when one shape is
-> truly a transformation of another; write it by hand the moment they diverge, so
-> you're not fighting the type system to bend `Partial<T>` into a shape it was
-> never meant to describe."
+> "Suppose `UpdateAppUserInput` were exactly `CreateAppUserInput` with every field made optional. Then `Partial<CreateAppUserInput>` would be the right tool. It is one line, fully derived.
+>
+> But it is not a match here. Update drops `individualId` entirely. It also adds `isActive`, which create never had.
+>
+> So this app writes it out by hand.
+>
+> That is the real judgment call with utility types. Use them when one shape is truly a transformation of another. Write the type by hand when the shapes diverge. Then you are not forcing `Partial<T>` into a shape it was never meant to describe."
 
 ---
 
@@ -128,9 +130,11 @@ export type UpdateAppUserInput = {
 **Visual:** End card pointing to Episode 7.
 
 **Narration:**
-> "Next: every mutation in this app is `async`, and every one of them has to type
-> what a database call, and a failure, actually look like. Let's follow one all the
-> way through."
+> "Next: every mutation in this app is `async`.
+>
+> Every one of them must type what a database call looks like, and what a failure looks like.
+>
+> Let us follow one all the way through."
 
 ---
 

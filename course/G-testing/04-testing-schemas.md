@@ -13,13 +13,15 @@
 Two-column table. Left: "Valid cases — assert the parsed output shape". Right: "Invalid cases — assert that HttpError is thrown with the right status".
 
 **Narration:**
-Schema parsers in PrismApp are not Zod schemas — they're manual validation functions that take unknown input and return a typed object. Examples: `parseCreateContributionInput`, `parseCreateContributionCorrectionInput`.
+Schema parsers in PrismApp are not Zod schemas. They are manual validation functions. They take unknown input and return a typed object. Examples are `parseCreateContributionInput` and `parseCreateContributionCorrectionInput`.
 
-Their contract is:
-- **Valid input** → returns a typed object with all expected fields
-- **Invalid input** → throws `HttpError` with status `400` and code `VALIDATION_ERROR`
+Their contract has two sides.
 
-Tests for schema parsers verify both sides:
+**Valid input** returns a typed object with all expected fields.
+
+**Invalid input** throws `HttpError` with status `400` and code `VALIDATION_ERROR`.
+
+Tests for schema parsers verify both sides.
 
 **Valid side:**
 ```ts
@@ -39,7 +41,9 @@ it("throws HttpError 400 for missing unitId", () => {
 });
 ```
 
-Note: the error assertion uses `toThrow(HttpError)` — not `toThrow("some message string")`. Testing the class is more stable than testing the message. Messages can change; the error type contract should not.
+Notice that the error assertion uses `toThrow(HttpError)`. It does not use `toThrow("some message string")`. Testing the class is more stable than testing the message.
+
+Messages can change. The error type contract should not.
 
 **On-screen action / demo:**
 Open `contributions.schemas.test.ts`. Show the `VALID_CONTRIBUTION` constant at the top. Then show one valid test and one invalid test side by side.
@@ -60,9 +64,9 @@ Schema tests = two sides. Valid input returns a typed object with correct values
 Code block: `VALID_CONTRIBUTION` constant. Then three mutations: (1) omit field with destructure, (2) replace field with wrong type, (3) replace field with out-of-range value. Each as a separate `it` block.
 
 **Narration:**
-The pattern is consistent across all schema tests:
+The pattern is consistent across all schema tests.
 
-**Step 1**: Define a valid baseline at the `describe` scope:
+**Step 1**: Define a valid baseline at the `describe` scope.
 ```ts
 const VALID_CONTRIBUTION = {
   unitId: "unit-abc",
@@ -76,7 +80,7 @@ const VALID_CONTRIBUTION = {
 
 **Step 2**: For each valid case, pass the baseline or an extension of it.
 
-**Step 3**: For each error case, omit or replace exactly one field:
+**Step 3**: For each error case, omit or replace exactly one field.
 
 ```ts
 // Omit a required field:
@@ -100,7 +104,9 @@ it("throws HttpError 400 for empty contributionPeriodIds", () => {
 });
 ```
 
-The destructure-to-omit pattern (`const { field: _omit, ...rest } = obj`) is the idiomatic TypeScript way to omit a field from a const object for testing. The `_omit` prefix tells TypeScript (and the linter) that the variable is intentionally unused.
+The destructure-to-omit pattern is `const { field: _omit, ...rest } = obj`. It is the idiomatic TypeScript way to omit a field from a const object for testing.
+
+The `_omit` prefix tells TypeScript and the linter that the variable is intentionally unused.
 
 **On-screen action / demo:**
 Open `contributions.schemas.test.ts`. Find `VALID_CONTRIBUTION`. Then read five different error test cases — show how each changes exactly one field.
@@ -124,15 +130,15 @@ Three assertion forms side by side:
 3. `try { fn(); expect.fail(...) } catch(e) { expect(e).toBeInstanceOf(HttpError); expect(e.status).toBe(400); }` — full property check
 
 **Narration:**
-Most error tests only need to verify the error class:
+Most error tests only need to verify the error class.
 
 ```ts
 expect(() => normalizeHeadPeriod("WEEKLY")).toThrow(HttpError);
 ```
 
-This confirms that the function throws the right error type — not an unhandled exception, not a different error class.
+This confirms that the function throws the right error type. It is not an unhandled exception. It is not a different error class.
 
-When you need to verify the status code or error code (useful when a function could throw different `HttpError` instances in different conditions):
+Sometimes you need to verify the status code or error code. This is useful when a function could throw different `HttpError` instances in different conditions.
 
 ```ts
 it("error status is 400 and code is VALIDATION_ERROR", () => {
@@ -147,9 +153,11 @@ it("error status is 400 and code is VALIDATION_ERROR", () => {
 });
 ```
 
-Note `expect.fail("should have thrown")` — if the function does NOT throw, this line executes and deliberately fails the test with a clear message. Without it, the `catch` block never runs and the test passes silently even when the function failed to throw.
+Look at `expect.fail("should have thrown")`. If the function does NOT throw, this line executes. It deliberately fails the test with a clear message.
 
-This is the `residencies.helpers.test.ts` pattern — used when error property verification matters, not just error class.
+Without it, the `catch` block never runs. The test then passes silently, even when the function failed to throw.
+
+This is the `residencies.helpers.test.ts` pattern. Use it when error property verification matters, not just the error class.
 
 **On-screen action / demo:**
 Open `residencies.helpers.test.ts`. Find the `try/catch` test block for `ensureNotBeforeUnitInception`. Point out `expect.fail(...)` and the cast `(e as HttpError)`.
