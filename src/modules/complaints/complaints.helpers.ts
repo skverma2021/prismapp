@@ -4,6 +4,21 @@
 import { HttpError } from "@/src/lib/api-response";
 
 /**
+ * Valid status transition graph (CM1, CM2, CM4b).
+ * `Closed` is reachable only from `Resolved`, so every ticket passes through the
+ * reopen window. A `Reopened` ticket must be worked and resolved again before it
+ * can be closed. The detail page keeps a copy of this table for button visibility.
+ */
+export const VALID_TRANSITIONS: Record<string, string[]> = {
+  Open: ["Assigned", "InProgress"],
+  Assigned: ["InProgress"],
+  InProgress: ["Resolved"],
+  Resolved: ["Closed", "Reopened"],
+  Closed: [],
+  Reopened: ["Assigned", "InProgress"],
+};
+
+/**
  * CM4a: a Resolved complaint cannot be closed while its reopen window is open.
  * Reopen is allowed up to and including `reopenDeadline` (CM3), so closing is
  * allowed only strictly after it. A null deadline means there is no window to protect.
@@ -12,12 +27,10 @@ export function isReopenWindowOpen(reopenDeadline: Date | null, now: Date): bool
   return reopenDeadline !== null && now.getTime() <= reopenDeadline.getTime();
 }
 
-export function assertResolvedCanBeClosed(
-  complaint: { status: string; reopenDeadline: Date | null },
+export function assertReopenWindowElapsed(
+  complaint: { reopenDeadline: Date | null },
   now: Date
 ): void {
-  if (complaint.status !== "Resolved") return;
-
   if (isReopenWindowOpen(complaint.reopenDeadline, now)) {
     throw new HttpError(
       409,

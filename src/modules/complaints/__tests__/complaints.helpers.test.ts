@@ -1,9 +1,28 @@
 import { describe, it, expect } from "vitest";
 import { HttpError } from "@/src/lib/api-response";
-import { assertResolvedCanBeClosed, isReopenWindowOpen } from "../complaints.helpers";
+import { VALID_TRANSITIONS, assertReopenWindowElapsed, isReopenWindowOpen } from "../complaints.helpers";
 
 const deadline = new Date("2026-11-24T10:00:00.000Z");
 const at = (iso: string) => new Date(iso);
+
+describe("VALID_TRANSITIONS (CM4b)", () => {
+  it("allows Closed only from Resolved", () => {
+    const canClose = Object.entries(VALID_TRANSITIONS)
+      .filter(([, targets]) => targets.includes("Closed"))
+      .map(([status]) => status);
+
+    expect(canClose).toEqual(["Resolved"]);
+  });
+
+  it("sends a Reopened ticket back through work, not straight to Closed", () => {
+    expect(VALID_TRANSITIONS.Reopened).toEqual(["Assigned", "InProgress"]);
+    expect(VALID_TRANSITIONS.InProgress).toContain("Resolved");
+  });
+
+  it("keeps Closed terminal", () => {
+    expect(VALID_TRANSITIONS.Closed).toEqual([]);
+  });
+});
 
 describe("isReopenWindowOpen", () => {
   it("is open before the deadline and exactly at it", () => {
@@ -17,13 +36,9 @@ describe("isReopenWindowOpen", () => {
   });
 });
 
-describe("assertResolvedCanBeClosed (CM4a)", () => {
-  it("rejects closing a Resolved complaint inside the reopen window with 409 PRECONDITION_FAILED", () => {
-    const attempt = () =>
-      assertResolvedCanBeClosed(
-        { status: "Resolved", reopenDeadline: deadline },
-        at("2026-11-23T09:59:59.000Z")
-      );
+describe("assertReopenWindowElapsed (CM4a)", () => {
+  it("rejects closing inside the reopen window with 409 PRECONDITION_FAILED", () => {
+    const attempt = () => assertReopenWindowElapsed({ reopenDeadline: deadline }, at("2026-11-23T09:59:59.000Z"));
 
     expect(attempt).toThrow(HttpError);
     try {
@@ -34,20 +49,9 @@ describe("assertResolvedCanBeClosed (CM4a)", () => {
     }
   });
 
-  it("allows closing a Resolved complaint after the window has elapsed", () => {
+  it("allows closing after the window has elapsed", () => {
     expect(() =>
-      assertResolvedCanBeClosed(
-        { status: "Resolved", reopenDeadline: deadline },
-        at("2026-11-24T10:00:00.001Z")
-      )
+      assertReopenWindowElapsed({ reopenDeadline: deadline }, at("2026-11-24T10:00:00.001Z"))
     ).not.toThrow();
-  });
-
-  it("does not restrict closing from other statuses", () => {
-    for (const status of ["Open", "Assigned", "InProgress", "Reopened"]) {
-      expect(() =>
-        assertResolvedCanBeClosed({ status, reopenDeadline: deadline }, at("2026-11-23T10:00:00.000Z"))
-      ).not.toThrow();
-    }
   });
 });

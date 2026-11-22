@@ -107,6 +107,7 @@
 3. CM3 — A complaint can be reopened only within 48 hours of its `resolvedAt` timestamp.
 4. CM4 — Once a complaint is `Closed` and the reopen window has elapsed, no further status transitions are permitted.
    - CM4a — A `Resolved` complaint can be closed only after its reopen window has elapsed (`now > reopenDeadline`). Closing earlier is rejected for every role, including `SOCIETY_ADMIN`, with no override. Closing is a manual action; automatic closure after the window is deferred.
+   - CM4b — `Closed` is reachable only from `Resolved`. A complaint in `Open`, `Assigned`, `InProgress` or `Reopened` cannot be closed directly. A `Reopened` complaint must be worked and resolved again, which starts a new reopen window, before it can be closed.
 5. CM5 — Every status transition must be captured in the audit log with actor identity and timestamp.
 
 ### Complaint Identity

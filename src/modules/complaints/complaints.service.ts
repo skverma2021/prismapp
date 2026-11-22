@@ -8,17 +8,9 @@ import type {
   UpdateComplaintInput,
 } from "./complaints.schemas";
 import { COMPLAINT_STATUSES } from "./complaints.schemas";
-import { assertResolvedCanBeClosed } from "./complaints.helpers";
+import { assertReopenWindowElapsed, VALID_TRANSITIONS } from "./complaints.helpers";
 
-// Valid status transition graph (CM1, CM2)
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  Open: ["Assigned", "InProgress", "Closed"],
-  Assigned: ["InProgress", "Closed"],
-  InProgress: ["Resolved", "Closed"],
-  Resolved: ["Closed", "Reopened"],
-  Closed: [],
-  Reopened: ["Assigned", "InProgress", "Closed"],
-};
+// Valid status transition graph (CM1, CM2, CM4b) lives in ./complaints.helpers
 
 const REOPEN_WINDOW_MS = 48 * 60 * 60 * 1000; // CM3: 48 hours
 
@@ -274,7 +266,9 @@ export async function updateComplaint(
       throw new HttpError(
         409,
         "CONFLICT",
-        `Cannot transition from '${complaint.status}' to '${input.status}'.`
+        input.status === "Closed"
+          ? `Only a Resolved complaint can be closed. This complaint is '${complaint.status}'; resolve it first.`
+          : `Cannot transition from '${complaint.status}' to '${input.status}'.`
       );
     }
     // CM3: Reopen only within the 48h window
@@ -287,9 +281,10 @@ export async function updateComplaint(
         );
       }
     }
-    // CM4a: Resolved → Closed only after the reopen window has elapsed (no role override)
+    // CM4a: a Resolved complaint can be closed only after the reopen window has elapsed
+    // (no role override). CM4b already limits Closed to Resolved via VALID_TRANSITIONS.
     if (input.status === "Closed") {
-      assertResolvedCanBeClosed(complaint, new Date());
+      assertReopenWindowElapsed(complaint, new Date());
     }
   }
 

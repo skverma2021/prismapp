@@ -60,13 +60,14 @@ const STATUS_BADGE: Record<string, string> = {
   Reopened: "bg-rose-100 text-rose-800",
 };
 
+// Close is offered only from Resolved (CM4b); the server enforces it, this copy only drives buttons.
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  Open: ["Assigned", "InProgress", "Closed"],
-  Assigned: ["InProgress", "Closed"],
-  InProgress: ["Resolved", "Closed"],
+  Open: ["Assigned", "InProgress"],
+  Assigned: ["InProgress"],
+  InProgress: ["Resolved"],
   Resolved: ["Closed", "Reopened"],
   Closed: [],
-  Reopened: ["Assigned", "InProgress", "Closed"],
+  Reopened: ["Assigned", "InProgress"],
 };
 
 const TRANSITION_LABELS: Record<string, string> = {

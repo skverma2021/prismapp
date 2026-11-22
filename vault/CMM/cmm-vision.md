@@ -82,7 +82,7 @@ Multiple residents facing the same issue (e.g., low water pressure) can upvote a
 
 ### 3. Reopen Window
 
-Resident can reopen a `Resolved` ticket within 48 hours if the issue persists. Prevents premature MC closure: a `Resolved` ticket cannot be closed until the window has elapsed (CM4a).
+Resident can reopen a `Resolved` ticket within 48 hours if the issue persists. Prevents premature MC closure: a `Resolved` ticket cannot be closed until the window has elapsed (CM4a), and only a `Resolved` ticket can be closed (CM4b).
 
 ### 4. Offline Logging via WhatsApp / SMS Bot
 
