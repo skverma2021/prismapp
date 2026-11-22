@@ -283,7 +283,7 @@ The core complaint ticket entity.
 ### Key Points
 - One `Complaint` = one logged issue against a unit or common area.
 - `ticketId` is system-assigned and immutable after creation.
-- Status follows the lifecycle: `Open → Assigned → In Progress → Resolved → Closed`. `Reopened` returns the ticket to `Open` within the reopen window.
+- Status follows the lifecycle: `Open → Assigned → In Progress → Resolved → Closed`. `Reopened` returns the ticket to `Open` within the reopen window. A `Resolved` ticket cannot be closed until the reopen window has elapsed (CM4a).
 - When `isAnonymous = true`, `reportedById` is stored but not exposed in resident-facing views.
 - Core fields (`ticketId`, `unitId`, `reportedById`, `isAnonymous`, `createdAt`) are immutable after creation.
 - `reopenDeadline` = `resolvedAt + 48 hours`; cleared when the ticket reaches `Closed`.

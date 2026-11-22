@@ -173,6 +173,10 @@ Goal: make SLA breach visible and give the MC a summary view.
 8. ✅ Complaint summary card on dashboard home page (`src/components/complaints/complaint-summary-card.tsx`). Fetches `GET /api/complaints/summary` (new route). Shows: open ticket count, breached SLA count (highlighted red when >0), oldest open ticket age. All roles. Complaints entry card added to `entryCards` on home page.
 9. Block/unit breakdown deferred — low immediate value; can be a Sprint 3 accordion if needed.
 
+### Phase 4 — CMM Follow-up: Close Only After the Reopen Window ✅ DONE
+13. ✅ CM4a. A `Resolved` complaint can be closed only after `reopenDeadline` has passed. Enforced server-side in `updateComplaint` via `assertResolvedCanBeClosed` (`complaints.helpers.ts`, 409 `PRECONDITION_FAILED`); no role override, including `SOCIETY_ADMIN`. The detail-page "Close" button is disabled during the window with an explanatory note. Closing stays manual.
+14. Automatic closure after the window (backlog). Only if resolved tickets pile up; needs a scheduled job (Vercel Cron) or a check on read. Not built: it has not been validated as a need.
+
 ### Phase 4 — CMM Sprint 3: Operational Backlog (Not Course Material)
 Goal: production polish for a live MSH deployment. These items introduce external service dependencies without adding new software design patterns, so they are excluded from the course.
 

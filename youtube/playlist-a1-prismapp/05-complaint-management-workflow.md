@@ -100,6 +100,8 @@ showing timestamps and actor names.
 
 **Visual:** Screen recording — the create-complaint form showing a category dropdown
 and a priority dropdown, with an SLA hours value displayed once priority is picked.
+Optional: a resolved complaint inside its reopen window, with the Close button
+greyed out and the note "This complaint can be closed after this time."
 
 **Narration:**
 > "Every complaint is filed against a predefined category and a predefined priority. It is not free text, so reporting stays consistent.
@@ -107,6 +109,10 @@ and a priority dropdown, with an SLA hours value displayed once priority is pick
 > Priority carries a target resolution time, called an SLA, in hours.
 >
 > Right now, that SLA is tracked and visible. But automatic escalation when it is breached is intentionally deferred.
+>
+> The same is true for closing a complaint. A resolved complaint cannot be closed until its 48-hour reopen window has passed. Even an admin cannot close it early.
+>
+> After the window, an admin closes it by hand. Closing it automatically is also deferred.
 >
 > This is a good example of scoping a feature honestly. We do not half-build automation that nobody has validated yet."
 
@@ -191,6 +197,11 @@ tagged, "Internal" and "Resident".
   "Reopened" }) }).then(r => r.json()).then(console.log)` and show the returned
   `409 PRECONDITION_FAILED` / "Reopen window has elapsed" JSON.
 - **Diagrams needed:** status-chain lifecycle diagram with the Reopened loop-back.
+- **Early-close shot (Scene 4):** the Close button is disabled, not absent, while the
+  reopen window is open (rule CM4a). To show the server rule, run the same console
+  `fetch` as above with `{ status: "Closed" }` on a complaint resolved less than
+  48 hours ago, and show the `409 PRECONDITION_FAILED` / "The reopen window is still
+  open" JSON. This applies to every role, including `SOCIETY_ADMIN`.
 - **Source material to reuse:** `vault/01-Domain/Domain-Rules.md` "Complaint Rules
   (CMM)" section, rules `CM1`–`CM18`; `vault/00-Core/System-Overview.md` for CMM's
   current delivery status (Sprints 0–2 delivered; photo attachments, notifications,

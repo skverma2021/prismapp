@@ -247,7 +247,7 @@ Maps a contribution to specific periods
 10. depositedBy must always be a valid Individual (no anonymous payments).
 11. A Complaint must have a category and a priority.
 12. Complaint `ticketId` is system-assigned and immutable after creation.
-13. Complaint status lifecycle: `Open → Assigned → In Progress → Resolved → Closed`; `Reopened` returns to `Open` within 48 hours of `resolvedAt`.
+13. Complaint status lifecycle: `Open → Assigned → In Progress → Resolved → Closed`; `Reopened` returns to `Open` within 48 hours of `resolvedAt`. A `Resolved` complaint can be closed only after those 48 hours have elapsed (CM4a).
 14. Anonymous complaints store `reportedById` but must not expose it in resident-facing API responses.
 15. `ComplaintNotes` are append-only; `Internal` visibility restricts access to Admin/Manager roles.
 

@@ -170,6 +170,12 @@ export default function ComplaintDetailPage() {
     ? `Reopen deadline: ${formatDate(complaint.reopenDeadline)}`
     : "";
 
+  // CM4a: closing a Resolved complaint is blocked until the reopen window has elapsed
+  const closeBlockedByWindow =
+    complaint?.status === "Resolved" &&
+    complaint.reopenDeadline !== null &&
+    new Date() <= new Date(complaint.reopenDeadline);
+
   // ---------------------------------------------------------------------------
   // Status transitions
   // ---------------------------------------------------------------------------
@@ -375,23 +381,30 @@ export default function ComplaintDetailPage() {
           </p>
         )}
         {reopenDeadlineLabel && complaint.status === "Resolved" && (
-          <p className="mt-2 text-xs text-slate-400">{reopenDeadlineLabel}</p>
+          <p className="mt-2 text-xs text-slate-400">
+            {reopenDeadlineLabel}
+            {closeBlockedByWindow ? ". This complaint can be closed after this time." : ""}
+          </p>
         )}
 
         {/* Status transition buttons (MANAGER/ADMIN only) */}
         {isAdminOrManager && availableTransitions.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
-            {availableTransitions.map((toStatus) => (
-              <button
-                key={toStatus}
-                type="button"
-                disabled={actionLoading}
-                onClick={() => handleStatusTransition(toStatus)}
-                className={`${BTN_BASE} ${TRANSITION_STYLES[toStatus] ?? "bg-slate-500 text-white"}`}
-              >
-                {TRANSITION_LABELS[toStatus] ?? toStatus}
-              </button>
-            ))}
+            {availableTransitions.map((toStatus) => {
+              const waitingForWindow = toStatus === "Closed" && closeBlockedByWindow;
+              return (
+                <button
+                  key={toStatus}
+                  type="button"
+                  disabled={actionLoading || waitingForWindow}
+                  title={waitingForWindow ? "Available after the reopen window ends" : undefined}
+                  onClick={() => handleStatusTransition(toStatus)}
+                  className={`${BTN_BASE} ${TRANSITION_STYLES[toStatus] ?? "bg-slate-500 text-white"} disabled:cursor-not-allowed disabled:opacity-50`}
+                >
+                  {TRANSITION_LABELS[toStatus] ?? toStatus}
+                </button>
+              );
+            })}
           </div>
         )}
       </section>

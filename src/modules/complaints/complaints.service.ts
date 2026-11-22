@@ -8,6 +8,7 @@ import type {
   UpdateComplaintInput,
 } from "./complaints.schemas";
 import { COMPLAINT_STATUSES } from "./complaints.schemas";
+import { assertResolvedCanBeClosed } from "./complaints.helpers";
 
 // Valid status transition graph (CM1, CM2)
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -285,6 +286,10 @@ export async function updateComplaint(
           "Reopen window has elapsed. This complaint cannot be reopened."
         );
       }
+    }
+    // CM4a: Resolved → Closed only after the reopen window has elapsed (no role override)
+    if (input.status === "Closed") {
+      assertResolvedCanBeClosed(complaint, new Date());
     }
   }
 
